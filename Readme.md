@@ -2,72 +2,114 @@
 
 [![Go Reference](https://pkg.go.dev/badge/gopkg.in/ro-ag/zftp.v0.svg)](https://pkg.go.dev/gopkg.in/ro-ag/zftp.v0)
 
-zftp is a Go-based FTP library that provides a high-level interface for interacting with FTP servers. This library is designed to work with IBM mainframe FTP servers and supports specific features such as setting the file type and end-of-line sequences.
+The zftp package provides a convenient and feature-rich way to work with mainframe FTP servers, specifically designed for z/OS systems. It offers capabilities to interact with z/OS datasets, execute FTP commands tailored for mainframe operations, and handle mainframe-specific attributes and file transfer modes.
 
 ## Features
 
-- Opening an FTP session with `Open(server string) (*FTPSession, error)`
-- Setting the verbosity of logging with `SetVerbose(v bool)`
-- Securing the FTP session using TLS with `AuthTLS(tlsConfig *tls.Config) error`
-- Closing an FTP session with `Close() error`
-- Logging in with `Login(user, pass string) error`
-- Sending a command to the FTP server with `SendCommandWithContext(ctx context.Context, expect ReturnCode, command string, a ...string) (string, error)`
-- Getting the system type of the FTP server with `System() string`
-- Setting the end-of-line sequence for the FTP server with `SetRetrieveEOL(eol LineBreaker) error`
-- Setting the end-of-line wide characters sequence for the FTP server with `SetRetrieveWideCharEOL(eol LineBreaker) error`
-- Sending a file to the FTP server with `Put(ctx context.Context, localFile, remoteFile string, options ...PutOption) error`
-- Getting a file from the FTP server with `Get(ctx context.Context, remoteFile, localFile string, options ...GetOption) error`
-- Listing files in a directory on the FTP server with `List(ctx context.Context, remoteDir string, options ...ListOption) ([]*FTPFile, error)`
+- **z/OS Dataset Support**: Perform operations on z/OS datasets, including retrieving attributes, checking migration status, and verifying dataset size.
 
-## Example Usage
+- **FTP Commands for Mainframe Operations**: Execute FTP commands specific to z/OS systems, such as listing datasets, retrieving members of a partitioned dataset, and performing file transfers with correct attributes and formats.
 
-The library is used by creating an `FTPSession` and calling methods on it to interact with the FTP server. Here is a basic example:
+- **Working with Mainframe Attributes**: Easily work with mainframe dataset attributes, including volume, unit, RECFM (record format), LRECL (record length), BLKSIZE (block size), and DSORG (dataset organization).
+
+- **Migrated and Not Mounted Dataset Handling**: Identify migrated and not mounted datasets and handle them accordingly in your application logic.
+
+- **Transfer Modes**: Support both ASCII and binary transfer modes required for mainframe file transfers.
+
+- **Verification of File Size**: Verify the transferred file's size to ensure accuracy, particularly important on mainframe systems with gzip format limitations.
+
+- **GetAndGzip**: Retrieve and compress a file in a single step, saving bandwidth and storage space.
+
+## Installation
+
+To install the zftp package, use the following `go get` command:
+
+```bash
+go get gopkg.in/ro-ag/zftp.v0
+```
+
+## Usage
+
+Here are some of the most important functions provided by the zftp package:
+
+- `Open(hostname string) (*FTPSession, error)`: Open an FTP session to the specified hostname, returning a session instance for further operations.
+
+- `(*FTPSession) Login(username, password string) error`: Log in to the FTP server using the provided username and password.
+
+- `(*FTPSession) Get(remoteFile, localFile string, transferType TransferType) error`: Retrieve a file from the FTP server and store it locally, specifying the transfer type as ASCII or binary.
+
+- `(*FTPSession) Put(localFile, remoteFile string, transferType TransferType) error`: Upload a local file to the FTP server, specifying the transfer type as ASCII or binary.
+
+- `(*FTPSession) List(remotePath string) ([]string, error)`: List files and directories at the specified remote path on the FTP server.
+
+- `(*FTPSession) ListDatasets(remotePath string) ([]hfs.Dataset, error)`: List z/OS datasets at the specified remote path, including dataset attributes.
+
+- `(*FTPSession) GetAndGzip(remoteFile, localFile string, transferType TransferType) error`: Retrieve a file from the FTP server, compress it using gzip format, and store it locally in a single step.
+
+Refer to the [GoDoc](https://pkg.go.dev/gopkg.in/ro-ag/zftp.v0) for detailed documentation and more functions provided by the package.
+
+## Example
+
+Here's an example that demonstrates the basic usage of the zftp package:
 
 ```go
 package main
 
 import (
-	"crypto/tls"
+	"fmt"
 	"gopkg.in/ro-ag/zftp.v0"
-	"log"
 )
 
 func main() {
-	// Open a connection to the FTP server
-	session, err := zftp.Open("myftpserver.com:21")
+	// Open an FTP session to the mainframe server
+	s, err := zftp.Open("example.com")
 	if err != nil {
-		log.Fatal(err)
-	}
-
-	// Set up a TLS connection
-	tlsConfig := &tls.Config{
-		InsecureSkipVerify: true,
-	}
-	err = session.AuthTLS(tlsConfig)
-	if err != nil {
-		log.Fatal(err)
+		fmt.Println("Failed to open FTP session:", err)
+		return
 	}
 
 	// Log in to the FTP server
-	err = session.Login("myusername", "mypassword")
+	err = s.Login("username
+
+", "password")
 	if err != nil {
-		log.Fatal(err)
+		fmt.Println("Failed to log in:", err)
+		return
 	}
 
-	// List the files in the root directory
-	files, err := session.List("*")
+	// Retrieve a file from the FTP server and store it locally
+	err = s.Get("remote_file.txt", "local_file.txt", zftp.TypeAscii)
 	if err != nil {
-		log.Fatal(err)
+		fmt.Println("Failed to retrieve file:", err)
+		return
 	}
 
-	for _, file := range files {
-		log.Println(file)
+	// Retrieve and compress a file from the FTP server using gzip format
+	err = s.GetAndGzip("remote_file.txt", "local_file.txt.gz", zftp.TypeAscii)
+	if err != nil {
+		fmt.Println("Failed to retrieve and compress file:", err)
+		return
 	}
 
-	// Close the connection to the FTP server
-	err = session.Close()
+	// Close the FTP session
+	err = s.Close()
 	if err != nil {
-		log.Fatal(err)
+		fmt.Println("Failed to close FTP session:", err)
+		return
 	}
+
+	fmt.Println("File retrieved and compressed successfully!")
 }
 ```
+
+The `GetAndGzip` function allows you to retrieve a file from the FTP server and compress it using gzip format in a single step. This can be beneficial in scenarios where you need to conserve bandwidth and storage space. By compressing the file during the retrieval process, you reduce the size of the transferred data, resulting in faster downloads and reduced storage requirements. The `GetAndGzip` function simplifies this process by handling the retrieval and compression in a single function call, streamlining your file transfer operations.
+
+## Contributing
+
+Contributions to the zftp package are welcome! Please open an issue to discuss any proposed changes or improvements.
+
+## License
+
+The zftp package is licensed under the MIT License. See the [LICENSE](./LICENSE) file for more information.
+
+---
