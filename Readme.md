@@ -1,5 +1,7 @@
 # zFTP
 
+[![Go Reference](https://pkg.go.dev/badge/gopkg.in/ro-ag/zftp.v0.svg)](https://pkg.go.dev/gopkg.in/ro-ag/zftp.v0)
+
 zftp is a Go-based FTP library that provides a high-level interface for interacting with FTP servers. This library is designed to work with IBM mainframe FTP servers and supports specific features such as setting the file type and end-of-line sequences.
 
 ## Features

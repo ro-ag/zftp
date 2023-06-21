@@ -7,6 +7,8 @@ import (
 	"strings"
 )
 
+// List returns a list of files and directories in the current working directory
+// it returns the raw lines by the server
 func (s *FTPSession) anyList(cmd, expression string) ([]string, error) {
 	cmd = strings.TrimSpace(strings.ToUpper(cmd))
 	trimLine := false
@@ -102,6 +104,7 @@ func (s *FTPSession) ListDatasets(expression string) ([]hfs.Dataset, error) {
 	return datasets, nil
 }
 
+// ListPds returns a list of files matching the given expression, including file attributes.
 func (s *FTPSession) ListPds(expression string) ([]hfs.PdsMember, error) {
 	lines, err := s.List(expression)
 	if err != nil {
