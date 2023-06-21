@@ -13,7 +13,7 @@ var (
 	password = os.Getenv("ZFTP_PASSWORD")
 )
 
-func TestOpenTls(t *testing.T) {
+func TestOpen(t *testing.T) {
 
 	log.SetLevel(log.DebugLevel)
 	log.SetFormatter(&log.TextFormatter{

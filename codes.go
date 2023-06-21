@@ -10,6 +10,8 @@ import (
 )
 
 //go:generate stringer -type=ReturnCode
+
+// ReturnCode is an FTP return code
 type ReturnCode int
 
 const (
@@ -53,21 +55,25 @@ const (
 	CodeBadFileName            ReturnCode = 553
 )
 
+// ReturnError is an FTP return code error
 type ReturnError struct {
 	rc      int
 	message string
 	wantRc  int
 }
 
-func (e *ReturnError) Got() ReturnCode {
+// ReturnCode returns the FTP return code
+func (e *ReturnError) ReturnCode() ReturnCode {
 	return ReturnCode(e.rc)
 }
 
+// Error returns the error message
 func (e *ReturnError) Error() string {
 	return fmt.Sprintf("FTP response code: got %d, want %d, message: %s", e.rc, e.wantRc, e.message)
 }
 
-func (code ReturnCode) CheckCode(reader *bufio.Reader) (msg string, err error) {
+// check checks the response code and returns the message
+func (code ReturnCode) check(reader *bufio.Reader) (msg string, err error) {
 
 	var (
 		response     strings.Builder

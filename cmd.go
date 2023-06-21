@@ -27,7 +27,7 @@ func (s *FTPSession) SendCommandWithContext(ctx context.Context, expect ReturnCo
 			return
 		}
 
-		msg, err := expect.CheckCode(s.r)
+		msg, err := expect.check(s.r)
 		if err != nil {
 			log.Debugf("[res|error] %s", err)
 			errChan <- err
@@ -92,7 +92,7 @@ func (s *FTPSession) checkLast(expect ReturnCode) error {
 		return nil
 	}
 
-	_, err := expect.CheckCode(s.r)
+	_, err := expect.check(s.r)
 	if err != nil {
 		log.Debugf("[res|error] %s", err)
 		return err

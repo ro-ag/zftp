@@ -15,6 +15,7 @@ import (
 	"syscall"
 )
 
+// FTPSession represents an FTP session
 type FTPSession struct {
 	conn        net.Conn
 	system      string
@@ -28,7 +29,7 @@ type FTPSession struct {
 	mu          sync.Mutex
 }
 
-// Open opens a TLS connection to the FTP server and returns an FTPSession
+// Open opens a Net connection to the FTP server and returns an FTPSession
 func Open(server string) (*FTPSession, error) {
 	conn, err := net.Dial("tcp", server)
 	if err != nil {
@@ -40,7 +41,7 @@ func Open(server string) (*FTPSession, error) {
 		r:    bufio.NewReader(conn),
 	}
 
-	msg, err := CodeSvcReadySoon.CheckCode(session.r)
+	msg, err := CodeSvcReadySoon.check(session.r)
 	if err != nil {
 		return nil, err
 	}
@@ -71,6 +72,7 @@ func Open(server string) (*FTPSession, error) {
 	return session, nil
 }
 
+// SetVerbose sets the verbose flag
 func (s *FTPSession) SetVerbose(v bool) {
 	s.mu.Lock()
 	s.verbose = v
@@ -182,16 +184,4 @@ func (s *FTPSession) Login(user, pass string) error {
 	}
 
 	return nil
-}
-
-func drainBuffer(r *bufio.Reader) {
-	// Read until there's nothing left to read
-	for {
-		_, err := r.Peek(1)
-		if err != nil {
-			// If Peek returns an error (including io.EOF), we stop
-			break
-		}
-		r.ReadByte()
-	}
 }
