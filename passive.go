@@ -6,6 +6,7 @@ import (
 	"crypto/tls"
 	"fmt"
 	log "github.com/sirupsen/logrus"
+	"gopkg.in/ro-ag/zftp.v0/internal/utils"
 	"net"
 	"regexp"
 	"strconv"
@@ -13,7 +14,6 @@ import (
 	"sync"
 	"sync/atomic"
 	"time"
-	"zftp/internal/utils"
 )
 
 // SetPassiveMode sets the FTP session to passive mode.

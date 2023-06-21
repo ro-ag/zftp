@@ -3,9 +3,9 @@ package zftp
 import (
 	"fmt"
 	log "github.com/sirupsen/logrus"
+	"gopkg.in/ro-ag/zftp.v0/internal/utils"
 	"os"
 	"strings"
-	"zftp/internal/utils"
 )
 
 // Put a file from the local file system to the remote file system.

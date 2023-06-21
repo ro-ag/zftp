@@ -3,8 +3,8 @@ package zftp
 import (
 	"fmt"
 	log "github.com/sirupsen/logrus"
+	"gopkg.in/ro-ag/zftp.v0/hfs"
 	"strings"
-	"zftp/hfs"
 )
 
 func (s *FTPSession) anyList(cmd, expression string) ([]string, error) {

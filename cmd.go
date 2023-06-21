@@ -4,8 +4,8 @@ import (
 	"context"
 	"fmt"
 	log "github.com/sirupsen/logrus"
+	"gopkg.in/ro-ag/zftp.v0/internal/utils"
 	"strings"
-	"zftp/internal/utils"
 )
 
 // SendCommandWithContext sends a command to the FTP server and expects a specific return code.

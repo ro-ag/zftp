@@ -3,8 +3,8 @@ package zftp
 import (
 	"fmt"
 	log "github.com/sirupsen/logrus"
+	"gopkg.in/ro-ag/zftp.v0/internal/transfer"
 	"io"
-	"zftp/internal/transfer"
 )
 
 type TransferType interface {

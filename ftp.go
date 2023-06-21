@@ -5,6 +5,7 @@ import (
 	"crypto/tls"
 	"fmt"
 	log "github.com/sirupsen/logrus"
+	"gopkg.in/ro-ag/zftp.v0/internal/utils"
 	"net"
 	"os"
 	"os/signal"
@@ -12,7 +13,6 @@ import (
 	"sync"
 	"sync/atomic"
 	"syscall"
-	"zftp/internal/utils"
 )
 
 type FTPSession struct {

@@ -4,9 +4,9 @@ import (
 	"compress/gzip"
 	"fmt"
 	log "github.com/sirupsen/logrus"
+	"gopkg.in/ro-ag/zftp.v0/internal/utils"
 	"os"
 	"path/filepath"
-	"zftp/internal/utils"
 )
 
 // Get retrieves a file from the FTP server and saves it to the local file system.

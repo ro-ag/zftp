@@ -2,8 +2,8 @@ package zftp_test
 
 import (
 	log "github.com/sirupsen/logrus"
+	"gopkg.in/ro-ag/zftp.v0"
 	"testing"
-	"zftp"
 )
 
 func TestFTPSession_Get(t *testing.T) {

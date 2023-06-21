@@ -2,9 +2,9 @@ package zftp_test
 
 import (
 	log "github.com/sirupsen/logrus"
+	"gopkg.in/ro-ag/zftp.v0"
 	"os"
 	"testing"
-	"zftp"
 )
 
 var (
