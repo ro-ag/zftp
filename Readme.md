@@ -69,9 +69,7 @@ func main() {
 	}
 
 	// Log in to the FTP server
-	err = s.Login("username
-
-", "password")
+	err = s.Login("username", "password")
 	if err != nil {
 		fmt.Println("Failed to log in:", err)
 		return
