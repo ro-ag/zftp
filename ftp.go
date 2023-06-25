@@ -21,7 +21,7 @@ type FTPSession struct {
 	system      string
 	currType    TransferType
 	isClosed    atomic.Bool
-	r           *bufio.Reader
+	reader      *bufio.Reader
 	lastMessage strings.Builder
 	dataConns   sync.Map
 	verbose     bool
@@ -37,11 +37,11 @@ func Open(server string) (*FTPSession, error) {
 	}
 
 	session := &FTPSession{
-		conn: conn,
-		r:    bufio.NewReader(conn),
+		conn:   conn,
+		reader: bufio.NewReader(conn),
 	}
 
-	msg, err := CodeSvcReadySoon.check(session.r)
+	msg, err := CodeSvcReadySoon.check(session.reader)
 	if err != nil {
 		return nil, err
 	}
@@ -93,7 +93,7 @@ func (s *FTPSession) AuthTLS(tlsConfig *tls.Config) error {
 
 	s.conn = tls.Client(s.conn, tlsConfig)
 
-	s.r = bufio.NewReader(s.conn)
+	s.reader = bufio.NewReader(s.conn)
 
 	// Protection Buffer Size
 	_, err = s.SendCommand(CodeCmdOK, "PBSZ", "0")

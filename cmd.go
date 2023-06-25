@@ -27,7 +27,7 @@ func (s *FTPSession) SendCommandWithContext(ctx context.Context, expect ReturnCo
 			return
 		}
 
-		msg, err := expect.check(s.r)
+		msg, err := expect.check(s.reader)
 		if err != nil {
 			log.Debugf("[res|error] %s", err)
 			errChan <- err
@@ -80,7 +80,18 @@ func (s *FTPSession) Site(subCommand string, a ...string) (string, error) {
 	args := strings.Join(a, " ")
 	subCommand = strings.TrimSpace(strings.ToUpper(subCommand))
 	subCommandWithArgs := fmt.Sprintf("%s %s", subCommand, args)
-	return s.SendCommand(CodeCmdOK, "SITE", subCommandWithArgs)
+	str, err := s.SendCommand(CodeCmdOK, "SITE", subCommandWithArgs)
+	lines := strings.Split(str, "\n")
+	switch {
+	case err != nil:
+		return "", err
+	case strings.Contains(str, "Unrecognized parameter"):
+		return "", fmt.Errorf("error : '%s', %s", subCommandWithArgs, lines[0])
+	case strings.Contains(str, "Parameter ignored"):
+		return "", fmt.Errorf("error : '%s', %s", subCommandWithArgs, lines[0])
+	default:
+		return str, nil
+	}
 }
 
 func (s *FTPSession) checkLast(expect ReturnCode) error {
@@ -92,7 +103,7 @@ func (s *FTPSession) checkLast(expect ReturnCode) error {
 		return nil
 	}
 
-	_, err := expect.check(s.r)
+	_, err := expect.check(s.reader)
 	if err != nil {
 		log.Debugf("[res|error] %s", err)
 		return err

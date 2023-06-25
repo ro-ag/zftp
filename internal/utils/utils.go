@@ -7,7 +7,9 @@ import (
 	"github.com/kr/text"
 	log "github.com/sirupsen/logrus"
 	"os"
+	"regexp"
 	"runtime"
+	"strconv"
 	"strings"
 )
 
@@ -98,4 +100,52 @@ func VerifyGzSize(file *os.File, size int64) error {
 		return fmt.Errorf("transferred file size doesn't match the size in gzip footer (expected %d, got %d)", have, want)
 	}
 	return nil
+}
+
+var trims = regexp.MustCompile(`(^\s+|\s+$|^'|'$)|[\n\r]+`)
+
+func StandardizeQuote(name string) string {
+	trims.ReplaceAllString(name, "")
+	return fmt.Sprintf("'%s'", name)
+}
+
+func RemoveNewLine(name string) string {
+	return trims.ReplaceAllString(name, "")
+}
+
+var regexLastWord = regexp.MustCompile(`\s(\w+)$`)
+
+func LastWord(str string) string {
+	matches := regexLastWord.FindStringSubmatch(str)
+	if len(matches) == 2 {
+		return matches[1]
+	}
+	return ""
+}
+
+func LastWordToInt(str string) (int, error) {
+	str = LastWord(str)
+	if str == "undefined" {
+		return 0, nil
+	}
+	return strconv.Atoi(str)
+}
+
+func LastText(str string) string {
+	if len(str) == 0 {
+		return ""
+	}
+	words := strings.Split(RemoveNewLine(str), " ")
+	return words[len(words)-1]
+}
+
+func StringToBool(str string) (bool, error) {
+	switch strings.TrimSpace(strings.ToLower(str)) {
+	case "true":
+		return true, nil
+	case "false":
+		return false, nil
+	default:
+		return false, fmt.Errorf("invalid boolean value: %s", str)
+	}
 }

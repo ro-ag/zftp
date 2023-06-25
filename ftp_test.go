@@ -7,6 +7,16 @@ import (
 	"testing"
 )
 
+func init() {
+	log.SetLevel(log.DebugLevel)
+	log.SetFormatter(&log.TextFormatter{
+		ForceColors:      true,
+		FullTimestamp:    true,
+		DisableTimestamp: true,
+		//	PadLevelText:     true,
+	})
+}
+
 var (
 	hostname = os.Getenv("ZFTP_HOSTNAME")
 	username = os.Getenv("ZFTP_USERNAME")
@@ -15,13 +25,6 @@ var (
 
 func TestOpen(t *testing.T) {
 
-	log.SetLevel(log.DebugLevel)
-	log.SetFormatter(&log.TextFormatter{
-		ForceColors:      true,
-		FullTimestamp:    true,
-		DisableTimestamp: true,
-		//	PadLevelText:     true,
-	})
 	s, err := zftp.Open(hostname)
 	if err != nil {
 		t.Fatal(err)

@@ -13,13 +13,26 @@ func (s *FTPSession) anyList(cmd, expression string) ([]string, error) {
 	cmd = strings.TrimSpace(strings.ToUpper(cmd))
 	trimLine := false
 	switch cmd {
-	case "LIST", "MLSD":
+	case "LIST":
 		break
 	case "NLST":
 		trimLine = true
 		break
 	default:
 		log.Panicf("invalid command: %s", cmd)
+	}
+
+	current := s.currType
+
+	if current != TypeAscii {
+		if err := s.SetType(TypeAscii); err != nil {
+			return nil, err
+		}
+		defer func() {
+			if err := s.SetType(current); err != nil {
+				log.Error(err)
+			}
+		}()
 	}
 
 	port, err := s.SetPassiveMode()
@@ -81,11 +94,42 @@ func (s *FTPSession) List(expression string) ([]string, error) {
 
 // NList returns a plane list of files matching the given expression. It does not include file attributes.
 func (s *FTPSession) NList(expression string) ([]string, error) {
+	curr, err := s.StatusOf().FILEtype()
+	if err != nil {
+		return nil, err
+	}
+	defer func(s *FTPSession) {
+		_, err := s.Site(fmt.Sprintf("FILETYPE=%s", curr))
+		if err != nil {
+			log.Error(err)
+		}
+	}(s)
+
+	_, err = s.Site("FILETYPE=SEQ")
+	if err != nil {
+		return nil, err
+	}
 	return s.anyList("NLST", expression)
 }
 
 // ListDatasets returns a list of files matching the given expression, including file attributes.
 func (s *FTPSession) ListDatasets(expression string) ([]hfs.Dataset, error) {
+	curr, err := s.StatusOf().FILEtype()
+	if err != nil {
+		return nil, err
+	}
+	defer func(s *FTPSession) {
+		_, err := s.Site(fmt.Sprintf("FILETYPE=%s", curr))
+		if err != nil {
+			log.Error(err)
+		}
+	}(s)
+
+	_, err = s.Site("FILETYPE=SEQ")
+	if err != nil {
+		return nil, err
+	}
+
 	lines, err := s.List(expression)
 	if err != nil {
 		return nil, err

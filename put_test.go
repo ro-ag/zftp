@@ -1,19 +1,12 @@
 package zftp_test
 
 import (
-	log "github.com/sirupsen/logrus"
 	"gopkg.in/ro-ag/zftp.v0"
 	"testing"
 )
 
 func TestFTPSession_Put(t *testing.T) {
-	log.SetLevel(log.DebugLevel)
-	log.SetFormatter(&log.TextFormatter{
-		ForceColors:      true,
-		FullTimestamp:    true,
-		DisableTimestamp: true,
-		//	PadLevelText:     true,
-	})
+
 	s, err := zftp.Open(hostname)
 	if err != nil {
 		t.Fatal(err)
