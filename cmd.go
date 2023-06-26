@@ -75,41 +75,27 @@ func (s *FTPSession) SendCommand(expect ReturnCode, command string, a ...string)
 	return s.SendCommandWithContext(context.Background(), expect, command, a...)
 }
 
-// Site sends the SITE command to the FTP server.
-func (s *FTPSession) Site(subCommand string, a ...string) (string, error) {
-	args := strings.Join(a, " ")
-	subCommand = strings.TrimSpace(strings.ToUpper(subCommand))
-	subCommandWithArgs := fmt.Sprintf("%s %s", subCommand, args)
-	str, err := s.SendCommand(CodeCmdOK, "SITE", subCommandWithArgs)
-	lines := strings.Split(str, "\n")
-	switch {
-	case err != nil:
-		return "", err
-	case strings.Contains(str, "Unrecognized parameter"):
-		return "", fmt.Errorf("error : '%s', %s", subCommandWithArgs, lines[0])
-	case strings.Contains(str, "Parameter ignored"):
-		return "", fmt.Errorf("error : '%s', %s", subCommandWithArgs, lines[0])
-	default:
-		return str, nil
-	}
-}
-
-func (s *FTPSession) checkLast(expect ReturnCode) error {
+func (s *FTPSession) checkLast(expect ReturnCode) (string, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
 	if s.isClosed.Load() {
 		log.Warningf("<%s> session %s is closed", utils.Caller(), s.conn.RemoteAddr().String())
-		return nil
+		return "", nil
 	}
 
-	_, err := expect.check(s.reader)
+	s.lastMessage.Reset()
+
+	msg, err := expect.check(s.reader)
+
+	s.lastMessage.WriteString(msg)
+
 	if err != nil {
 		log.Debugf("[res|error] %s", err)
-		return err
+		return "", err
 	}
 
-	return nil
+	return msg, nil
 }
 
 // System get the system type of the FTP server. will panic

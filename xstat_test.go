@@ -53,7 +53,7 @@ func TestFTPSession_StatusOf(t *testing.T) {
 				case int:
 					t.Logf("%s: %d", method.Name, results[0].Interface().(int))
 				case bool:
-					t.Logf("%s: \"%t\"", method.Name, results[0].Interface().(bool))
+					t.Logf("%s: %t", method.Name, results[0].Interface().(bool))
 				default:
 					t.Errorf("Unknown type returned: %s\n", results[0].Type().String())
 				}

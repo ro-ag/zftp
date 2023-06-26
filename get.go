@@ -31,7 +31,7 @@ func (s *FTPSession) Get(remote string, localFile string, mode TransferType) err
 	}()
 
 	log.Debug("[***] starting transfer from: ", remote)
-	bytesTransferred, err := s.RetrieveIO(remote, file, mode)
+	bytesTransferred, _, err := s.RetrieveIO(remote, file, mode)
 	if err != nil {
 		return fmt.Errorf("failed to retrieve file: %s", err)
 	}
@@ -63,7 +63,7 @@ func (s *FTPSession) GetAndGzip(remote string, localFile string, mode TransferTy
 	}()
 
 	log.Debug("[***] starting transfer from: ", remote)
-	bytesTransferred, err := s.RetrieveIO(remote, gzWriter, mode)
+	bytesTransferred, _, err := s.RetrieveIO(remote, gzWriter, mode)
 	if err != nil {
 		return fmt.Errorf("failed to retrieve and compress file: %s", err)
 	}

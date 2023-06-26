@@ -2,15 +2,14 @@ package zftp
 
 import (
 	"fmt"
-	"gopkg.in/ro-ag/zftp.v0/internal/utils"
-	"regexp"
-	"strconv"
+	"gopkg.in/ro-ag/zftp.v0/internal/helper"
 	"strings"
 )
 
-var (
-	recFmt = regexp.MustCompile(`^Record\s+format\s+(\w+)\s*,\s*Lrecl:\s*(\d+)\s*,\s*Blocksize:\s*(\d+)`)
-)
+// Stat returns the server status string
+func (s *FTPSession) Stat(a ...string) (string, error) {
+	return s.SendCommand(CodeSysStatus, "STAT", a...)
+}
 
 // XStat - XSTA retrieve individual status variables or properties from the server's current status.
 func (s *FTPSession) XStat(feature string) (string, error) {
@@ -26,10 +25,8 @@ func (s *FTPSession) XStat(feature string) (string, error) {
 
 // StatusOf returns a StatusOf interface for the current FTP session.
 func (s *FTPSession) StatusOf() StatusOf {
-	return xsta(s.XStat)
+	return helper.GetFeature(s.XStat)
 }
-
-type xsta func(string) (string, error)
 
 // StatusOf interface with methods to retrieve individual status variables or properties from the server's current status.
 // https://www.ibm.com/docs/en/zos/2.4.0?topic=ftpdata-summary-ftp-client-server-configuration-statements
@@ -65,7 +62,7 @@ type StatusOf interface {
 	DATAClass() (string, error)
 
 	// DATAKEEPALIVE Indicates the number of seconds that TCP/IP waits while the data connection is inactive before sending a keepalive packet to the FTP client. The value 0 indicates that the DATAKEEPALIVE timer is disabled for this session. For active mode data connections, the keepalive timer that is configured in PROFILE.TCPIP controls how often keepalive packets flow on the data connection. For passive mode data connections, FTP suppresses the PROFILE.TCPIP keepalive timer.
-	DATAKEEPALIVE() (string, error)
+	DATAKEEPALIVE() (int, error)
 
 	// DATASetmode Indicates whether DATASetmode or DIRECTORYMode is in effect.
 	DATASetmode() (string, error)
@@ -74,7 +71,7 @@ type StatusOf interface {
 	DB2() (string, error)
 
 	// DBSUB Indicates whether substitution is allowed for data bytes that cannot be translated in a double-byte character translation.
-	DBSUB() (string, error)
+	DBSUB() (bool, error)
 
 	// DCbdsn Indicates the name of the MVS™ data set to be used as a model for allocating new data sets.
 	DCbdsn() (string, error)
@@ -95,7 +92,7 @@ type StatusOf interface {
 	DSNTYPE() (string, error)
 
 	// DSWAITTIME Indicates the number of minutes the FTP server waits for an MVS data set to become available when a local data set is held by another job or process. The value 0 indicates that the FTP server does not wait to obtain a data set when the data set is being held by another job or process.
-	DSWAITTIME() (string, error)
+	DSWAITTIME() (int, error)
 
 	// EATTR Indicates whether newly allocated data sets can have extended attributes and whether new data sets can reside in the EAS of an EAV.
 	//
@@ -108,34 +105,34 @@ type StatusOf interface {
 	ENCODING() (string, error)
 
 	// FIFOIOTIME Indicates the length of time the that FTP server waits for a read from a z/OS® UNIX named pipe or write to a z/OS UNIX named pipe to complete.
-	FIFOIOTIME() (string, error)
+	FIFOIOTIME() (int, error)
 
 	// FIFOOPENTIME Indicates the length of time that the FTP server waits for an open of a z/OS UNIX named pipe to complete.
-	FIFOOPENTIME() (string, error)
+	FIFOOPENTIME() (int, error)
 
 	// FILEtype Indicates the data set file type.
 	FILEtype() (string, error)
 
 	// FTpkeepalive Indicates the control connection keepalive timer value in seconds.
-	FTpkeepalive() (string, error)
+	FTpkeepalive() (int, error)
 
 	// INactivetime Indicates the inactivity timer to a specified number of seconds.
-	INactivetime() (string, error)
+	INactivetime() (int, error)
 
 	// ISPFSTATS Indicates that FTP will create or update ISPF Member statistics when PUt, MPut, or APpend subcommands are issued.
-	ISPFSTATS() (string, error)
+	ISPFSTATS() (bool, error)
 
 	// JESENTRYLimit Indicates the number of entries that can be displayed concurrently using a LIST or NLST command.
-	JESENTRYLimit() (string, error)
+	JESENTRYLimit() (int, error)
 
 	// JESGETBYDSN Indicates whether the server should retrieve the file from the MVS system and submit it as a batch job when FILETYPE is JES and JESINTERFACELEVEL is 2, or whether the server should retrieve the JES spool file by the data set name.
-	JESGETBYDSN() (string, error)
+	JESGETBYDSN() (bool, error)
 
 	// JESJOBName Indicates that any command (Get, LIST, DIr, or MGet) should be limited to those jobs, started tasks, APPC/MVS, or TSO output that match the specified value.
 	JESJOBName() (string, error)
 
 	// JESLrecl Indicates the logical record length (LRecl) for the Job Entry System (JES) internal reader at the foreign host.
-	JESLrecl() (string, error)
+	JESLrecl() (int, error)
 
 	// JESOwner Indicates that any command (Get, LIST, DIr, or MGet) should be limited to those jobs, started tasks, APPC/MVS, or TSO output which are owned by the user ID specified.
 	JESOwner() (string, error)
@@ -147,19 +144,19 @@ type StatusOf interface {
 	JESSTatus() (string, error)
 
 	// LISTLEVEL Indicates which format the FTP server will use when it replies to the LIST command.
-	LISTLEVEL() (string, error)
+	LISTLEVEL() (int, error)
 
 	// LISTSUBdir Indicates that wildcard searches should apply to the current working directory and should also span its subdirectories.
-	LISTSUBdir() (string, error)
+	LISTSUBdir() (bool, error)
 
 	// LRecl Indicates the logical record length (LRecl) of a newly allocated data set.
-	LRecl() (string, error)
+	LRecl() (int, error)
 
 	// MBDATACONN Indicates the code pages for the file system and for the network transfer that are used when the server does data conversion during a data transfer.
 	MBDATACONN() (string, error)
 
 	// MBREQUIRELASTEOL Indicates whether the FTP server reports an error when a multibyte file or data set is received from the server with no EOL sequence in the last record received.
-	MBREQUIRELASTEOL() (string, error)
+	MBREQUIRELASTEOL() (bool, error)
 
 	// MBSENDEOL Indicates which end-of-line sequence to use when the ENCODING value is SBCS, the data is ASCII, and data is being sent to the server.
 	MBSENDEOL() (string, error)
@@ -189,16 +186,16 @@ type StatusOf interface {
 	RECfm() (string, error)
 
 	// RETpd Indicates the number of days that a newly allocated data set should be retained.
-	RETpd() (string, error)
+	RETpd() (int, error)
 
 	// SBDataconn Indicates the conversions between file system and network code pages to be used for data transfers.
-	SBDataconn() (string, error)
+	SBDataconn() (int, error)
 
 	// SBSENDEOL Indicates which end-of-line sequence to use when ENCODING is SBCS, the data is ASCII, and data is being sent to the client.
 	SBSENDEOL() (string, error)
 
 	// SBSUB Indicates that substitution is allowed for data bytes that cannot be translated in a single-byte-character translation.
-	SBSUB() (string, error)
+	SBSUB() (bool, error)
 
 	// SBSUBCHAR Indicates the value that is used for substitution when SBSUB is also specified.
 	SBSUBCHAR() (string, error)
@@ -228,7 +225,7 @@ type StatusOf interface {
 	TRUNcate() (string, error)
 
 	// UCOUNT Indicates the number of devices to allocate concurrently to support the allocation request.
-	UCOUNT() (string, error)
+	UCOUNT() (int, error)
 
 	// UCSHOSTCS Indicates the EBCDIC code set to be used when converting to and from Unicode.
 	UCSHOSTCS() (string, error)
@@ -240,7 +237,7 @@ type StatusOf interface {
 	UCSTRUNC() (string, error)
 
 	// UMask Indicates the file mode creation mask.
-	UMask() (string, error)
+	UMask() (int, error)
 
 	// UNICODEFILESYSTEMBOM Indicates whether the FTP server will store incoming Unicode files with a byte order mark.
 	UNICODEFILESYSTEMBOM() (string, error)
@@ -252,7 +249,7 @@ type StatusOf interface {
 	UNIXFILETYPE() (string, error)
 
 	// VCOUNT Indicates the number of tape data set volumes that an allocated data set can span.
-	VCOUNT() (string, error)
+	VCOUNT() (int, error)
 
 	// VOLume Indicates the volume serial number for allocation of new data sets.
 	VOLume() (string, error)
@@ -265,633 +262,4 @@ type StatusOf interface {
 
 	// XLate Indicates the translating table to be used for the data connection.
 	XLate() (string, error)
-}
-
-func (x xsta) ASAtrans() (string, error) {
-	resp, err := x("ASAtrans")
-	if err != nil {
-		return "", err
-	}
-	return utils.RemoveNewLine(resp), nil
-}
-
-func (x xsta) AUTOMount() (string, error) {
-	resp, err := x("AUTOMount")
-	if err != nil {
-		return "", err
-	}
-	return utils.RemoveNewLine(resp), nil
-}
-
-func (x xsta) AUTORecall() (string, error) {
-	resp, err := x("AUTORecall")
-	if err != nil {
-		return "", err
-	}
-	return utils.RemoveNewLine(resp), nil
-}
-
-func (x xsta) BLocks() (string, error) {
-	resp, err := x("BLocks")
-	if err != nil {
-		return "", err
-	}
-	return utils.RemoveNewLine(resp), nil
-}
-
-func (x xsta) BLOCKSIze() (int, error) {
-	resp, err := x("BLOCKSIze")
-	if err != nil {
-		return 0, err
-	}
-
-	m := recFmt.FindStringSubmatch(resp)
-	if len(m) < 4 {
-		return 0, fmt.Errorf("unexpected response: %s", resp)
-	}
-
-	return strconv.Atoi(m[3])
-}
-
-func (x xsta) BUfno() (int, error) {
-	resp, err := x("BUfno")
-	if err != nil {
-		return 0, err
-	}
-	return utils.LastWordToInt(resp)
-}
-
-func (x xsta) CHKptint() (int, error) {
-	resp, err := x("CHKptint")
-	if err != nil {
-		return 0, err
-	}
-	return utils.LastWordToInt(resp)
-}
-
-func (x xsta) CONDdisp() (string, error) {
-	resp, err := x("CONDdisp")
-	if err != nil {
-		return "", err
-	}
-	return utils.RemoveNewLine(resp), nil
-}
-
-func (x xsta) CYlinders() (string, error) {
-	resp, err := x("CYlinders")
-	if err != nil {
-		return "", err
-	}
-	return utils.RemoveNewLine(resp), nil
-}
-
-func (x xsta) DATAClass() (string, error) {
-	resp, err := x("DATAClass")
-	if err != nil {
-		return "", err
-	}
-	return utils.LastWord(resp), nil
-}
-
-func (x xsta) DATAKEEPALIVE() (string, error) {
-	resp, err := x("DATAKEEPALIVE")
-	if err != nil {
-		return "", err
-	}
-	return utils.LastWord(resp), nil
-}
-
-func (x xsta) DATASetmode() (string, error) {
-	resp, err := x("DATASetmode")
-	if err != nil {
-		return "", err
-	}
-	return utils.RemoveNewLine(resp), nil
-}
-
-func (x xsta) DB2() (string, error) {
-	resp, err := x("DB2")
-	if err != nil {
-		return "", err
-	}
-	return utils.LastWord(resp), nil
-}
-
-func (x xsta) DBSUB() (string, error) {
-	resp, err := x("DBSUB")
-	if err != nil {
-		return "", err
-	}
-	return utils.LastWord(resp), nil
-}
-
-func (x xsta) DCbdsn() (string, error) {
-	resp, err := x("DCbdsn")
-	if err != nil {
-		return "", err
-	}
-	return utils.LastWord(resp), nil
-}
-
-func (x xsta) DESt() (string, error) {
-	resp, err := x("DESt")
-	if err != nil {
-		return "", err
-	}
-	return utils.LastWord(resp), nil
-}
-
-func (x xsta) Directory() (string, error) {
-	resp, err := x("Directory")
-	if err != nil {
-		return "", err
-	}
-	return utils.RemoveNewLine(resp), nil
-}
-
-func (x xsta) DIRECTORYMode() (string, error) {
-	resp, err := x("DIRECTORYMode")
-	if err != nil {
-		return "", err
-	}
-	return utils.RemoveNewLine(resp), nil
-}
-
-func (x xsta) DSNTYPE() (string, error) {
-	resp, err := x("DSNTYPE")
-	if err != nil {
-		return "", err
-	}
-	return utils.LastWord(resp), nil
-}
-
-func (x xsta) DSWAITTIME() (string, error) {
-	resp, err := x("DSWAITTIME")
-	if err != nil {
-		return "", err
-	}
-	return utils.LastWord(resp), nil
-}
-
-func (x xsta) EATTR() (string, error) {
-	resp, err := x("EATTR")
-	if err != nil {
-		return "", err
-	}
-	return utils.LastWord(resp), nil
-}
-
-func (x xsta) ENCODING() (string, error) {
-	resp, err := x("ENCODING")
-	if err != nil {
-		return "", err
-	}
-	return utils.LastWord(resp), nil
-}
-
-func (x xsta) FIFOIOTIME() (string, error) {
-	resp, err := x("FIFOIOTIME")
-	if err != nil {
-		return "", err
-	}
-	return utils.LastWord(resp), nil
-}
-
-func (x xsta) FIFOOPENTIME() (string, error) {
-	resp, err := x("FIFOOPENTIME")
-	if err != nil {
-		return "", err
-	}
-	return utils.LastWord(resp), nil
-}
-
-func (x xsta) FILEtype() (string, error) {
-	resp, err := x("FILEtype")
-	if err != nil {
-		return "", err
-	}
-	regx := regexp.MustCompile(`^FileType\s+(\w+).*$`)
-	ft := regx.FindStringSubmatch(resp)
-	if len(ft) < 2 {
-		return "", fmt.Errorf("could not parse file type")
-	}
-	return ft[1], nil
-}
-
-func (x xsta) FTpkeepalive() (string, error) {
-	resp, err := x("FTpkeepalive")
-	if err != nil {
-		return "", err
-	}
-	return utils.LastWord(resp), nil
-}
-
-func (x xsta) INactivetime() (string, error) {
-	resp, err := x("INactivetime")
-	if err != nil {
-		return "", err
-	}
-	return utils.LastWord(resp), nil
-}
-
-func (x xsta) ISPFSTATS() (string, error) {
-	resp, err := x("ISPFSTATS")
-	if err != nil {
-		return "", err
-	}
-	return utils.LastWord(resp), nil
-}
-
-func (x xsta) JESENTRYLimit() (string, error) {
-	resp, err := x("JESENTRYLimit")
-	if err != nil {
-		return "", err
-	}
-	return utils.LastWord(resp), nil
-}
-
-func (x xsta) JESGETBYDSN() (string, error) {
-	resp, err := x("JESGETBYDSN")
-	if err != nil {
-		return "", err
-	}
-	return utils.LastWord(resp), nil
-}
-
-func (x xsta) JESJOBName() (string, error) {
-	resp, err := x("JESJOBName")
-	if err != nil {
-		return "", err
-	}
-	return utils.LastText(resp), nil
-}
-
-func (x xsta) JESLrecl() (string, error) {
-	resp, err := x("JESLrecl")
-	if err != nil {
-		return "", err
-	}
-	return utils.LastWord(resp), nil
-}
-
-func (x xsta) JESOwner() (string, error) {
-	resp, err := x("JESOwner")
-	if err != nil {
-		return "", err
-	}
-	return utils.LastWord(resp), nil
-}
-
-func (x xsta) JESRecfm() (string, error) {
-	resp, err := x("JESRecfm")
-	if err != nil {
-		return "", err
-	}
-	return utils.LastWord(resp), nil
-}
-
-func (x xsta) JESSTatus() (string, error) {
-	resp, err := x("JESSTatus")
-	if err != nil {
-		return "", err
-	}
-	return utils.LastText(resp), nil
-}
-
-func (x xsta) LISTLEVEL() (string, error) {
-	resp, err := x("LISTLEVEL")
-	if err != nil {
-		return "", err
-	}
-	return utils.LastWord(resp), nil
-}
-
-func (x xsta) LISTSUBdir() (string, error) {
-	resp, err := x("LISTSUBdir")
-	if err != nil {
-		return "", err
-	}
-	return utils.LastWord(resp), nil
-}
-
-func (x xsta) LRecl() (string, error) {
-	resp, err := x("LRecl")
-	if err != nil {
-		return "", err
-	}
-	m := recFmt.FindStringSubmatch(resp)
-	if len(m) < 4 {
-		return "", fmt.Errorf("could not parse LRecl: %s", resp)
-	}
-	return m[2], nil
-}
-
-func (x xsta) MBDATACONN() (string, error) {
-	resp, err := x("MBDATACONN")
-	if err != nil {
-		return "", err
-	}
-	return utils.LastWord(resp), nil
-}
-
-func (x xsta) MBREQUIRELASTEOL() (string, error) {
-	resp, err := x("MBREQUIRELASTEOL")
-	if err != nil {
-		return "", err
-	}
-	return utils.LastWord(resp), nil
-}
-
-var eolFmt = regexp.MustCompile(`uses\s+(\w+)\s+line\s+terminator$`)
-
-func (x xsta) MBSENDEOL() (string, error) {
-	resp, err := x("MBSENDEOL")
-	if err != nil {
-		return "", err
-	}
-	m := eolFmt.FindStringSubmatch(resp)
-	if len(m) < 2 {
-		return "", fmt.Errorf("could not parse MBSENDEOL")
-	}
-	return m[1], nil
-}
-
-func (x xsta) MGmtclass() (string, error) {
-	resp, err := x("MGmtclass")
-	if err != nil {
-		return "", err
-	}
-	return utils.LastWord(resp), nil
-}
-
-func (x xsta) MIGratevol() (string, error) {
-	resp, err := x("MIGratevol")
-	if err != nil {
-		return "", err
-	}
-	return utils.LastWord(resp), nil
-}
-
-func (x xsta) PDSTYPE() (string, error) {
-	resp, err := x("PDSTYPE")
-	if err != nil {
-		return "", err
-	}
-	return utils.RemoveNewLine(resp), nil
-}
-
-func (x xsta) PRImary() (string, error) {
-	resp, err := x("PRImary")
-	if err != nil {
-		return "", err
-	}
-	return utils.RemoveNewLine(resp), nil
-}
-
-func (x xsta) QUOtesoverride() (string, error) {
-	resp, err := x("QUOtesoverride")
-	if err != nil {
-		return "", err
-	}
-	return utils.RemoveNewLine(resp), nil
-}
-
-func (x xsta) RDW() (string, error) {
-	resp, err := x("RDW")
-	if err != nil {
-		return "", err
-	}
-	return utils.RemoveNewLine(resp), nil
-}
-
-func (x xsta) READTAPEFormat() (string, error) {
-	resp, err := x("READTAPEFormat")
-	if err != nil {
-		return "", err
-	}
-	return utils.RemoveNewLine(resp), nil
-}
-
-func (x xsta) RECfm() (string, error) {
-	resp, err := x("RECfm")
-	if err != nil {
-		return "", err
-	}
-	m := recFmt.FindStringSubmatch(resp)
-	if len(m) < 4 {
-		return "", fmt.Errorf("could not parse RECfm")
-	}
-	return m[1], nil
-}
-
-func (x xsta) RETpd() (string, error) {
-	resp, err := x("RETpd")
-	if err != nil {
-		return "", err
-	}
-	return utils.LastWord(resp), nil
-}
-
-func (x xsta) SBDataconn() (string, error) {
-	resp, err := x("SBDataconn")
-	if err != nil {
-		return "", err
-	}
-	return utils.LastWord(resp), nil
-}
-
-func (x xsta) SBSENDEOL() (string, error) {
-	resp, err := x("SBSENDEOL")
-	if err != nil {
-		return "", err
-	}
-	m := eolFmt.FindStringSubmatch(resp)
-	if len(m) < 2 {
-		return "", fmt.Errorf("could not parse SBSENDEOL")
-	}
-	return m[1], nil
-}
-
-func (x xsta) SBSUB() (string, error) {
-	resp, err := x("SBSUB")
-	if err != nil {
-		return "", err
-	}
-	return utils.LastWord(resp), nil
-}
-
-func (x xsta) SBSUBCHAR() (string, error) {
-	resp, err := x("SBSUBCHAR")
-	if err != nil {
-		return "", err
-	}
-	return utils.LastWord(resp), nil
-}
-
-func (x xsta) SECondary() (string, error) {
-	resp, err := x("SECondary")
-	if err != nil {
-		return "", err
-	}
-	return utils.RemoveNewLine(resp), nil
-}
-
-func (x xsta) SPRead() (string, error) {
-	resp, err := x("SPRead")
-	if err != nil {
-		return "", err
-	}
-	return utils.RemoveNewLine(resp), nil
-}
-
-func (x xsta) SQLCol() (string, error) {
-	resp, err := x("SQLCol")
-	if err != nil {
-		return "", err
-	}
-	return utils.LastWord(resp), nil
-}
-
-func (x xsta) STOrclass() (string, error) {
-	resp, err := x("STOrclass")
-	if err != nil {
-		return "", err
-	}
-	return utils.LastWord(resp), nil
-}
-
-func (x xsta) TLSRFCLEVEL() (string, error) {
-	resp, err := x("TLSRFCLEVEL")
-	if err != nil {
-		return "", err
-	}
-	return utils.RemoveNewLine(resp), nil
-}
-
-func (x xsta) TRacks() (string, error) {
-	resp, err := x("TRacks")
-	if err != nil {
-		return "", err
-	}
-	return utils.RemoveNewLine(resp), nil
-}
-
-func (x xsta) TRAILingblanks() (string, error) {
-	resp, err := x("TRAILingblanks")
-	if err != nil {
-		return "", err
-	}
-	return utils.RemoveNewLine(resp), nil
-}
-
-func (x xsta) TRUNcate() (string, error) {
-	resp, err := x("TRUNcate")
-	if err != nil {
-		return "", err
-	}
-	return utils.RemoveNewLine(resp), nil
-}
-
-func (x xsta) UCOUNT() (string, error) {
-	resp, err := x("UCOUNT")
-	if err != nil {
-		return "", err
-	}
-	return utils.LastWord(resp), nil
-}
-
-func (x xsta) UCSHOSTCS() (string, error) {
-	resp, err := x("UCSHOSTCS")
-	if err != nil {
-		return "", err
-	}
-	return utils.RemoveNewLine(resp), nil
-}
-
-func (x xsta) UCSSUB() (string, error) {
-	resp, err := x("UCSSUB")
-	if err != nil {
-		return "", err
-	}
-	return utils.LastWord(resp), nil
-}
-
-func (x xsta) UCSTRUNC() (string, error) {
-	resp, err := x("UCSTRUNC")
-	if err != nil {
-		return "", err
-	}
-	return utils.LastWord(resp), nil
-}
-
-func (x xsta) UMask() (string, error) {
-	resp, err := x("UMask")
-	if err != nil {
-		return "", err
-	}
-	return utils.LastWord(resp), nil
-}
-
-func (x xsta) UNICODEFILESYSTEMBOM() (string, error) {
-	resp, err := x("UNICODEFILESYSTEMBOM")
-	if err != nil {
-		return "", err
-	}
-	return utils.LastWord(resp), nil
-}
-
-func (x xsta) Unit() (string, error) {
-	resp, err := x("Unit")
-	if err != nil {
-		return "", err
-	}
-	return utils.LastWord(resp), nil
-}
-
-func (x xsta) UNIXFILETYPE() (string, error) {
-	resp, err := x("UNIXFILETYPE")
-	if err != nil {
-		return "", err
-	}
-	return utils.LastWord(resp), nil
-}
-
-func (x xsta) VCOUNT() (string, error) {
-	resp, err := x("VCOUNT")
-	if err != nil {
-		return "", err
-	}
-	return utils.LastWord(resp), nil
-}
-
-func (x xsta) VOLume() (string, error) {
-	resp, err := x("VOLume")
-	if err != nil {
-		return "", err
-	}
-	return utils.LastWord(resp), nil
-}
-
-func (x xsta) WRAPrecord() (string, error) {
-	resp, err := x("WRAPrecord")
-	if err != nil {
-		return "", err
-	}
-	return utils.RemoveNewLine(resp), nil
-}
-
-func (x xsta) WRTAPEFastio() (string, error) {
-	resp, err := x("WRTAPEFastio")
-	if err != nil {
-		return "", err
-	}
-	return utils.RemoveNewLine(resp), nil
-}
-
-func (x xsta) XLate() (string, error) {
-	resp, err := x("XLate")
-	if err != nil {
-		return "", err
-	}
-	return utils.LastWord(resp), nil
 }

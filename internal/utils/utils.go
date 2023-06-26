@@ -149,3 +149,7 @@ func StringToBool(str string) (bool, error) {
 		return false, fmt.Errorf("invalid boolean value: %s", str)
 	}
 }
+
+func LastWordToBool(str string) (bool, error) {
+	return StringToBool(LastWord(str))
+}

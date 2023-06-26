@@ -52,7 +52,7 @@ func (s *FTPSession) Put(srcLocal string, destRemote string, mode TransferType, 
 
 	log.Debug("[***] starting transfer to:", destRemote)
 
-	bytesTransferred, err := s.StoreIO(destRemote, file, mode)
+	bytesTransferred, _, err := s.StoreIO(destRemote, file, mode)
 	if err != nil {
 		return fmt.Errorf("failed to store file: %s", err)
 	}

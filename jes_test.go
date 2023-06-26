@@ -1,7 +1,6 @@
 package zftp_test
 
 import (
-	"fmt"
 	"regexp"
 	"testing"
 
@@ -21,37 +20,6 @@ func TestSubmitJCL(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	msg := ""
-	/*
-		msg, _ = s.SendCommand(zftp.CodeHelpMsg, "HELP")
-		t.Log(msg)
-		msg, _ = s.SendCommand(zftp.CodeHelpMsg, "HELP SITE")
-		t.Log(msg)
-
-	*/
-	msg, err = s.Stat()
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	fmt.Println(msg)
-
-	//s.SendCommand(zftp.CodeCmdOK, "SITE FILETYPE=JES")
-	if ft, err := s.StatusOf().FILEtype(); err != nil {
-		t.Fatal(err)
-	} else {
-		t.Log(ft)
-	}
-
-	s.Site("FILETYPE=JES")
-	//s.SendCommand(zftp.CodeCmdOK, "SITE QUOTE Q")
-	s.Site("JESJOBNAME=*")
-	s.Site("JESOWNER=*")
-	s.Site("JESSTATUS=ALL")
-	//s.Site("HELP DIR")
-	s.SetType(zftp.TypeAscii)
-	s.List("*")
-	return
 
 	// Define the JCL string
 	jcl := `

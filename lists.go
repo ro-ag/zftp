@@ -80,7 +80,7 @@ func (s *FTPSession) anyList(cmd, expression string) ([]string, error) {
 		return nil, err
 	}
 
-	err = s.checkLast(CodeFileActionOK)
+	_, err = s.checkLast(CodeFileActionOK)
 	if err != nil {
 		return nil, fmt.Errorf("error while checking last response: %s", err)
 	}
