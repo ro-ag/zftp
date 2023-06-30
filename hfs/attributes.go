@@ -24,6 +24,8 @@ func (f *StringField) Value() string {
 	return f.data
 }
 
+/* ------------------------------------------------------------------------------------------------------------------ */
+
 type IntField struct {
 	data uint16
 }
@@ -31,6 +33,7 @@ type IntField struct {
 func (f *IntField) parse(data string) error {
 	data = strings.TrimSpace(data)
 	if len(data) == 0 {
+		f.data = 0
 		return nil
 	}
 	value, err := strconv.Atoi(data)
@@ -52,6 +55,8 @@ func (f *IntField) Value() uint16 {
 	return f.data
 }
 
+/* ------------------------------------------------------------------------------------------------------------------ */
+
 type FloatField struct {
 	data float32
 }
@@ -59,6 +64,7 @@ type FloatField struct {
 func (f *FloatField) parse(data string) error {
 	data = strings.TrimSpace(data)
 	if len(data) == 0 {
+		f.data = 0.0
 		return nil
 	}
 	value, err := strconv.ParseFloat(data, 32)
@@ -70,12 +76,17 @@ func (f *FloatField) parse(data string) error {
 }
 
 func (f *FloatField) String() string {
+	if f.data == 0 {
+		return ""
+	}
 	return fmt.Sprintf("%05.02f", f.data)
 }
 
 func (f *FloatField) Value() float32 {
 	return f.data
 }
+
+/* ------------------------------------------------------------------------------------------------------------------ */
 
 type DateField struct {
 	data time.Time
@@ -85,6 +96,7 @@ func (f *DateField) parse(data string) error {
 	const layout = "2006/01/02" // Customize the layout based on your input format
 	data = strings.TrimSpace(data)
 	if len(data) == 0 {
+		f.data = time.Time{}
 		return nil
 	}
 	t, err := time.Parse(layout, data)
@@ -106,6 +118,8 @@ func (f *DateField) Value() time.Time {
 	return f.data
 }
 
+/* ------------------------------------------------------------------------------------------------------------------ */
+
 type TimeField struct {
 	data time.Time
 }
@@ -114,6 +128,7 @@ func (f *TimeField) parse(data string) error {
 	const layout = "2006/01/02 15:04"
 	data = strings.TrimSpace(data)
 	if len(data) == 0 {
+		f.data = time.Time{}
 		return nil
 	}
 	t, err := time.Parse(layout, data)
@@ -125,6 +140,9 @@ func (f *TimeField) parse(data string) error {
 }
 
 func (f *TimeField) String() string {
+	if f.data.IsZero() {
+		return ""
+	}
 	return f.data.Format("2006/01/02 15:04")
 }
 

@@ -16,40 +16,40 @@ var (
 
 type GetFeature func(string) (string, error)
 
-func (x GetFeature) ASAtrans() (string, error) {
-	resp, err := x("ASAtrans")
+func (xstat GetFeature) ASATrans() (string, error) {
+	resp, err := xstat("ASATrans")
 	if err != nil {
 		return "", err
 	}
 	return utils.RemoveNewLine(resp), nil
 }
 
-func (x GetFeature) AUTOMount() (string, error) {
-	resp, err := x("AUTOMount")
+func (xstat GetFeature) AutoMount() (string, error) {
+	resp, err := xstat("AUTOMount")
 	if err != nil {
 		return "", err
 	}
 	return utils.RemoveNewLine(resp), nil
 }
 
-func (x GetFeature) AUTORecall() (string, error) {
-	resp, err := x("AUTORecall")
+func (xstat GetFeature) AutoRecall() (string, error) {
+	resp, err := xstat("AUTORecall")
 	if err != nil {
 		return "", err
 	}
 	return utils.RemoveNewLine(resp), nil
 }
 
-func (x GetFeature) BLocks() (string, error) {
-	resp, err := x("BLocks")
+func (xstat GetFeature) BLocks() (string, error) {
+	resp, err := xstat("BLocks")
 	if err != nil {
 		return "", err
 	}
 	return utils.RemoveNewLine(resp), nil
 }
 
-func (x GetFeature) BLOCKSIze() (int, error) {
-	resp, err := x("BLOCKSIze")
+func (xstat GetFeature) BlockSize() (int, error) {
+	resp, err := xstat("BLOCKSIze")
 	if err != nil {
 		return 0, err
 	}
@@ -62,160 +62,160 @@ func (x GetFeature) BLOCKSIze() (int, error) {
 	return strconv.Atoi(m[3])
 }
 
-func (x GetFeature) BUfno() (int, error) {
-	resp, err := x("BUfno")
+func (xstat GetFeature) BufNo() (int, error) {
+	resp, err := xstat("BUfno")
 	if err != nil {
 		return 0, err
 	}
 	return utils.LastWordToInt(resp)
 }
 
-func (x GetFeature) CHKptint() (int, error) {
-	resp, err := x("CHKptint")
+func (xstat GetFeature) CheckpointInterval() (int, error) {
+	resp, err := xstat("CHKptint")
 	if err != nil {
 		return 0, err
 	}
 	return utils.LastWordToInt(resp)
 }
 
-func (x GetFeature) CONDdisp() (string, error) {
-	resp, err := x("CONDdisp")
+func (xstat GetFeature) ConditionDisposition() (string, error) {
+	resp, err := xstat("CONDdisp")
 	if err != nil {
 		return "", err
 	}
 	return utils.RemoveNewLine(resp), nil
 }
 
-func (x GetFeature) CYlinders() (string, error) {
-	resp, err := x("CYlinders")
+func (xstat GetFeature) Cylinders() (string, error) {
+	resp, err := xstat("CYlinders")
 	if err != nil {
 		return "", err
 	}
 	return utils.RemoveNewLine(resp), nil
 }
 
-func (x GetFeature) DATAClass() (string, error) {
-	resp, err := x("DATAClass")
+func (xstat GetFeature) DataClass() (string, error) {
+	resp, err := xstat("DATAClass")
 	if err != nil {
 		return "", err
 	}
 	return utils.LastWord(resp), nil
 }
 
-func (x GetFeature) DATAKEEPALIVE() (int, error) {
-	resp, err := x("DATAKEEPALIVE")
+func (xstat GetFeature) DataKeepAlive() (int, error) {
+	resp, err := xstat("DATAKEEPALIVE")
 	if err != nil {
 		return 0, err
 	}
 	return utils.LastWordToInt(resp)
 }
 
-func (x GetFeature) DATASetmode() (string, error) {
-	resp, err := x("DATASetmode")
+func (xstat GetFeature) DatasetMode() (string, error) {
+	resp, err := xstat("DATASetmode")
 	if err != nil {
 		return "", err
 	}
 	return utils.RemoveNewLine(resp), nil
 }
 
-func (x GetFeature) DB2() (string, error) {
-	resp, err := x("DB2")
+func (xstat GetFeature) DB2() (string, error) {
+	resp, err := xstat("DB2")
 	if err != nil {
 		return "", err
 	}
 	return utils.LastWord(resp), nil
 }
 
-func (x GetFeature) DBSUB() (bool, error) {
-	resp, err := x("DBSUB")
+func (xstat GetFeature) DoubleByteSubstitution() (bool, error) {
+	resp, err := xstat("DBSUB")
 	if err != nil {
 		return false, err
 	}
 	return utils.LastWordToBool(resp)
 }
 
-func (x GetFeature) DCbdsn() (string, error) {
-	resp, err := x("DCbdsn")
+func (xstat GetFeature) DCBDSN() (string, error) {
+	resp, err := xstat("DCBDSN")
 	if err != nil {
 		return "", err
 	}
 	return utils.LastWord(resp), nil
 }
 
-func (x GetFeature) DESt() (string, error) {
-	resp, err := x("DESt")
+func (xstat GetFeature) Destination() (string, error) {
+	resp, err := xstat("DESt")
 	if err != nil {
 		return "", err
 	}
 	return utils.LastWord(resp), nil
 }
 
-func (x GetFeature) Directory() (string, error) {
-	resp, err := x("Directory")
+func (xstat GetFeature) Directory() (string, error) {
+	resp, err := xstat("Directory")
 	if err != nil {
 		return "", err
 	}
 	return utils.RemoveNewLine(resp), nil
 }
 
-func (x GetFeature) DIRECTORYMode() (string, error) {
-	resp, err := x("DIRECTORYMode")
+func (xstat GetFeature) DirectoryMode() (string, error) {
+	resp, err := xstat("DIRECTORYMode")
 	if err != nil {
 		return "", err
 	}
 	return utils.RemoveNewLine(resp), nil
 }
 
-func (x GetFeature) DSNTYPE() (string, error) {
-	resp, err := x("DSNTYPE")
+func (xstat GetFeature) DSNType() (string, error) {
+	resp, err := xstat("DSNTYPE")
 	if err != nil {
 		return "", err
 	}
 	return utils.LastWord(resp), nil
 }
 
-func (x GetFeature) DSWAITTIME() (int, error) {
-	resp, err := x("DSWAITTIME")
+func (xstat GetFeature) DSWaitTime() (int, error) {
+	resp, err := xstat("DSWAITTIME")
 	if err != nil {
 		return 0, err
 	}
 	return utils.LastWordToInt(resp)
 }
 
-func (x GetFeature) EATTR() (string, error) {
-	resp, err := x("EATTR")
+func (xstat GetFeature) EATTR() (string, error) {
+	resp, err := xstat("EATTR")
 	if err != nil {
 		return "", err
 	}
 	return utils.LastWord(resp), nil
 }
 
-func (x GetFeature) ENCODING() (string, error) {
-	resp, err := x("ENCODING")
+func (xstat GetFeature) Encoding() (string, error) {
+	resp, err := xstat("ENCODING")
 	if err != nil {
 		return "", err
 	}
 	return utils.LastWord(resp), nil
 }
 
-func (x GetFeature) FIFOIOTIME() (int, error) {
-	resp, err := x("FIFOIOTIME")
+func (xstat GetFeature) FifoIoTime() (int, error) {
+	resp, err := xstat("FIFOIOTIME")
 	if err != nil {
 		return 0, err
 	}
 	return utils.LastWordToInt(resp)
 }
 
-func (x GetFeature) FIFOOPENTIME() (int, error) {
-	resp, err := x("FIFOOPENTIME")
+func (xstat GetFeature) FifoOpenTime() (int, error) {
+	resp, err := xstat("FIFOOPENTIME")
 	if err != nil {
 		return 0, err
 	}
 	return utils.LastWordToInt(resp)
 }
 
-func (x GetFeature) FILEtype() (string, error) {
-	resp, err := x("FILEtype")
+func (xstat GetFeature) FileType() (string, error) {
+	resp, err := xstat("FileType")
 	if err != nil {
 		return "", err
 	}
@@ -227,124 +227,124 @@ func (x GetFeature) FILEtype() (string, error) {
 	return ft[1], nil
 }
 
-func (x GetFeature) FTpkeepalive() (int, error) {
-	resp, err := x("FTpkeepalive")
+func (xstat GetFeature) FTPKeepAlive() (int, error) {
+	resp, err := xstat("FTpkeepalive")
 	if err != nil {
 		return 0, err
 	}
 	return utils.LastWordToInt(resp)
 }
 
-func (x GetFeature) INactivetime() (int, error) {
-	resp, err := x("INactivetime")
+func (xstat GetFeature) InactiveTime() (int, error) {
+	resp, err := xstat("INactivetime")
 	if err != nil {
 		return 0, err
 	}
 	return utils.LastWordToInt(resp)
 }
 
-func (x GetFeature) ISPFSTATS() (bool, error) {
-	resp, err := x("ISPFSTATS")
+func (xstat GetFeature) ISPFStats() (bool, error) {
+	resp, err := xstat("ISPFSTATS")
 	if err != nil {
 		return false, err
 	}
 	return utils.LastWordToBool(resp)
 }
 
-func (x GetFeature) JESENTRYLimit() (int, error) {
-	resp, err := x("JESENTRYLimit")
+func (xstat GetFeature) JesEntryLimit() (int, error) {
+	resp, err := xstat("JESENTRYLimit")
 	if err != nil {
 		return 0, err
 	}
 	return utils.LastWordToInt(resp)
 }
 
-func (x GetFeature) JESGETBYDSN() (bool, error) {
-	resp, err := x("JESGETBYDSN")
+func (xstat GetFeature) JesGetByDSN() (bool, error) {
+	resp, err := xstat("JESGETBYDSN")
 	if err != nil {
 		return false, err
 	}
 	return utils.LastWordToBool(resp)
 }
 
-func (x GetFeature) JESJOBName() (string, error) {
-	resp, err := x("JESJOBName")
+func (xstat GetFeature) JesJobName() (string, error) {
+	resp, err := xstat("JESJOBName")
 	if err != nil {
 		return "", err
 	}
 	return utils.LastText(resp), nil
 }
 
-func (x GetFeature) JESLrecl() (int, error) {
-	resp, err := x("JESLrecl")
+func (xstat GetFeature) JesLrecl() (int, error) {
+	resp, err := xstat("JESLrecl")
 	if err != nil {
 		return 0, err
 	}
 	return utils.LastWordToInt(resp)
 }
 
-func (x GetFeature) JESOwner() (string, error) {
-	resp, err := x("JESOwner")
+func (xstat GetFeature) JesOwner() (string, error) {
+	resp, err := xstat("JESOwner")
 	if err != nil {
 		return "", err
 	}
 	return utils.LastWord(resp), nil
 }
 
-func (x GetFeature) JESRecfm() (string, error) {
-	resp, err := x("JESRecfm")
+func (xstat GetFeature) JesRecfm() (string, error) {
+	resp, err := xstat("JESRecfm")
 	if err != nil {
 		return "", err
 	}
 	return utils.LastWord(resp), nil
 }
 
-func (x GetFeature) JESSTatus() (string, error) {
-	resp, err := x("JESSTatus")
+func (xstat GetFeature) JesStatus() (string, error) {
+	resp, err := xstat("JESSTatus")
 	if err != nil {
 		return "", err
 	}
 	return utils.LastText(resp), nil
 }
 
-func (x GetFeature) LISTLEVEL() (int, error) {
-	resp, err := x("LISTLEVEL")
+func (xstat GetFeature) ListLevel() (int, error) {
+	resp, err := xstat("LISTLEVEL")
 	if err != nil {
 		return 0, err
 	}
 	return utils.LastWordToInt(resp)
 }
 
-func (x GetFeature) LISTSUBdir() (bool, error) {
-	resp, err := x("LISTSUBdir")
+func (xstat GetFeature) ListSubDir() (bool, error) {
+	resp, err := xstat("LISTSUBdir")
 	if err != nil {
 		return false, err
 	}
 	return utils.LastWordToBool(resp)
 }
 
-func (x GetFeature) LRecl() (int, error) {
-	resp, err := x("LRecl")
+func (xstat GetFeature) Lrecl() (int, error) {
+	resp, err := xstat("Lrecl")
 	if err != nil {
 		return 0, err
 	}
 	m := recFmt.FindStringSubmatch(resp)
 	if len(m) < 4 {
-		return 0, fmt.Errorf("could not parse LRecl: %s", resp)
+		return 0, fmt.Errorf("could not parse Lrecl: %s", resp)
 	}
 	return strconv.Atoi(m[3])
 }
 
-func (x GetFeature) MBDATACONN() (string, error) {
-	resp, err := x("MBDATACONN")
+func (xstat GetFeature) MBDataConn() (string, error) {
+	resp, err := xstat("MBDATACONN")
 	if err != nil {
 		return "", err
 	}
 	return utils.LastWord(resp), nil
 }
 
-func (x GetFeature) MBREQUIRELASTEOL() (bool, error) {
-	resp, err := x("MBREQUIRELASTEOL")
+func (xstat GetFeature) MBRequireLastEol() (bool, error) {
+	resp, err := xstat("MBREQUIRELASTEOL")
 	if err != nil {
 		return false, err
 	}
@@ -353,8 +353,8 @@ func (x GetFeature) MBREQUIRELASTEOL() (bool, error) {
 
 var eolFmt = regexp.MustCompile(`uses\s+(\w+)\s+line\s+terminator$`)
 
-func (x GetFeature) MBSENDEOL() (string, error) {
-	resp, err := x("MBSENDEOL")
+func (xstat GetFeature) MBSendEol() (string, error) {
+	resp, err := xstat("MBSENDEOL")
 	if err != nil {
 		return "", err
 	}
@@ -365,92 +365,92 @@ func (x GetFeature) MBSENDEOL() (string, error) {
 	return m[1], nil
 }
 
-func (x GetFeature) MGmtclass() (string, error) {
-	resp, err := x("MGmtclass")
+func (xstat GetFeature) MgmtClass() (string, error) {
+	resp, err := xstat("MGmtclass")
 	if err != nil {
 		return "", err
 	}
 	return utils.LastWord(resp), nil
 }
 
-func (x GetFeature) MIGratevol() (string, error) {
-	resp, err := x("MIGratevol")
+func (xstat GetFeature) MigrateVol() (string, error) {
+	resp, err := xstat("MIGratevol")
 	if err != nil {
 		return "", err
 	}
 	return utils.LastWord(resp), nil
 }
 
-func (x GetFeature) PDSTYPE() (string, error) {
-	resp, err := x("PDSTYPE")
+func (xstat GetFeature) PDSType() (string, error) {
+	resp, err := xstat("PDSTYPE")
 	if err != nil {
 		return "", err
 	}
 	return utils.RemoveNewLine(resp), nil
 }
 
-func (x GetFeature) PRImary() (string, error) {
-	resp, err := x("PRImary")
+func (xstat GetFeature) Primary() (string, error) {
+	resp, err := xstat("Primary")
 	if err != nil {
 		return "", err
 	}
 	return utils.RemoveNewLine(resp), nil
 }
 
-func (x GetFeature) QUOtesoverride() (string, error) {
-	resp, err := x("QUOtesoverride")
+func (xstat GetFeature) QuotesOverride() (string, error) {
+	resp, err := xstat("QUOtesoverride")
 	if err != nil {
 		return "", err
 	}
 	return utils.RemoveNewLine(resp), nil
 }
 
-func (x GetFeature) RDW() (string, error) {
-	resp, err := x("RDW")
+func (xstat GetFeature) RDW() (string, error) {
+	resp, err := xstat("RDW")
 	if err != nil {
 		return "", err
 	}
 	return utils.RemoveNewLine(resp), nil
 }
 
-func (x GetFeature) READTAPEFormat() (string, error) {
-	resp, err := x("READTAPEFormat")
+func (xstat GetFeature) ReadTapeFormat() (string, error) {
+	resp, err := xstat("READTAPEFormat")
 	if err != nil {
 		return "", err
 	}
 	return utils.RemoveNewLine(resp), nil
 }
 
-func (x GetFeature) RECfm() (string, error) {
-	resp, err := x("RECfm")
+func (xstat GetFeature) Recfm() (string, error) {
+	resp, err := xstat("Recfm")
 	if err != nil {
 		return "", err
 	}
 	m := recFmt.FindStringSubmatch(resp)
 	if len(m) < 4 {
-		return "", fmt.Errorf("could not parse RECfm")
+		return "", fmt.Errorf("could not parse Recfm")
 	}
 	return m[1], nil
 }
 
-func (x GetFeature) RETpd() (int, error) {
-	resp, err := x("RETpd")
+func (xstat GetFeature) RetPD() (int, error) {
+	resp, err := xstat("RetPD")
 	if err != nil {
 		return 0, err
 	}
 	return utils.LastWordToInt(resp)
 }
 
-func (x GetFeature) SBDataconn() (int, error) {
-	resp, err := x("SBDataconn")
+func (xstat GetFeature) SBDataConn() (int, error) {
+	resp, err := xstat("SBDataConn")
 	if err != nil {
 		return 0, err
 	}
 	return utils.LastWordToInt(resp)
 }
 
-func (x GetFeature) SBSENDEOL() (string, error) {
-	resp, err := x("SBSENDEOL")
+func (xstat GetFeature) SBSendEol() (string, error) {
+	resp, err := xstat("SBSENDEOL")
 	if err != nil {
 		return "", err
 	}
@@ -461,184 +461,184 @@ func (x GetFeature) SBSENDEOL() (string, error) {
 	return m[1], nil
 }
 
-func (x GetFeature) SBSUB() (bool, error) {
-	resp, err := x("SBSUB")
+func (xstat GetFeature) SBSub() (bool, error) {
+	resp, err := xstat("SBSUB")
 	if err != nil {
 		return false, err
 	}
 	return utils.LastWordToBool(resp)
 }
 
-func (x GetFeature) SBSUBCHAR() (string, error) {
-	resp, err := x("SBSUBCHAR")
+func (xstat GetFeature) SBSubChar() (string, error) {
+	resp, err := xstat("SBSUBCHAR")
 	if err != nil {
 		return "", err
 	}
 	return utils.LastWord(resp), nil
 }
 
-func (x GetFeature) SECondary() (string, error) {
-	resp, err := x("SECondary")
+func (xstat GetFeature) Secondary() (string, error) {
+	resp, err := xstat("SECondary")
 	if err != nil {
 		return "", err
 	}
 	return utils.RemoveNewLine(resp), nil
 }
 
-func (x GetFeature) SPRead() (string, error) {
-	resp, err := x("SPRead")
+func (xstat GetFeature) SPRead() (string, error) {
+	resp, err := xstat("SPRead")
 	if err != nil {
 		return "", err
 	}
 	return utils.RemoveNewLine(resp), nil
 }
 
-func (x GetFeature) SQLCol() (string, error) {
-	resp, err := x("SQLCol")
+func (xstat GetFeature) SQLCol() (string, error) {
+	resp, err := xstat("SQLCol")
 	if err != nil {
 		return "", err
 	}
 	return utils.LastWord(resp), nil
 }
 
-func (x GetFeature) STOrclass() (string, error) {
-	resp, err := x("STOrclass")
+func (xstat GetFeature) StorageClass() (string, error) {
+	resp, err := xstat("STOrclass")
 	if err != nil {
 		return "", err
 	}
 	return utils.LastWord(resp), nil
 }
 
-func (x GetFeature) TLSRFCLEVEL() (string, error) {
-	resp, err := x("TLSRFCLEVEL")
+func (xstat GetFeature) TlsRfcLevel() (string, error) {
+	resp, err := xstat("TLSRFCLEVEL")
 	if err != nil {
 		return "", err
 	}
 	return utils.RemoveNewLine(resp), nil
 }
 
-func (x GetFeature) TRacks() (string, error) {
-	resp, err := x("TRacks")
+func (xstat GetFeature) Tracks() (string, error) {
+	resp, err := xstat("TRacks")
 	if err != nil {
 		return "", err
 	}
 	return utils.RemoveNewLine(resp), nil
 }
 
-func (x GetFeature) TRAILingblanks() (string, error) {
-	resp, err := x("TRAILingblanks")
+func (xstat GetFeature) TrailingBlanks() (string, error) {
+	resp, err := xstat("TRAILingblanks")
 	if err != nil {
 		return "", err
 	}
 	return utils.RemoveNewLine(resp), nil
 }
 
-func (x GetFeature) TRUNcate() (string, error) {
-	resp, err := x("TRUNcate")
+func (xstat GetFeature) Truncate() (string, error) {
+	resp, err := xstat("TRUNcate")
 	if err != nil {
 		return "", err
 	}
 	return utils.RemoveNewLine(resp), nil
 }
 
-func (x GetFeature) UCOUNT() (int, error) {
-	resp, err := x("UCOUNT")
+func (xstat GetFeature) UCount() (int, error) {
+	resp, err := xstat("UCOUNT")
 	if err != nil {
 		return 0, err
 	}
 	return utils.LastWordToInt(resp)
 }
 
-func (x GetFeature) UCSHOSTCS() (string, error) {
-	resp, err := x("UCSHOSTCS")
+func (xstat GetFeature) UCSHostCS() (string, error) {
+	resp, err := xstat("UCSHOSTCS")
 	if err != nil {
 		return "", err
 	}
 	return utils.RemoveNewLine(resp), nil
 }
 
-func (x GetFeature) UCSSUB() (string, error) {
-	resp, err := x("UCSSUB")
+func (xstat GetFeature) UCSSub() (string, error) {
+	resp, err := xstat("UCSSUB")
 	if err != nil {
 		return "", err
 	}
 	return utils.LastWord(resp), nil
 }
 
-func (x GetFeature) UCSTRUNC() (string, error) {
-	resp, err := x("UCSTRUNC")
+func (xstat GetFeature) UCSTrunc() (string, error) {
+	resp, err := xstat("UCSTRUNC")
 	if err != nil {
 		return "", err
 	}
 	return utils.LastWord(resp), nil
 }
 
-func (x GetFeature) UMask() (int, error) {
-	resp, err := x("UMask")
+func (xstat GetFeature) UMask() (int, error) {
+	resp, err := xstat("UMask")
 	if err != nil {
 		return 0, err
 	}
 	return utils.LastWordToInt(resp)
 }
 
-func (x GetFeature) UNICODEFILESYSTEMBOM() (string, error) {
-	resp, err := x("UNICODEFILESYSTEMBOM")
+func (xstat GetFeature) UnicodeFileSystemBOM() (string, error) {
+	resp, err := xstat("UNICODEFILESYSTEMBOM")
 	if err != nil {
 		return "", err
 	}
 	return utils.LastWord(resp), nil
 }
 
-func (x GetFeature) Unit() (string, error) {
-	resp, err := x("Unit")
+func (xstat GetFeature) Unit() (string, error) {
+	resp, err := xstat("Unit")
 	if err != nil {
 		return "", err
 	}
 	return utils.LastWord(resp), nil
 }
 
-func (x GetFeature) UNIXFILETYPE() (string, error) {
-	resp, err := x("UNIXFILETYPE")
+func (xstat GetFeature) UnixFileType() (string, error) {
+	resp, err := xstat("UNIXFILETYPE")
 	if err != nil {
 		return "", err
 	}
 	return utils.LastWord(resp), nil
 }
 
-func (x GetFeature) VCOUNT() (int, error) {
-	resp, err := x("VCOUNT")
+func (xstat GetFeature) VCount() (int, error) {
+	resp, err := xstat("VCOUNT")
 	if err != nil {
 		return 0, err
 	}
 	return utils.LastWordToInt(resp)
 }
 
-func (x GetFeature) VOLume() (string, error) {
-	resp, err := x("VOLume")
+func (xstat GetFeature) Volume() (string, error) {
+	resp, err := xstat("VOLume")
 	if err != nil {
 		return "", err
 	}
 	return utils.LastWord(resp), nil
 }
 
-func (x GetFeature) WRAPrecord() (string, error) {
-	resp, err := x("WRAPrecord")
+func (xstat GetFeature) WrapRecord() (string, error) {
+	resp, err := xstat("WRAPrecord")
 	if err != nil {
 		return "", err
 	}
 	return utils.RemoveNewLine(resp), nil
 }
 
-func (x GetFeature) WRTAPEFastio() (string, error) {
-	resp, err := x("WRTAPEFastio")
+func (xstat GetFeature) WRTapeFastIo() (string, error) {
+	resp, err := xstat("WRTAPEFastio")
 	if err != nil {
 		return "", err
 	}
 	return utils.RemoveNewLine(resp), nil
 }
 
-func (x GetFeature) XLate() (string, error) {
-	resp, err := x("XLate")
+func (xstat GetFeature) XLate() (string, error) {
+	resp, err := xstat("XLate")
 	if err != nil {
 		return "", err
 	}

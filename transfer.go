@@ -3,6 +3,7 @@ package zftp
 import (
 	"fmt"
 	log "github.com/sirupsen/logrus"
+	"gopkg.in/ro-ag/zftp.v0/eol"
 	"gopkg.in/ro-ag/zftp.v0/internal/transfer"
 	"io"
 )
@@ -131,7 +132,7 @@ setDefault:
 func (s *FTPSession) RetrieveIO(remote string, dest io.Writer, t TransferType) (int64, string, error) {
 	current := s.currType
 	if t.IsAscii() {
-		if err := s.SetRetrieveEOL(EolSystem); err != nil {
+		if err := s.SetStatusOf().SBSendEol(eol.System); err != nil {
 			return 0, "", err
 		}
 	}

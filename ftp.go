@@ -5,6 +5,7 @@ import (
 	"crypto/tls"
 	"fmt"
 	log "github.com/sirupsen/logrus"
+	"gopkg.in/ro-ag/zftp.v0/eol"
 	"gopkg.in/ro-ag/zftp.v0/internal/utils"
 	"net"
 	"os"
@@ -172,13 +173,13 @@ func (s *FTPSession) Login(user, pass string) error {
 	}
 
 	/* Indicate mainframe set End of line default per system */
-	err = s.SetRetrieveEOL(EolSystem)
+	err = s.SetStatusOf().SBSendEol(eol.System)
 	if err != nil {
 		return err
 	}
 
 	/* Indicate mainframe set End of line default per system */
-	err = s.SetRetrieveWideCharEOL(EolSystem)
+	err = s.SetStatusOf().MBSendEol(eol.System)
 	if err != nil {
 		return err
 	}

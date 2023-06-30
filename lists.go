@@ -4,12 +4,13 @@ import (
 	"fmt"
 	log "github.com/sirupsen/logrus"
 	"gopkg.in/ro-ag/zftp.v0/hfs"
+	"gopkg.in/ro-ag/zftp.v0/internal/utils"
 	"strings"
 )
 
 // List returns a list of files and directories in the current working directory
-// it returns the raw lines by the server
-func (s *FTPSession) anyList(cmd, expression string) ([]string, error) {
+// it returns the raw lines by the server, the list command response
+func (s *FTPSession) anyList(cmd, expression string) ([]string, string, error) {
 	cmd = strings.TrimSpace(strings.ToUpper(cmd))
 	trimLine := false
 	switch cmd {
@@ -26,7 +27,7 @@ func (s *FTPSession) anyList(cmd, expression string) ([]string, error) {
 
 	if current != TypeAscii {
 		if err := s.SetType(TypeAscii); err != nil {
-			return nil, err
+			return nil, "", err
 		}
 		defer func() {
 			if err := s.SetType(current); err != nil {
@@ -37,12 +38,12 @@ func (s *FTPSession) anyList(cmd, expression string) ([]string, error) {
 
 	port, err := s.SetPassiveMode()
 	if err != nil {
-		return nil, err
+		return nil, "", err
 	}
 
 	child, err := s.newChildConnection(port)
 	if err != nil {
-		return nil, err
+		return nil, "", err
 	}
 	defer func(child *childConnection) {
 		if err := child.Close(); err != nil {
@@ -50,9 +51,9 @@ func (s *FTPSession) anyList(cmd, expression string) ([]string, error) {
 		}
 	}(child)
 
-	_, err = s.SendCommand(CodeListOK, cmd, expression)
+	resp, err := s.SendCommand(CodeListOK, cmd, expression)
 	if err != nil {
-		return nil, fmt.Errorf("error while sending list command: %s", err)
+		return nil, resp, fmt.Errorf("error while sending list command: %s", err)
 	}
 
 	lines, err := make([]string, 0), error(nil)
@@ -66,69 +67,47 @@ func (s *FTPSession) anyList(cmd, expression string) ([]string, error) {
 			if err.Error() == "EOF" {
 				break
 			}
-			return nil, fmt.Errorf("error while scanning child connection: %s", err)
+			return nil, resp, fmt.Errorf("error while scanning child connection: %s", err)
 		}
 		if trimLine {
 			line = strings.TrimSpace(line)
 		}
 		lines = append(lines, line)
-		log.Debugf("[res] %s", line)
+		log.Debugf("[psv] %s", line)
 	}
 
 	err = child.Close()
 	if err != nil {
-		return nil, err
+		return nil, resp, err
 	}
 
 	_, err = s.checkLast(CodeFileActionOK)
 	if err != nil {
-		return nil, fmt.Errorf("error while checking last response: %s", err)
+		return nil, resp, fmt.Errorf("error while checking last response: %s", err)
 	}
-	return lines, nil
+	return lines, resp, nil
 }
 
 // List returns a list of files matching the given expression.
 func (s *FTPSession) List(expression string) ([]string, error) {
-	return s.anyList("LIST", expression)
+	lines, _, err := s.anyList("LIST", expression)
+	return lines, err
 }
 
 // NList returns a plane list of files matching the given expression. It does not include file attributes.
 func (s *FTPSession) NList(expression string) ([]string, error) {
-	curr, err := s.StatusOf().FILEtype()
-	if err != nil {
-		return nil, err
-	}
-	defer func(s *FTPSession) {
-		_, err := s.Site(fmt.Sprintf("FILETYPE=%s", curr))
-		if err != nil {
-			log.Error(err)
-		}
-	}(s)
-
-	_, err = s.Site("FILETYPE=SEQ")
-	if err != nil {
-		return nil, err
-	}
-	return s.anyList("NLST", expression)
+	lines, _, err := s.anyList("NLST", expression)
+	return lines, err
 }
 
 // ListDatasets returns a list of files matching the given expression, including file attributes.
 func (s *FTPSession) ListDatasets(expression string) ([]hfs.Dataset, error) {
-	curr, err := s.StatusOf().FILEtype()
-	if err != nil {
-		return nil, err
-	}
-	defer func(s *FTPSession) {
-		_, err := s.Site(fmt.Sprintf("FILETYPE=%s", curr))
-		if err != nil {
-			log.Error(err)
-		}
-	}(s)
 
-	_, err = s.Site("FILETYPE=SEQ")
+	curr, err := utils.SetValueAndGetCurrent("SEQ", s.SetStatusOf().FileType, s.StatusOf().FileType)
 	if err != nil {
 		return nil, err
 	}
+	defer curr.Restore()
 
 	lines, err := s.List(expression)
 	if err != nil {
@@ -150,6 +129,13 @@ func (s *FTPSession) ListDatasets(expression string) ([]hfs.Dataset, error) {
 
 // ListPds returns a list of files matching the given expression, including file attributes.
 func (s *FTPSession) ListPds(expression string) ([]hfs.PdsMember, error) {
+
+	curr, err := utils.SetValueAndGetCurrent("SEQ", s.SetStatusOf().FileType, s.StatusOf().FileType)
+	if err != nil {
+		return nil, err
+	}
+	defer curr.Restore()
+
 	lines, err := s.List(expression)
 	if err != nil {
 		return nil, err
@@ -166,4 +152,22 @@ func (s *FTPSession) ListPds(expression string) ([]hfs.PdsMember, error) {
 		members = append(members, member)
 	}
 	return members, nil
+}
+
+// ListSpool list jobs in the spool
+func (s *FTPSession) ListSpool(expression string) ([]hfs.JobStatus, error) {
+	curr, err := utils.SetValueAndGetCurrent("JES", s.SetStatusOf().FileType, s.StatusOf().FileType)
+	if err != nil {
+		return nil, err
+	}
+	defer curr.Restore()
+	lines, err := s.List(expression)
+	if err != nil {
+		return nil, fmt.Errorf("failed to list spool jobs: %w", err)
+	}
+	jobs, err := hfs.ParseJobStatus(lines, expression)
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse spool job status: %w", err)
+	}
+	return jobs, nil
 }

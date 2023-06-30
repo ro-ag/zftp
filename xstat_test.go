@@ -21,7 +21,7 @@ func TestFTPSession_StatusOf(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	l, err := s.XStat("FIFOIOTIME")
+	l, err := s.XStat("FifoIoTime")
 	if err != nil {
 		t.Fatal(err)
 	}

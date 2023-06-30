@@ -153,3 +153,35 @@ func StringToBool(str string) (bool, error) {
 func LastWordToBool(str string) (bool, error) {
 	return StringToBool(LastWord(str))
 }
+
+type SetRestorer struct {
+	orig string
+	want string
+	set  func(string) error
+	get  func() (string, error)
+}
+
+func SetValueAndGetCurrent(value string, set func(string) error, get func() (string, error)) (*SetRestorer, error) {
+	orig, err := get()
+	if err != nil {
+		return nil, fmt.Errorf("failed to get current value: %s", err)
+	}
+
+	err = set(value)
+	if err != nil {
+		return nil, fmt.Errorf("failed to set value: %s", err)
+	}
+
+	return &SetRestorer{
+		orig: orig,
+		set:  set,
+		get:  get,
+	}, nil
+}
+
+func (f *SetRestorer) Restore() {
+	err := f.set(f.orig)
+	if err != nil {
+		log.Warn(err)
+	}
+}

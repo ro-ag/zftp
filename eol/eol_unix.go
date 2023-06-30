@@ -1,6 +1,6 @@
 //go:build !windows
 // +build !windows
 
-package zftp
+package eol
 
-const EolSystem = EolLf
+const System = Lf

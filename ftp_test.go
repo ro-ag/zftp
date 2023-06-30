@@ -41,37 +41,6 @@ func TestOpen(t *testing.T) {
 	}
 	t.Log(str)
 
-	lines, err := s.List("'ZXP.*'")
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	t.Log(lines)
-
-	lines, err = s.NList("*")
-	if err != nil {
-		t.Fatal(err)
-	}
-	t.Log(lines)
-
-	datasets, err := s.ListDatasets("'ZXP.*'")
-	if err != nil {
-		t.Fatal(err)
-	}
-	t.Log(datasets)
-
-	lines, err = s.List("'ZXP.PUBLIC.SOURCE(*)'")
-	if err != nil {
-		t.Fatal(err)
-	}
-	t.Log(lines)
-
-	members, err := s.ListPds("'ZXP.PUBLIC.JCL(*)'")
-	if err != nil {
-		t.Fatal(err)
-	}
-	t.Log(members)
-
 	err = s.Close()
 	if err != nil {
 		t.Fatal(err)

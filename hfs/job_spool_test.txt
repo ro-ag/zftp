@@ -1,0 +1,9 @@
+JOBNAME  JOBID    OWNER    STATUS CLASS
+ANOTHER  JOB06184 Z33500   OUTPUT A        RC=0000
+--------
+         ID  STEPNAME PROCSTEP C DDNAME   BYTE-COUNT
+         001 JES2        N/A   A JESMSGLG      1234
+         002 JES2        N/A   A JESJCL         471
+         003 JES2        N/A   A JESYSMSG      1694
+         004 STEP2       N/A   A SYSPRINT       251
+4 spool files

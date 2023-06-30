@@ -178,6 +178,8 @@ func (s *FTPSession) newChildConnection(port int) (*childConnection, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
+	log.Debugf("[***] attempting to create a new connection with port %d", port)
+
 	address := s.conn.RemoteAddr().String()
 	// Split the address into IP/hostname and port
 	host, _, err := net.SplitHostPort(address)
@@ -193,12 +195,14 @@ func (s *FTPSession) newChildConnection(port int) (*childConnection, error) {
 
 	if s.tlsConfig != nil {
 		conn = tls.Client(conn, s.tlsConfig)
+		log.Debugf("[***] upgraded connection to TLS")
 	}
 
 	child := childConnection{conn: conn, parent: conn.RemoteAddr(), maps: &s.dataConns}
 	child.scan = newScanner(conn, child.IsClosed)
 	s.dataConns.Store(child.RemoteAddr().String(), &child)
 
+	log.Debugf("[***] created child connection: %s", child.RemoteAddr().String())
 	return &child, nil
 }
 

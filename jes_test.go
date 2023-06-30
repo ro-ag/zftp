@@ -23,7 +23,7 @@ func TestSubmitJCL(t *testing.T) {
 
 	// Define the JCL string
 	jcl := `
-//HELLO   JOB NOTIFY=&SYSUID,MSGLEVEL=(1,1)
+//ANOTHER   JOB NOTIFY=&SYSUID,MSGLEVEL=(1,1)
 //*
 //STEP1   EXEC PGM=IEFBR14
 //SYSOUT  DD SYSOUT=*
@@ -41,17 +41,15 @@ func TestSubmitJCL(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+	jb := regexp.MustCompile(`JOB[0-9]+`)
 
-	// Check if the output contains the expected message
-	expectedOutput := "JOB HELLO (JOB12345) SUBMITTED"
-	if !containsSubstring(output, expectedOutput) {
-		t.Errorf("Unexpected output. Expected: %s, Got: %s", expectedOutput, output)
+	if !jb.MatchString(output) {
+		t.Errorf("Empty output returned")
 	}
 
-	regexp.MustCompile(`JOB[0-9]+`)
-}
-
-// Helper function to check if a string contains a substring
-func containsSubstring(s, substr string) bool {
-	return len(s) >= len(substr) && s[len(s)-len(substr):] == substr
+	status, err := s.GetJobStatus(output)
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Logf("Job status: %+v", status)
 }
