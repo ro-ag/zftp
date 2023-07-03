@@ -2,6 +2,7 @@ package zftp
 
 import (
 	"fmt"
+	"gopkg.in/ro-ag/zftp.v0/hfs"
 	"gopkg.in/ro-ag/zftp.v0/internal/utils"
 	"io"
 	"math/rand"
@@ -11,6 +12,7 @@ import (
 	"time"
 )
 
+// JesOptions is an interface for options to the SubmitJCL method
 type JesOptions interface {
 	option() bool
 }
@@ -61,41 +63,29 @@ func generateJobFileName() string {
 	return jobName
 }
 
-// JobStatus holds the status of a job.
-type JobStatus struct {
-	Name   string
-	Status string
-	Owner  string
-	// Include other fields as needed
-}
+// GetJobStatus retrieves the status of a JES job by ID.
+func (s *FTPSession) GetJobStatus(jobID string) (*hfs.InfoJobDetail, error) {
 
-// GetJobStatus retrieves the status of a JES job.
-func (s *FTPSession) GetJobStatus(jobName string) (*JobStatus, error) {
+	if utils.RegexSearchPattern.MatchString(jobID) {
+		return nil, fmt.Errorf("invalid job-id: %s", jobID)
+	}
 
-	curr, err := utils.SetValueAndGetCurrent("*", s.SetStatusOf().JesJobName, s.StatusOf().JesJobName)
+	FileType, err := utils.SetValueAndGetCurrent("JES", s.SetStatusOf().FileType, s.StatusOf().FileType)
 	if err != nil {
 		return nil, err
 	}
-	defer curr.Restore()
+	defer FileType.Restore()
 
-	p, err := s.ListSpool(jobName)
+	JesJobName, err := utils.SetValueAndGetCurrent("*", s.SetStatusOf().JesJobName, s.StatusOf().JesJobName)
+	if err != nil {
+		return nil, err
+	}
+	defer JesJobName.Restore()
+
+	records, err := s.List(jobID)
 	if err != nil {
 		return nil, err
 	}
 
-	if len(p) == 0 {
-		return nil, fmt.Errorf("failed to find job status for %s", jobName)
-	}
-	if len(p) > 1 {
-		return nil, fmt.Errorf("unexpected return from spool list %s", jobName)
-	}
-
-	if len(p) == 1 {
-		return &JobStatus{
-			Name:   jobName,
-			Status: p[0].Status.Value(),
-			Owner:  p[0].Owner.Value(),
-		}, nil
-	}
-	return nil, fmt.Errorf("failed to find job status for %s", jobName)
+	return hfs.ParseInfoJobDetail(records)
 }

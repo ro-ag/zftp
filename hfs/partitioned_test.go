@@ -1,7 +1,8 @@
-package hfs
+package hfs_test
 
 import (
 	"bufio"
+	"gopkg.in/ro-ag/zftp.v0/hfs"
 	"os"
 	"testing"
 )
@@ -20,7 +21,7 @@ func TestParseMember(t *testing.T) {
 			continue
 		}
 		line := s.Text()
-		fields, err := ParseMember(line)
+		fields, err := hfs.ParseInfoPdsMember(line)
 		if err != nil {
 			t.Fatal(err)
 		}

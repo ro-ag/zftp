@@ -1,0 +1,9 @@
+JOBNAME  JOBID    OWNER    STATUS CLASS
+ANOTHER  JOB01622 Z33500   OUTPUT A        ABEND=806
+--------
+         ID  STEPNAME PROCSTEP C DDNAME   BYTE-COUNT
+         001 STEP3       N/A   A IDIREPRT     11225
+         002 JES2        N/A   A JESMSGLG      3100
+         003 JES2        N/A   A JESJCL         483
+         004 JES2        N/A   A JESYSMSG      5906
+4 spool files

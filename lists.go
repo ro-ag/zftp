@@ -11,6 +11,7 @@ import (
 // List returns a list of files and directories in the current working directory
 // it returns the raw lines by the server, the list command response
 func (s *FTPSession) anyList(cmd, expression string) ([]string, string, error) {
+
 	cmd = strings.TrimSpace(strings.ToUpper(cmd))
 	trimLine := false
 	switch cmd {
@@ -101,7 +102,7 @@ func (s *FTPSession) NList(expression string) ([]string, error) {
 }
 
 // ListDatasets returns a list of files matching the given expression, including file attributes.
-func (s *FTPSession) ListDatasets(expression string) ([]hfs.Dataset, error) {
+func (s *FTPSession) ListDatasets(expression string) ([]hfs.InfoDataset, error) {
 
 	curr, err := utils.SetValueAndGetCurrent("SEQ", s.SetStatusOf().FileType, s.StatusOf().FileType)
 	if err != nil {
@@ -113,12 +114,12 @@ func (s *FTPSession) ListDatasets(expression string) ([]hfs.Dataset, error) {
 	if err != nil {
 		return nil, err
 	}
-	datasets := make([]hfs.Dataset, 0)
+	datasets := make([]hfs.InfoDataset, 0)
 	for i := range lines {
 		if i == 0 {
 			continue
 		}
-		dataset, errParsing := hfs.ParseDataset(lines[i])
+		dataset, errParsing := hfs.ParseInfoDataset(lines[i])
 		if errParsing != nil {
 			return nil, errParsing
 		}
@@ -128,7 +129,7 @@ func (s *FTPSession) ListDatasets(expression string) ([]hfs.Dataset, error) {
 }
 
 // ListPds returns a list of files matching the given expression, including file attributes.
-func (s *FTPSession) ListPds(expression string) ([]hfs.PdsMember, error) {
+func (s *FTPSession) ListPds(expression string) ([]hfs.InfoPdsMember, error) {
 
 	curr, err := utils.SetValueAndGetCurrent("SEQ", s.SetStatusOf().FileType, s.StatusOf().FileType)
 	if err != nil {
@@ -140,12 +141,12 @@ func (s *FTPSession) ListPds(expression string) ([]hfs.PdsMember, error) {
 	if err != nil {
 		return nil, err
 	}
-	members := make([]hfs.PdsMember, 0)
+	members := make([]hfs.InfoPdsMember, 0)
 	for i := range lines {
 		if i == 0 {
 			continue
 		}
-		member, errParsing := hfs.ParseMember(lines[i])
+		member, errParsing := hfs.ParseInfoPdsMember(lines[i])
 		if errParsing != nil {
 			return nil, errParsing
 		}
@@ -155,19 +156,31 @@ func (s *FTPSession) ListPds(expression string) ([]hfs.PdsMember, error) {
 }
 
 // ListSpool list jobs in the spool
-func (s *FTPSession) ListSpool(expression string) ([]hfs.JobStatus, error) {
+func (s *FTPSession) ListSpool(expression string) ([]hfs.InfoJob, error) {
+
+	expression = strings.TrimSpace(expression)
+	if expression == "" {
+		expression = "*"
+	}
+	if !utils.RegexSearchPattern.MatchString(expression) {
+		return nil, fmt.Errorf("invalid search pattern: %s", expression)
+	}
+
 	curr, err := utils.SetValueAndGetCurrent("JES", s.SetStatusOf().FileType, s.StatusOf().FileType)
 	if err != nil {
 		return nil, err
 	}
 	defer curr.Restore()
+
 	lines, err := s.List(expression)
 	if err != nil {
 		return nil, fmt.Errorf("failed to list spool jobs: %w", err)
 	}
-	jobs, err := hfs.ParseJobStatus(lines, expression)
+
+	jobs, err := hfs.ParseInfoJob(lines)
 	if err != nil {
 		return nil, fmt.Errorf("failed to parse spool job status: %w", err)
 	}
+
 	return jobs, nil
 }

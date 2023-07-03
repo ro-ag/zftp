@@ -4,14 +4,16 @@ import (
 	"bytes"
 	"encoding/binary"
 	"fmt"
-	"github.com/kr/text"
 	log "github.com/sirupsen/logrus"
+	"gopkg.in/ro-ag/zftp.v0/internal/text"
 	"os"
 	"regexp"
 	"runtime"
 	"strconv"
 	"strings"
 )
+
+var RegexSearchPattern = regexp.MustCompile(`[*?]|^\s*$`)
 
 func IsMigrated(line []byte) bool {
 	p := Prefix(line)

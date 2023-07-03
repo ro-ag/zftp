@@ -1,8 +1,11 @@
 package zftp_test
 
 import (
+	"gopkg.in/ro-ag/zftp.v0/hfs"
 	"regexp"
+	"strings"
 	"testing"
+	"time"
 
 	"gopkg.in/ro-ag/zftp.v0"
 )
@@ -25,31 +28,66 @@ func TestSubmitJCL(t *testing.T) {
 	jcl := `
 //ANOTHER   JOB NOTIFY=&SYSUID,MSGLEVEL=(1,1)
 //*
-//STEP1   EXEC PGM=IEFBR14
-//SYSOUT  DD SYSOUT=*
+//STEP1    EXEC PGM=IEFBR14
+//SYSOUT   DD SYSOUT=*
 //*
-//STEP2   EXEC PGM=IEBGENER
+//STEP2    EXEC PGM=IEBGENER
+//SYSUT1   DD *
+HELLO, WORLD!
+/*
+//SYSUT2   DD SYSOUT=*
+//SYSIN    DD DUMMY
 //SYSPRINT DD SYSOUT=*
-//SYSIN   DD DUMMY
-//SYSUT1  DD DUMMY
-//SYSUT2  DD SYSOUT=*
 //*
 `
 
 	// Submit the JCL
-	output, err := s.SubmitJCL(jcl)
+	jobID, err := s.SubmitJCL(jcl)
 	if err != nil {
 		t.Fatal(err)
 	}
 	jb := regexp.MustCompile(`JOB[0-9]+`)
 
-	if !jb.MatchString(output) {
+	if !jb.MatchString(jobID) {
 		t.Errorf("Empty output returned")
 	}
 
-	status, err := s.GetJobStatus(output)
+	// Wait for the job to complete
+
+	status, err := s.GetJobStatus(jobID)
+	if err != nil {
+		if err == hfs.ErrActiveJob {
+			t.Logf("Job is still active")
+			time.Sleep(5 * time.Second)
+			status, err = s.GetJobStatus(jobID)
+
+		} else {
+			t.Fatal(err)
+		}
+	}
+	t.Logf("Job status: %+v", status)
+
+	rc, err := status.ReturnCode()
 	if err != nil {
 		t.Fatal(err)
 	}
-	t.Logf("Job status: %+v", status)
+	if rc != 0 {
+		t.Errorf("Job failed with ReturnCode %d", rc)
+	}
+
+	// Get the job output
+
+	s.SetStatusOf().FileType("JES")
+	s.SetStatusOf().JesJobName("*")
+	jobOutput := &strings.Builder{}
+	n, str, err := s.RetrieveIO(jobID, jobOutput, zftp.TypeAscii)
+
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Logf("Retrieved %d bytes", n)
+	t.Logf("Output: %s", str)
+
+	t.Logf("Job output: %s", jobOutput.String())
+
 }

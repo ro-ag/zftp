@@ -7,30 +7,30 @@ import (
 	"time"
 )
 
-type StringField struct {
+type FieldString struct {
 	data string
 }
 
-func (f *StringField) parse(data string) error {
+func (f *FieldString) parse(data string) error {
 	f.data = strings.TrimSpace(data)
 	return nil
 }
 
-func (f *StringField) String() string {
+func (f *FieldString) String() string {
 	return f.data
 }
 
-func (f *StringField) Value() string {
+func (f *FieldString) Value() string {
 	return f.data
 }
 
 /* ------------------------------------------------------------------------------------------------------------------ */
 
-type IntField struct {
+type FieldInt struct {
 	data uint16
 }
 
-func (f *IntField) parse(data string) error {
+func (f *FieldInt) parse(data string) error {
 	data = strings.TrimSpace(data)
 	if len(data) == 0 {
 		f.data = 0
@@ -44,24 +44,24 @@ func (f *IntField) parse(data string) error {
 	return nil
 }
 
-func (f *IntField) String() string {
+func (f *FieldInt) String() string {
 	if f.data == 0 {
 		return ""
 	}
 	return strconv.Itoa(int(f.data))
 }
 
-func (f *IntField) Value() uint16 {
+func (f *FieldInt) Value() uint16 {
 	return f.data
 }
 
 /* ------------------------------------------------------------------------------------------------------------------ */
 
-type FloatField struct {
+type FieldFloat struct {
 	data float32
 }
 
-func (f *FloatField) parse(data string) error {
+func (f *FieldFloat) parse(data string) error {
 	data = strings.TrimSpace(data)
 	if len(data) == 0 {
 		f.data = 0.0
@@ -75,24 +75,24 @@ func (f *FloatField) parse(data string) error {
 	return nil
 }
 
-func (f *FloatField) String() string {
+func (f *FieldFloat) String() string {
 	if f.data == 0 {
 		return ""
 	}
 	return fmt.Sprintf("%05.02f", f.data)
 }
 
-func (f *FloatField) Value() float32 {
+func (f *FieldFloat) Value() float32 {
 	return f.data
 }
 
 /* ------------------------------------------------------------------------------------------------------------------ */
 
-type DateField struct {
+type FieldDate struct {
 	data time.Time
 }
 
-func (f *DateField) parse(data string) error {
+func (f *FieldDate) parse(data string) error {
 	const layout = "2006/01/02" // Customize the layout based on your input format
 	data = strings.TrimSpace(data)
 	if len(data) == 0 {
@@ -107,24 +107,24 @@ func (f *DateField) parse(data string) error {
 	return nil
 }
 
-func (f *DateField) String() string {
+func (f *FieldDate) String() string {
 	if f.data.IsZero() {
 		return ""
 	}
 	return f.data.Format("2006/01/02")
 }
 
-func (f *DateField) Value() time.Time {
+func (f *FieldDate) Value() time.Time {
 	return f.data
 }
 
 /* ------------------------------------------------------------------------------------------------------------------ */
 
-type TimeField struct {
+type FieldTime struct {
 	data time.Time
 }
 
-func (f *TimeField) parse(data string) error {
+func (f *FieldTime) parse(data string) error {
 	const layout = "2006/01/02 15:04"
 	data = strings.TrimSpace(data)
 	if len(data) == 0 {
@@ -139,13 +139,13 @@ func (f *TimeField) parse(data string) error {
 	return nil
 }
 
-func (f *TimeField) String() string {
+func (f *FieldTime) String() string {
 	if f.data.IsZero() {
 		return ""
 	}
 	return f.data.Format("2006/01/02 15:04")
 }
 
-func (f *TimeField) Value() time.Time {
+func (f *FieldTime) Value() time.Time {
 	return f.data
 }

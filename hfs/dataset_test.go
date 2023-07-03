@@ -1,7 +1,8 @@
-package hfs
+package hfs_test
 
 import (
 	"bufio"
+	"gopkg.in/ro-ag/zftp.v0/hfs"
 	"os"
 	"testing"
 )
@@ -20,7 +21,7 @@ func TestParseDataset(t *testing.T) {
 			continue
 		}
 		line := s.Text()
-		fields, err := ParseDataset(line)
+		fields, err := hfs.ParseInfoDataset(line)
 		if err != nil {
 			t.Fatalf("error %v\n%s", err, line)
 		}

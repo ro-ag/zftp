@@ -1,7 +1,6 @@
 package zftp_test
 
 import (
-	log "github.com/sirupsen/logrus"
 	"gopkg.in/ro-ag/zftp.v0"
 	"testing"
 )
@@ -24,7 +23,7 @@ func TestFTPSession_List(t *testing.T) {
 			t.Fatal(err)
 		} else {
 			for _, f := range list {
-				log.Printf("%+v", f)
+				t.Logf("%+v", f)
 			}
 		}
 	})
@@ -34,7 +33,7 @@ func TestFTPSession_List(t *testing.T) {
 			t.Fatal(err)
 		} else {
 			for _, f := range list {
-				log.Printf("%+v", f)
+				t.Logf("%+v", f)
 			}
 		}
 	})
@@ -44,7 +43,7 @@ func TestFTPSession_List(t *testing.T) {
 			t.Fatal(err)
 		} else {
 			for _, f := range list {
-				log.Printf("%+v", f)
+				t.Logf("%+v", f)
 			}
 		}
 	})
@@ -54,7 +53,7 @@ func TestFTPSession_List(t *testing.T) {
 			t.Fatal(err)
 		} else {
 			for _, f := range list {
-				log.Printf("%+v", f)
+				t.Logf("%+v", f)
 			}
 		}
 	})
@@ -64,7 +63,7 @@ func TestFTPSession_List(t *testing.T) {
 			t.Fatal(err)
 		} else {
 			for _, f := range list {
-				log.Printf("%+v", f)
+				t.Logf("%+v", f)
 			}
 		}
 	})
@@ -77,7 +76,7 @@ func TestFTPSession_List(t *testing.T) {
 			t.Fatal(err)
 		} else {
 			for _, f := range list {
-				log.Printf("%+v", f)
+				t.Logf("%+v", f)
 			}
 		}
 	})
