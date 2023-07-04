@@ -36,6 +36,42 @@ func (d *InfoDataset) Active() bool {
 	return !d.IsMigrated() && !d.IsNotMounted()
 }
 
+// IsPartitioned returns true if the dataset is partitioned
+func (d *InfoDataset) IsPartitioned() bool {
+	return d.Dsorg.String() == "PO"
+}
+
+// IsSequential returns true if the dataset is sequential
+func (d *InfoDataset) IsSequential() bool {
+	return d.Dsorg.String() == "PS"
+}
+
+// IsVSAM returns true if the dataset is VSAM
+func (d *InfoDataset) IsVSAM() bool {
+	return strings.ToLower(d.Volume.String()) == "vsam" || strings.ToLower(d.Volume.String()) == "vsam"
+}
+
+// IsTape returns true if the dataset is a tape
+func (d *InfoDataset) IsTape() bool {
+	return strings.ToLower(d.Unit.String()) == "tape"
+}
+
+// String return a row of text representing the dataset
+func (d *InfoDataset) String() string {
+	str := strings.Builder{}
+	str.WriteString(fmt.Sprintf("Name: %s, ", d.Dsname.String()))
+	str.WriteString(fmt.Sprintf("Volume: %s, ", d.Volume.String()))
+	str.WriteString(fmt.Sprintf("Unit: %s, ", d.Unit.String()))
+	str.WriteString(fmt.Sprintf("Referred: %s, ", d.Referred.String()))
+	str.WriteString(fmt.Sprintf("Ext: %s, ", d.Ext.String()))
+	str.WriteString(fmt.Sprintf("Used: %s, ", d.Used.String()))
+	str.WriteString(fmt.Sprintf("Recfm: %s, ", d.Recfm.String()))
+	str.WriteString(fmt.Sprintf("Lrecl: %s, ", d.Lrecl.String()))
+	str.WriteString(fmt.Sprintf("BlkSz: %s, ", d.BlkSz.String()))
+	str.WriteString(fmt.Sprintf("Dsorg: %s", d.Dsorg.String()))
+	return str.String()
+}
+
 // Constants for field offsets and sizes
 const (
 	volumeOffset   = 0

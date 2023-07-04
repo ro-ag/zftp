@@ -20,6 +20,11 @@ const (
 	jesInterfaceLevel2
 )
 
+var (
+	ErrActiveJob  = errors.New("job is active")
+	ErrAbendedJob = errors.New("job abended")
+)
+
 // InfoJob represents a job record from the JES spool.
 type InfoJob struct {
 	Name   FieldString `json:"Name"`
@@ -29,10 +34,16 @@ type InfoJob struct {
 	Class  FieldString `json:"Class"`
 }
 
-var (
-	ErrActiveJob  = errors.New("job is active")
-	ErrAbendedJob = errors.New("job abended")
-)
+// String returns a row of text representing the job.
+func (j *InfoJob) String() string {
+	str := strings.Builder{}
+	str.WriteString(fmt.Sprintf("Name: %s, ", j.Name.String()))
+	str.WriteString(fmt.Sprintf("JobId: %s, ", j.JobId.String()))
+	str.WriteString(fmt.Sprintf("Owner: %s, ", j.Owner.String()))
+	str.WriteString(fmt.Sprintf("Status: %s, ", j.Status.String()))
+	str.WriteString(fmt.Sprintf("Class: %s", j.Class.String()))
+	return str.String()
+}
 
 // ParseInfoJob parses a slice of strings into a slice of InfoJob structs.
 func ParseInfoJob(records []string) ([]InfoJob, error) {
@@ -157,6 +168,18 @@ type jobDetail struct {
 	C         FieldString `json:"C"`
 	DDName    FieldString `json:"DDName"`
 	ByteCount FieldInt    `json:"ByteCount"`
+}
+
+// String returns a row of text representing the job detail.
+func (j jobDetail) String() string {
+	str := strings.Builder{}
+	str.WriteString(fmt.Sprintf("Id: %d, ", j.Id.Value()))
+	str.WriteString(fmt.Sprintf("StepName: %s, ", j.StepName.String()))
+	str.WriteString(fmt.Sprintf("ProcSpec: %s, ", j.ProcSpec.String()))
+	str.WriteString(fmt.Sprintf("C: %s, ", j.C.String()))
+	str.WriteString(fmt.Sprintf("DDName: %s, ", j.DDName.String()))
+	str.WriteString(fmt.Sprintf("ByteCount: %d", j.ByteCount.Value()))
+	return str.String()
 }
 
 // ParseInfoJobDetail parses a slice of strings into a slice of InfoJobDetail structs.

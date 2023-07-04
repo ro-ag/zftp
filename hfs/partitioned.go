@@ -1,6 +1,9 @@
 package hfs
 
-import "fmt"
+import (
+	"fmt"
+	"strings"
+)
 
 // Partitioned
 // Name     VV.MM   Created       Changed      Size  Init   Mod   Id
@@ -15,6 +18,20 @@ type InfoPdsMember struct {
 	Init    FieldInt    `json:"Init"`    // Init Number of lines when the member was first saved
 	Mod     FieldInt    `json:"Mod"`     // Mod Number of lines in the current member that have been added or changed. If the data is unnumbered, this number is zero
 	Id      FieldString `json:"Id"`      // Id The user ID of the person who created or last updated this version
+}
+
+// String returns a row of text representing the Partitioned Dataset member
+func (m *InfoPdsMember) String() string {
+	str := strings.Builder{}
+	str.WriteString(fmt.Sprintf("Name: %s, ", m.Name.String()))
+	str.WriteString(fmt.Sprintf("VV.MM: %s, ", m.VvMm.String()))
+	str.WriteString(fmt.Sprintf("Created: %s, ", m.Created.String()))
+	str.WriteString(fmt.Sprintf("Changed: %s, ", m.Changed.String()))
+	str.WriteString(fmt.Sprintf("Size: %s, ", m.Size.String()))
+	str.WriteString(fmt.Sprintf("Init: %s, ", m.Init.String()))
+	str.WriteString(fmt.Sprintf("Mod: %s, ", m.Mod.String()))
+	str.WriteString(fmt.Sprintf("ID: %s", m.Id.String()))
+	return str.String()
 }
 
 const (

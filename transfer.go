@@ -12,6 +12,7 @@ type TransferType interface {
 	strCommand() string
 	IsAscii() bool
 	IsBinary() bool
+	Name() string
 }
 
 type transferType uint8
@@ -25,6 +26,14 @@ const (
 // StrCommand returns the command string for the transfer type
 func (t transferType) strCommand() string {
 	return fmt.Sprintf("TYPE %c", t)
+}
+
+// Name returns the name of the transfer type
+func (t transferType) Name() string {
+	if t.IsAscii() {
+		return "ASCII"
+	}
+	return "BINARY"
 }
 
 // SetType sets the transfer type and stores it in the FTPSession
