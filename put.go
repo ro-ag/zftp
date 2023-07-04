@@ -8,6 +8,11 @@ import (
 	"strings"
 )
 
+const (
+	MinBlockSize = 1
+	MaxBlockSize = 32768
+)
+
 // Put a file from the local file system to the remote file system.
 //   - if the remote file already exists, it is overwritten.
 //   - mode is the transfer mode, either ASCII or binary.
@@ -23,7 +28,7 @@ func (s *FTPSession) Put(srcLocal string, destRemote string, mode TransferType, 
 		}
 	}
 
-	log.Debug("[***] attempting to open source file:", srcLocal)
+	log.Debugf("[***] attempting to open source file: %s", srcLocal)
 
 	file, err := os.Open(srcLocal)
 	if err != nil {
@@ -32,11 +37,7 @@ func (s *FTPSession) Put(srcLocal string, destRemote string, mode TransferType, 
 
 	defer func() {
 		if cerr := file.Close(); cerr != nil {
-			if err != nil {
-				err = fmt.Errorf("%s; also failed to close file: %s", err, cerr)
-			} else {
-				err = fmt.Errorf("failed to close file: %s", cerr)
-			}
+			log.Errorf("failed to close file: %s", cerr)
 		}
 	}()
 
@@ -45,12 +46,12 @@ func (s *FTPSession) Put(srcLocal string, destRemote string, mode TransferType, 
 		log.Error("Failed to get file stats for:", srcLocal)
 		return err
 	}
-	log.Debug("[***] file stats for", srcLocal, ":")
-	log.Debug("[***]   - size in bytes     : ", fileInfo.Size())
-	log.Debug("[***]   - file mode         : ", fileInfo.Mode())
-	log.Debug("[***]   - modification time : ", fileInfo.ModTime())
+	log.Debugf("[***] file stats for %s :", srcLocal)
+	log.Debugf("[***]   - size in bytes     : %d", fileInfo.Size())
+	log.Debugf("[***]   - file mode         : %s", fileInfo.Mode())
+	log.Debugf("[***]   - modification time : %s", fileInfo.ModTime())
 
-	log.Debug("[***] starting transfer to:", destRemote)
+	log.Debugf("[***] starting transfer to: %s", destRemote)
 
 	bytesTransferred, _, err := s.StoreIO(destRemote, file, mode)
 	if err != nil {
@@ -70,42 +71,42 @@ type DataSpec interface {
 type Recfm string
 
 const (
-	RecfmF   Recfm = "F"   // Fixed record length
-	RecfmFB  Recfm = "FB"  // Fixed length records, Blocked
-	RecfmFBA Recfm = "FBA" // Fixed length records, Blocked, ASA control characters
-	RecfmFBM Recfm = "FBM" // Fixed length records, Blocked, Machine control characters
-	RecfmV   Recfm = "V"   // Variable record length
-	RecfmVB  Recfm = "VB"  // Variable length records, Blocked
-	RecfmVBA Recfm = "VBA" // Variable length records, Blocked, ASA control characters
-	RecfmVBM Recfm = "VBM" // Variable length records, Blocked, Machine control characters
-	RecfmU   Recfm = "U"   // Undefined record format
-	RecfmVS  Recfm = "VS"  // Variable record length, Spanned
-	RecfmVBS Recfm = "VBS" // Variable length records, Blocked, Spanned
+	WithRecfmF   Recfm = "F"   // Fixed record length
+	WithRecfmFB  Recfm = "FB"  // Fixed length records, Blocked
+	WithRecfmFBA Recfm = "FBA" // Fixed length records, Blocked, ASA control characters
+	WithRecfmFBM Recfm = "FBM" // Fixed length records, Blocked, Machine control characters
+	WithRecfmV   Recfm = "V"   // Variable record length
+	WithRecfmVB  Recfm = "VB"  // Variable length records, Blocked
+	WithRecfmVBA Recfm = "VBA" // Variable length records, Blocked, ASA control characters
+	WithRecfmVBM Recfm = "VBM" // Variable length records, Blocked, Machine control characters
+	WithRecfmU   Recfm = "U"   // Undefined record format
+	WithRecfmVS  Recfm = "VS"  // Variable record length, Spanned
+	WithRecfmVBS Recfm = "VBS" // Variable length records, Blocked, Spanned
 )
 
 func isValidRECFM(recfm Recfm) (string, bool) {
 	switch recfm {
-	case RecfmF:
+	case WithRecfmF:
 		return "Fixed record length", true
-	case RecfmFB:
+	case WithRecfmFB:
 		return "Fixed length records, Blocked", true
-	case RecfmFBA:
+	case WithRecfmFBA:
 		return "Fixed length records, Blocked, ASA control characters", true
-	case RecfmFBM:
+	case WithRecfmFBM:
 		return "Fixed length records, Blocked, Machine control characters", true
-	case RecfmV:
+	case WithRecfmV:
 		return "Variable record length", true
-	case RecfmVB:
+	case WithRecfmVB:
 		return "Variable length records, Blocked", true
-	case RecfmVBA:
+	case WithRecfmVBA:
 		return "Variable length records, Blocked, ASA control characters", true
-	case RecfmVBM:
+	case WithRecfmVBM:
 		return "Variable length records, Blocked, Machine control characters", true
-	case RecfmU:
+	case WithRecfmU:
 		return "Undefined record format", true
-	case RecfmVS:
+	case WithRecfmVS:
 		return "Variable record length, Spanned", true
-	case RecfmVBS:
+	case WithRecfmVBS:
 		return "Variable length records, Blocked, Spanned", true
 	default:
 		return "", false
@@ -123,8 +124,8 @@ func (rec Recfm) getCommand() (string, error) {
 type blksz uint16
 
 func (b blksz) getCommand() (string, error) {
-	if b < 1 || b > 32760 {
-		return "", fmt.Errorf("blocksize must be between 1 and 32760")
+	if b < MinBlockSize || b > MaxBlockSize {
+		return "", fmt.Errorf("blocksize must be between %d and %d", MinBlockSize, MaxBlockSize)
 	}
 	return fmt.Sprintf("BLKSIZE=%d", b), nil
 }
@@ -138,21 +139,21 @@ func (r lrecl) getCommand() (string, error) {
 	return fmt.Sprintf("LRECL=%d", r), nil
 }
 
-// Lrecl specs for dataset logical record length.
-func Lrecl(length uint16) DataSpec {
+// WithLrecl specs for dataset logical record length.
+func WithLrecl(length uint16) DataSpec {
 	return lrecl(length)
 }
 
-// Blksize specs for dataset block size.
-func Blksize(size uint16) DataSpec {
+// WithBlkSize specs for dataset block size.
+func WithBlkSize(size uint16) DataSpec {
 	return blksz(size)
 }
 
 // SetDataSpecs sets the attributes of the dataset being transferred to.
 // The attributes are specified as a variadic list of DataSpec.
 // Valid attributes are:
-//   - Lrecl(length uint16) - record length
-//   - Blksize(size uint16) - block size
+//   - WithLrecl(length uint16) - record length
+//   - WithBlkSize(size uint16) - block size
 //   - Recfm(recfm Recfm)   - record format
 //
 // this function sends a SITE command to the server to set the attributes.

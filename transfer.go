@@ -66,7 +66,7 @@ func (s *FTPSession) transfer(t transfer.DataTransfer, remote string) (int64, st
 		}
 	}(child)
 
-	_, err = s.SendCommand(CodeListOK, t.Command(), remote)
+	msg1, err := s.SendCommand(CodeListOK, t.Command(), remote)
 	if err != nil {
 		return 0, "", err
 	}
@@ -81,12 +81,12 @@ func (s *FTPSession) transfer(t transfer.DataTransfer, remote string) (int64, st
 		return sz, "", err
 	}
 
-	msg, err := s.checkLast(CodeFileActionOK)
+	msg2, err := s.checkLast(CodeFileActionOK)
 	if err != nil {
 		return sz, "", fmt.Errorf("error while checking last response: %s", err)
 	}
 
-	return sz, msg, nil
+	return sz, fmt.Sprintf("%s\n%s", msg1, msg2), nil
 }
 
 // StoreIO stores the contents of the reader to the remote file in the specified mode

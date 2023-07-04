@@ -17,7 +17,7 @@ func TestFTPSession_Put(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	err = s.SetDataSpecs(zftp.Blksize(2403), zftp.Lrecl(120), zftp.RecfmFB)
+	err = s.SetDataSpecs(zftp.WithBlkSize(2403), zftp.WithLrecl(120), zftp.WithRecfmFB)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -31,9 +31,9 @@ func TestFTPSession_Put(t *testing.T) {
 	err = s.Put("sample_data.txt",
 		"SAMPDATA.TXT",
 		zftp.TypeAscii,
-		zftp.Blksize(2400),
-		zftp.Lrecl(120),
-		zftp.RecfmFB,
+		zftp.WithBlkSize(2400),
+		zftp.WithLrecl(120),
+		zftp.WithRecfmFB,
 	)
 
 	if err != nil {

@@ -46,8 +46,7 @@ type Retrieve struct {
 }
 
 func (r *Retrieve) Transfer(conn net.Conn) (int64, error) {
-	src := bufio.NewReader(conn)
-	n, err := io.Copy(r.dest, src)
+	n, err := io.Copy(r.dest, conn)
 	if err != nil {
 		return 0, err
 	}
