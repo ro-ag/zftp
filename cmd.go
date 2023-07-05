@@ -110,3 +110,8 @@ func (s *FTPSession) System() string {
 	}
 	return system
 }
+
+// CWD changes the current working directory to the specified path.
+func (s *FTPSession) CWD(expression string) (string, error) {
+	return s.SendCommand(CodeFileActionOK, "CWD", expression)
+}
