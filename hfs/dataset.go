@@ -21,6 +21,11 @@ type InfoDataset struct {
 	isNotMount bool
 }
 
+// Name returns DName but without the quotes
+func (d *InfoDataset) Name() string {
+	return strings.Trim(d.Dsname.String(), "'")
+}
+
 // IsMigrated returns true if the dataset is migrated
 func (d *InfoDataset) IsMigrated() bool {
 	return d.isMigrated
