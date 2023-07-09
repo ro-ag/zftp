@@ -31,6 +31,7 @@ const (
 	CodeClosingDataConn        ReturnCode = 226
 	CodeEnteringPassiveMode    ReturnCode = 227
 	CodeLoggedInProceed        ReturnCode = 230
+	CodeSecurityOk             ReturnCode = 234
 	CodeFileActionOK           ReturnCode = 250
 	CodeDirCreated             ReturnCode = 257
 	CodeNeedPwd                ReturnCode = 331

@@ -82,7 +82,7 @@ func (s *FTPSession) AuthTLS(tlsConfig *tls.Config) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
-	_, err := s.SendCommand(CodeSecurityExchangeOK, "AUTH", "TLS")
+	_, err := s.SendCommand(CodeSecurityOk, "AUTH", "TLS")
 	if err != nil {
 		return err
 	}
