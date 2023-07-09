@@ -60,17 +60,6 @@ func Open(server string) (*FTPSession, error) {
 		os.Exit(0)
 	}()
 
-	syt, err := session.SendCommand(CodeSysType, "SYST")
-	if err != nil {
-		return nil, err
-	}
-
-	if !strings.Contains(syt, "MVS") {
-		return nil, fmt.Errorf("unsupported system type: %s", syt)
-	}
-
-	session.system = "MVS"
-
 	return session, nil
 }
 
@@ -193,6 +182,18 @@ func (s *FTPSession) Login(user, pass string) error {
 	if err != nil {
 		return err
 	}
+
+	/* Check */
+	syt, err := s.SendCommand(CodeSysType, "SYST")
+	if err != nil {
+		return err
+	}
+
+	if !strings.Contains(syt, "MVS") {
+		return fmt.Errorf("unsupported system type: %s", syt)
+	}
+
+	s.system = "MVS"
 
 	return nil
 }
