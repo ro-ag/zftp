@@ -20,6 +20,7 @@ import (
 type FTPSession struct {
 	conn        net.Conn
 	system      string
+	user        string
 	currType    TransferType
 	isClosed    atomic.Bool
 	reader      *bufio.Reader
@@ -151,6 +152,8 @@ func (s *FTPSession) Login(user, pass string) error {
 		pass = os.Getenv("FTP_PASS")
 	}
 
+	s.user = strings.ToUpper(user)
+
 	_, err := s.SendCommand(CodeNeedPwd, "USER", user)
 	if err != nil {
 		return err
@@ -185,4 +188,9 @@ func (s *FTPSession) Login(user, pass string) error {
 	}
 
 	return nil
+}
+
+// GetUser returns the current username
+func (s *FTPSession) GetUser() string {
+	return s.user
 }
