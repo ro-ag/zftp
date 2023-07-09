@@ -78,6 +78,13 @@ func Open(server string) (*FTPSession, error) {
 func (s *FTPSession) SetVerbose(v bool) {
 	s.mu.Lock()
 	s.verbose = v
+	log.SetLevel(log.DebugLevel)
+	log.SetFormatter(&log.TextFormatter{
+		ForceColors:      true,
+		FullTimestamp:    true,
+		DisableTimestamp: true,
+		//	PadLevelText:     true,
+	})
 	s.mu.Unlock()
 }
 
