@@ -153,7 +153,7 @@ type FieldDate struct {
 func (f *FieldDate) parse(data string) error {
 	const layout = "2006/01/02" // Customize the layout based on your input format
 	data = strings.TrimSpace(data)
-	if len(data) == 0 {
+	if len(data) == 0 || data == "**NONE**" {
 		f.data = time.Time{}
 		return nil
 	}
