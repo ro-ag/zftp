@@ -153,7 +153,7 @@ func ParseInfoDataset(record string) (InfoDataset, error) {
 		return dataset, nil
 	}
 
-	if strings.HasPrefix(strings.TrimSpace(record), "Not Mounted") {
+	if strings.Contains(strings.TrimSpace(record), "Not Mounted") {
 		dataset.isNotMount = true
 		err = dataset.Volume.parse("Not Mounted")
 		if err != nil {
