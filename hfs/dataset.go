@@ -146,11 +146,19 @@ func ParseInfoDataset(record string) (InfoDataset, error) {
 
 	if strings.HasPrefix(strings.TrimSpace(record), "Migrated") {
 		dataset.isMigrated = true
+		err = dataset.Volume.parse("Migrated")
+		if err != nil {
+			return InfoDataset{}, fmt.Errorf("failed to parse Volume field: %v", err)
+		}
 		return dataset, nil
 	}
 
 	if strings.HasPrefix(strings.TrimSpace(record), "Not Mounted") {
 		dataset.isNotMount = true
+		err = dataset.Volume.parse("Not Mounted")
+		if err != nil {
+			return InfoDataset{}, fmt.Errorf("failed to parse Volume field: %v", err)
+		}
 		return dataset, nil
 	}
 
