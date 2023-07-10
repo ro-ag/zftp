@@ -2,11 +2,13 @@ package hfs
 
 import (
 	"fmt"
+	"reflect"
 	"strings"
 )
 
 // InfoDataset is a struct that represents a z/OS dataset
 type InfoDataset struct {
+	Dsname     FieldString `json:"Dsname"`
 	Volume     FieldString `json:"Volume"`
 	Unit       FieldString `json:"Unit"`
 	Referred   FieldDate   `json:"Referred"`
@@ -16,7 +18,6 @@ type InfoDataset struct {
 	Lrecl      FieldInt    `json:"Lrecl"`
 	BlkSz      FieldInt    `json:"BlkSz"`
 	Dsorg      FieldString `json:"Dsorg"`
-	Dsname     FieldString `json:"Dsname"`
 	isMigrated bool
 	isNotMount bool
 }
@@ -61,6 +62,22 @@ func (d *InfoDataset) IsTape() bool {
 	return strings.ToLower(d.Unit.String()) == "tape"
 }
 
+// ToStringSlice returns a slice of strings representing the dataset
+func (d *InfoDataset) ToStringSlice() []string {
+	return []string{
+		d.Dsname.String(),
+		d.Volume.String(),
+		d.Unit.String(),
+		d.Referred.String(),
+		d.Ext.String(),
+		d.Used.String(),
+		d.Recfm.String(),
+		d.Lrecl.String(),
+		d.BlkSz.String(),
+		d.Dsorg.String(),
+	}
+}
+
 // String return a row of text representing the dataset
 func (d *InfoDataset) String() string {
 	str := strings.Builder{}
@@ -75,6 +92,20 @@ func (d *InfoDataset) String() string {
 	str.WriteString(fmt.Sprintf("BlkSz: %s, ", d.BlkSz.String()))
 	str.WriteString(fmt.Sprintf("Dsorg: %s", d.Dsorg.String()))
 	return str.String()
+}
+
+// Headers returns the headers for the dataset
+func (d *InfoDataset) Headers() []string {
+	t := reflect.TypeOf(*d)
+	headers := make([]string, 0, t.NumField())
+	for i := 0; i < t.NumField(); i++ {
+		field := t.Field(i)
+		jsonTag := field.Tag.Get("json")
+		if jsonTag != "" {
+			headers = append(headers, jsonTag)
+		}
+	}
+	return headers
 }
 
 // Constants for field offsets and sizes

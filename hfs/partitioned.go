@@ -2,6 +2,7 @@ package hfs
 
 import (
 	"fmt"
+	"reflect"
 	"strings"
 )
 
@@ -32,6 +33,33 @@ func (m *InfoPdsMember) String() string {
 	str.WriteString(fmt.Sprintf("Mod: %s, ", m.Mod.String()))
 	str.WriteString(fmt.Sprintf("ID: %s", m.Id.String()))
 	return str.String()
+}
+
+func (m *InfoPdsMember) ToStringSlice() []string {
+	return []string{
+		m.Name.String(),
+		m.VvMm.String(),
+		m.Created.String(),
+		m.Changed.String(),
+		m.Size.String(),
+		m.Init.String(),
+		m.Mod.String(),
+		m.Id.String(),
+	}
+}
+
+// Headers returns the headers for the dataset
+func (m *InfoPdsMember) Headers() []string {
+	t := reflect.TypeOf(*m)
+	headers := make([]string, 0, t.NumField())
+	for i := 0; i < t.NumField(); i++ {
+		field := t.Field(i)
+		jsonTag := field.Tag.Get("json")
+		if jsonTag != "" {
+			headers = append(headers, jsonTag)
+		}
+	}
+	return headers
 }
 
 const (

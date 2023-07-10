@@ -6,20 +6,17 @@ The zftp package provides a convenient and feature-rich way to work with mainfra
 
 ## Features
 
-- **z/OS Dataset Support**: Perform operations on z/OS datasets, including retrieving attributes, checking migration status, and verifying dataset size.
+- **FTP Session Management**: Establish and manage FTP sessions with a mainframe server. Send commands to the server and handle the server's responses.
 
-- **FTP Commands for Mainframe Operations**: Execute FTP commands specific to z/OS systems, such as listing datasets, retrieving members of a partitioned dataset, and performing file transfers with correct attributes and formats.
+- **File Transfer**: Retrieve and upload files to/from the FTP server. The package supports both ASCII and binary transfer modes, and includes functions to handle end-of-line sequence conversions between different operating systems.
 
-- **Working with Mainframe Attributes**: Easily work with mainframe dataset attributes, including volume, unit, RECFM (record format), LRECL (record length), BLKSIZE (block size), and DSORG (dataset organization).
+- **FTP Commands**: Implement various FTP commands specific to z/OS systems, including listing datasets, executing JES commands, managing site parameters, and handling passive mode connections.
 
-- **Migrated and Not Mounted Dataset Handling**: Identify migrated and not mounted datasets and handle them accordingly in your application logic.
+- **Dataset Management**: Interact with z/OS datasets, including retrieving attributes, checking migration status, and verifying dataset size. The package also provides functions to handle different types of datasets, such as partitioned and sequential datasets.
 
-- **Transfer Modes**: Support both ASCII and binary transfer modes required for mainframe file transfers.
+- **HFS Attributes**: Handle HFS attributes, manage HFS datasets, and work with partitioned datasets. The package also provides functions to parse job records and details from the JES spool.
 
-- **Verification of File Size**: Verify the transferred file's size to ensure accuracy, particularly important on mainframe systems with gzip format limitations.
-
-- **GetAndGzip**: Retrieve and compress a file in a single step, saving bandwidth and storage space.
-
+- **Error Handling**: Define a set of FTP return codes and provide functions to check the server's response against these codes. The package includes a custom error type for FTP return code errors, which includes the received and expected return codes and an error message.
 ## Installation
 
 To install the zftp package, use the following `go get` command:
