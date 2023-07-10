@@ -121,7 +121,7 @@ func (s *FTPSession) ListDatasets(expression string) ([]hfs.InfoDataset, error) 
 		}
 		dataset, errParsing := hfs.ParseInfoDataset(lines[i])
 		if errParsing != nil {
-			return nil, errParsing
+			return nil, fmt.Errorf("error while parsing record \"%s\": %s", lines[i], errParsing)
 		}
 		datasets = append(datasets, dataset)
 	}
