@@ -76,7 +76,7 @@ type JobResult struct {
 }
 
 var (
-	jesJobDoneRegexp   = regexp.MustCompile(`When\s+(JOB\d+)\s+is\s+done`)
+	jesJobDoneRegexp   = regexp.MustCompile(`When\s+(J\w+\d+)\s+is\s+done`)
 	jesJobDoneRcRegexp = regexp.MustCompile(`\$HASP395\s+(\w+)\s+ENDED\s+-\s+RC=(\d+)`)
 )
 
