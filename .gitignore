@@ -3,3 +3,4 @@ sample_*
 .DS_Store
 venv/
 *.py
+dummy/
