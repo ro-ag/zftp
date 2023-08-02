@@ -12,6 +12,8 @@ func TestFTPSession_Put(t *testing.T) {
 		t.Fatal(err)
 	}
 
+	s.SetVerbose(zftp.LogAll)
+
 	err = s.Login(username, password)
 	if err != nil {
 		t.Fatal(err)

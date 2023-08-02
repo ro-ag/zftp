@@ -2,8 +2,8 @@ package zftp
 
 import (
 	"fmt"
-	log "github.com/sirupsen/logrus"
 	"gopkg.in/ro-ag/zftp.v0/hfs"
+	"gopkg.in/ro-ag/zftp.v0/internal/log"
 	"gopkg.in/ro-ag/zftp.v0/internal/utils"
 	"strings"
 )
@@ -74,7 +74,7 @@ func (s *FTPSession) anyList(cmd, expression string) ([]string, string, error) {
 			line = strings.TrimSpace(line)
 		}
 		lines = append(lines, line)
-		log.Debugf("[psv] %s", line)
+		log.Passivef("%s", line)
 	}
 
 	err = child.Close()

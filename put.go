@@ -2,7 +2,7 @@ package zftp
 
 import (
 	"fmt"
-	log "github.com/sirupsen/logrus"
+	"gopkg.in/ro-ag/zftp.v0/internal/log"
 	"gopkg.in/ro-ag/zftp.v0/internal/utils"
 	"os"
 	"strings"
@@ -21,14 +21,14 @@ const (
 func (s *FTPSession) Put(srcLocal string, destRemote string, mode TransferType, a ...DataSpec) error {
 
 	if len(a) > 0 {
-		log.Debug("[***] dataset attributes passed to Put()")
+		log.Debug("dataset attributes passed to Put()")
 		err := s.SetDataSpecs(a...)
 		if err != nil {
 			return err
 		}
 	}
 
-	log.Debugf("[***] attempting to open source file: %s", srcLocal)
+	log.Debugf("attempting to open source file: %s", srcLocal)
 
 	file, err := os.Open(srcLocal)
 	if err != nil {
@@ -46,26 +46,26 @@ func (s *FTPSession) Put(srcLocal string, destRemote string, mode TransferType, 
 		log.Error("Failed to get file stats for:", srcLocal)
 		return err
 	}
-	log.Debugf("[***] file stats for %s :", srcLocal)
-	log.Debugf("[***]   - size in bytes     : %d", fileInfo.Size())
-	log.Debugf("[***]   - file mode         : %s", fileInfo.Mode())
-	log.Debugf("[***]   - modification time : %s", fileInfo.ModTime())
+	log.Debugf("file stats for %s :", srcLocal)
+	log.Debugf("   - size in bytes     : %d", fileInfo.Size())
+	log.Debugf("   - file mode         : %s", fileInfo.Mode())
+	log.Debugf("   - modification time : %s", fileInfo.ModTime())
 
-	log.Debugf("[***] starting transfer to: %s", destRemote)
+	log.Debugf("starting transfer to: %s", destRemote)
 
 	bytesTransferred, _, err := s.StoreIO(destRemote, file, mode)
 	if err != nil {
 		return fmt.Errorf("failed to store file: %s", err)
 	}
 
-	log.Debugf("[***] successfully transferred %d bytes to %s", bytesTransferred, destRemote)
+	log.Debugf("successfully transferred %d bytes to %s", bytesTransferred, destRemote)
 
 	return nil
 }
 
 // DataSpec is an interface for specifying dataset attributes.
 type DataSpec interface {
-	getCommand() (string, error)
+	Apply() (string, error)
 }
 
 type Recfm string
@@ -113,7 +113,7 @@ func isValidRECFM(recfm Recfm) (string, bool) {
 	}
 }
 
-func (rec Recfm) getCommand() (string, error) {
+func (rec Recfm) Apply() (string, error) {
 	_, ok := isValidRECFM(rec)
 	if !ok {
 		return "", fmt.Errorf("invalid RECFM value: %s", rec)
@@ -123,7 +123,7 @@ func (rec Recfm) getCommand() (string, error) {
 
 type blksz uint16
 
-func (b blksz) getCommand() (string, error) {
+func (b blksz) Apply() (string, error) {
 	if b < MinBlockSize || b > MaxBlockSize {
 		return "", fmt.Errorf("blocksize must be between %d and %d", MinBlockSize, MaxBlockSize)
 	}
@@ -132,7 +132,7 @@ func (b blksz) getCommand() (string, error) {
 
 type lrecl uint16
 
-func (r lrecl) getCommand() (string, error) {
+func (r lrecl) Apply() (string, error) {
 	if r < 1 || r > 32760 {
 		return "", fmt.Errorf("record length must be between 1 and 32760")
 	}
@@ -165,10 +165,11 @@ func (s *FTPSession) SetDataSpecs(attributes ...DataSpec) error {
 
 	var cmd strings.Builder
 	for _, attr := range attributes {
-		a, err := attr.getCommand()
+		a, err := attr.Apply()
 		if err != nil {
 			return err
 		}
+
 		cmd.WriteString(a)
 		cmd.WriteString(" ")
 	}

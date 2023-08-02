@@ -3,7 +3,7 @@ package zftp
 import (
 	"context"
 	"fmt"
-	log "github.com/sirupsen/logrus"
+	"gopkg.in/ro-ag/zftp.v0/internal/log"
 	"gopkg.in/ro-ag/zftp.v0/internal/utils"
 	"strings"
 )
@@ -22,14 +22,14 @@ func (s *FTPSession) SendCommandWithContext(ctx context.Context, expect ReturnCo
 		// log has already been printed in parseCommand
 		_, err := s.conn.Write(fullCommand)
 		if err != nil {
-			log.Debugf("[cmd|error] %s", err)
+			log.Commandf("error %s", err)
 			errChan <- err
 			return
 		}
 
 		msg, err := expect.check(s.reader)
 		if err != nil {
-			log.Debugf("[res|error] %s", err)
+			log.Serverf("error %s", err)
 			errChan <- err
 			return
 		}
@@ -58,11 +58,11 @@ func parseCommand(cmd string, a ...string) []byte {
 	switch {
 	case strings.HasPrefix(command, "PASS"):
 		maskPassword := strings.Repeat("*", len(args))
-		log.Debugf("[cmd] PASS %s", maskPassword)
+		log.Commandf("PASS %s", maskPassword)
 	case len(a) > 0:
-		log.Debugf("[cmd] %s %s", command, args)
+		log.Commandf("%s %s", command, args)
 	default:
-		log.Debugf("[cmd] %s", command)
+		log.Commandf("%s", command)
 	}
 
 	fullCommand := []byte(fmt.Sprintf("%s %s\r\n", command, args))
@@ -91,7 +91,7 @@ func (s *FTPSession) checkLast(expect ReturnCode) (string, error) {
 	s.lastMessage.WriteString(msg)
 
 	if err != nil {
-		log.Debugf("[res|error] %s", err)
+		log.Serverf("[res|error] %s", err)
 		return "", err
 	}
 

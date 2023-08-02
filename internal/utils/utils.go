@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"encoding/binary"
 	"fmt"
-	log "github.com/sirupsen/logrus"
+	"gopkg.in/ro-ag/zftp.v0/internal/log"
 	"gopkg.in/ro-ag/zftp.v0/internal/text"
 	"os"
 	"regexp"
@@ -96,7 +96,7 @@ func VerifyGzSize(file *os.File, size int64) error {
 	have := binary.LittleEndian.Uint32(footer)
 	want := uint32(size % MaxUint32)
 
-	log.Debugf("[***] file %s size=%d, uncompress size: %d, expected size: %d", file.Name(), fileInfo.Size(), have, want)
+	log.Debugf("file %s size=%d, uncompress size: %d, expected size: %d", file.Name(), fileInfo.Size(), have, want)
 
 	if have != want {
 		return fmt.Errorf("transferred file size doesn't match the size in gzip footer (expected %d, got %d)", have, want)
@@ -184,6 +184,6 @@ func SetValueAndGetCurrent(value string, set func(string) error, get func() (str
 func (f *SetRestorer) Restore() {
 	err := f.set(f.orig)
 	if err != nil {
-		log.Warn(err)
+		log.Warning(err)
 	}
 }

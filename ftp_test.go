@@ -1,21 +1,10 @@
 package zftp_test
 
 import (
-	log "github.com/sirupsen/logrus"
 	"gopkg.in/ro-ag/zftp.v0"
 	"os"
 	"testing"
 )
-
-func init() {
-	log.SetLevel(log.DebugLevel)
-	log.SetFormatter(&log.TextFormatter{
-		ForceColors:      true,
-		FullTimestamp:    true,
-		DisableTimestamp: true,
-		//	PadLevelText:     true,
-	})
-}
 
 var (
 	hostname = os.Getenv("ZFTP_HOSTNAME")
@@ -45,5 +34,4 @@ func TestOpen(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-
 }

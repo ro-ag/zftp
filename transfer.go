@@ -2,8 +2,8 @@ package zftp
 
 import (
 	"fmt"
-	log "github.com/sirupsen/logrus"
 	"gopkg.in/ro-ag/zftp.v0/eol"
+	"gopkg.in/ro-ag/zftp.v0/internal/log"
 	"gopkg.in/ro-ag/zftp.v0/internal/transfer"
 	"io"
 )

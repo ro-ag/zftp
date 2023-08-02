@@ -3,7 +3,7 @@ package zftp
 import (
 	"bufio"
 	"fmt"
-	log "github.com/sirupsen/logrus"
+	"gopkg.in/ro-ag/zftp.v0/internal/log"
 	"io"
 	"strconv"
 	"strings"
@@ -91,14 +91,14 @@ func (code ReturnCode) check(reader *bufio.Reader) (msg string, err error) {
 			return "", err
 		}
 
-		log.Debugf("[res] %s", line)
+		log.Serverf("%s", line)
 
 		// We only check the response code if we've read a complete line
 		if len(line) >= 4 {
 
 			tempReceivedCode, atoiErr := strconv.Atoi(string(line[:3]))
 			if atoiErr != nil {
-				log.WithFields(log.Fields{"error": atoiErr}).Error("Error converting response code to integer")
+				log.Errorf("converting response code to integer: %s", atoiErr)
 			} else {
 				receivedCode = tempReceivedCode
 			}

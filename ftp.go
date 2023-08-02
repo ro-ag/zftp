@@ -4,8 +4,8 @@ import (
 	"bufio"
 	"crypto/tls"
 	"fmt"
-	log "github.com/sirupsen/logrus"
 	"gopkg.in/ro-ag/zftp.v0/eol"
+	"gopkg.in/ro-ag/zftp.v0/internal/log"
 	"gopkg.in/ro-ag/zftp.v0/internal/utils"
 	"net"
 	"os"
@@ -26,7 +26,6 @@ type FTPSession struct {
 	reader      *bufio.Reader
 	lastMessage strings.Builder
 	dataConns   sync.Map
-	verbose     bool
 	tlsConfig   *tls.Config
 	mu          sync.Mutex
 }
@@ -47,7 +46,7 @@ func Open(server string) (*FTPSession, error) {
 	if err != nil {
 		return nil, err
 	}
-	log.Info(utils.WrapText(msg))
+	log.Debug(utils.WrapText(msg))
 	// Setup signal handler
 	c := make(chan os.Signal)
 	signal.Notify(c, os.Interrupt, syscall.SIGTERM)
@@ -64,17 +63,10 @@ func Open(server string) (*FTPSession, error) {
 }
 
 // SetVerbose sets the verbose flag
-func (s *FTPSession) SetVerbose(v bool) {
+func (s *FTPSession) SetVerbose(level logLevel) {
 	s.mu.Lock()
-	s.verbose = v
-	log.SetLevel(log.DebugLevel)
-	log.SetFormatter(&log.TextFormatter{
-		ForceColors:      true,
-		FullTimestamp:    true,
-		DisableTimestamp: true,
-		//	PadLevelText:     true,
-	})
-	s.mu.Unlock()
+	defer s.mu.Unlock()
+	log.SetLevel(log.Level(level))
 }
 
 // AuthTLS sends the AUTH TLS command to the FTP server and sets up the TLS connection
@@ -115,7 +107,7 @@ func (s *FTPSession) Close() error {
 	// Close all data connections
 	s.dataConns.Range(func(name, conn any) bool {
 		child := conn.(*childConnection)
-		log.Debugf("[***] closing child net connection %s", child.RemoteAddr())
+		log.Debugf("closing child net connection %s", child.RemoteAddr())
 		err := child.Close()
 		if err != nil {
 			log.Warningf("Error closing child net connection %s: %s", child.RemoteAddr(), err)
@@ -125,11 +117,11 @@ func (s *FTPSession) Close() error {
 
 	// Send QUIT command and close main connection
 
-	log.Debugf("[***] closing session connection %s", s.conn.RemoteAddr())
+	log.Debugf("closing session connection %s", s.conn.RemoteAddr())
 
 	err := s.conn.Close()
 	if err != nil {
-		log.Printf("Error closing session connection: %s", err)
+		log.Warningf("Error closing session connection: %s", err)
 		return err
 	}
 	s.isClosed.Store(true)
@@ -140,13 +132,6 @@ func (s *FTPSession) Close() error {
 func (s *FTPSession) Login(user, pass string) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
-
-	if user == "" {
-		user = os.Getenv("FTP_USER")
-	}
-	if pass == "" {
-		pass = os.Getenv("FTP_PASS")
-	}
 
 	s.user = strings.ToUpper(user)
 

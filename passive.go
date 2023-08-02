@@ -5,7 +5,7 @@ import (
 	"context"
 	"crypto/tls"
 	"fmt"
-	log "github.com/sirupsen/logrus"
+	"gopkg.in/ro-ag/zftp.v0/internal/log"
 	"gopkg.in/ro-ag/zftp.v0/internal/utils"
 	"net"
 	"regexp"
@@ -104,7 +104,7 @@ func (c *childConnection) Close() error {
 	alreadyClosed := c.isClosed.Load()
 	caller := utils.Caller()
 
-	log.Debugf("[***] <%s> attempting to close child connection: %s = %p | closed=%v", caller, c.RemoteAddr().String(), c, alreadyClosed)
+	log.Debugf("<%s> attempting to close child connection: %s = %p | closed=%v", caller, c.RemoteAddr().String(), c, alreadyClosed)
 
 	if c.isClosed.Load() {
 		return nil
@@ -123,7 +123,7 @@ func (c *childConnection) Close() error {
 	c.isClosed.Store(true)
 	c.maps.Delete(c.RemoteAddr().String())
 
-	log.Debugf("[***] closed child connection: %s = %p | closed=%v", c.RemoteAddr().String(), c, c.isClosed.Load())
+	log.Debugf("closed child connection: %s = %p | closed=%v", c.RemoteAddr().String(), c, c.isClosed.Load())
 
 	return err
 }
@@ -178,7 +178,7 @@ func (s *FTPSession) newChildConnection(port int) (*childConnection, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
-	log.Debugf("[***] attempting to create a new connection with port %d", port)
+	log.Debugf("attempting to create a new connection with port %d", port)
 
 	address := s.conn.RemoteAddr().String()
 	// Split the address into IP/hostname and port
@@ -195,14 +195,14 @@ func (s *FTPSession) newChildConnection(port int) (*childConnection, error) {
 
 	if s.tlsConfig != nil {
 		conn = tls.Client(conn, s.tlsConfig)
-		log.Debugf("[***] upgraded connection to TLS")
+		log.Debugf("upgraded connection to TLS")
 	}
 
 	child := childConnection{conn: conn, parent: conn.RemoteAddr(), maps: &s.dataConns}
 	child.scan = newScanner(conn, child.IsClosed)
 	s.dataConns.Store(child.RemoteAddr().String(), &child)
 
-	log.Debugf("[***] created child connection: %s", child.RemoteAddr().String())
+	log.Debugf("created child connection: %s", child.RemoteAddr().String())
 	return &child, nil
 }
 

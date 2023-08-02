@@ -3,7 +3,7 @@ package zftp
 import (
 	"compress/gzip"
 	"fmt"
-	log "github.com/sirupsen/logrus"
+	"gopkg.in/ro-ag/zftp.v0/internal/log"
 	"gopkg.in/ro-ag/zftp.v0/internal/utils"
 	"os"
 	"path/filepath"
@@ -13,7 +13,7 @@ import (
 // If the local file already exists, it is overwritten.
 // mode is the transfer mode, either ASCII or binary.
 func (s *FTPSession) Get(remote string, localFile string, mode TransferType) error {
-	log.Debug("[***] creating local file: ", localFile)
+	log.Debug("creating local file: ", localFile)
 	file, err := os.Create(localFile)
 	if err != nil {
 		return fmt.Errorf("failed to create local file: %s", err)
@@ -30,13 +30,13 @@ func (s *FTPSession) Get(remote string, localFile string, mode TransferType) err
 		}
 	}()
 
-	log.Debug("[***] starting transfer from: ", remote)
+	log.Debug("starting transfer from: ", remote)
 	bytesTransferred, _, err := s.RetrieveIO(remote, file, mode)
 	if err != nil {
 		return fmt.Errorf("failed to retrieve file: %s", err)
 	}
 
-	log.Debugf("[***] Successfully transferred %d bytes from %s", bytesTransferred, remote)
+	log.Debugf("Successfully transferred %d bytes from %s", bytesTransferred, remote)
 	return nil
 }
 
@@ -50,7 +50,7 @@ func (s *FTPSession) GetAndGzip(remote string, localFile string, mode TransferTy
 		localFile += ".gz"
 	}
 
-	log.Debug("[***] creating local file: ", localFile)
+	log.Debug("creating local file: ", localFile)
 	file, err := os.Create(localFile)
 	if err != nil {
 		return fmt.Errorf("failed to create local file: %s", err)
@@ -62,7 +62,7 @@ func (s *FTPSession) GetAndGzip(remote string, localFile string, mode TransferTy
 		err = closeGzHandler(err, gzWriter, file)
 	}()
 
-	log.Debug("[***] starting transfer from: ", remote)
+	log.Debug("starting transfer from: ", remote)
 	bytesTransferred, _, err := s.RetrieveIO(remote, gzWriter, mode)
 	if err != nil {
 		return fmt.Errorf("failed to retrieve and compress file: %s", err)
@@ -78,7 +78,7 @@ func (s *FTPSession) GetAndGzip(remote string, localFile string, mode TransferTy
 		return fmt.Errorf("failed to close gzip writer: %s", err)
 	}
 
-	log.Debugf("[***] successfully transferred and compressed %d bytes from %s", bytesTransferred, remote)
+	log.Debugf("successfully transferred and compressed %d bytes from %s", bytesTransferred, remote)
 
 	err = utils.VerifyGzSize(file, bytesTransferred)
 	if err != nil {
