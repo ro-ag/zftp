@@ -23,6 +23,7 @@ const (
 var (
 	ErrActiveJob  = errors.New("job is active")
 	ErrAbendedJob = errors.New("job abended")
+	ErrJCLError   = errors.New("job has JCL error")
 )
 
 // InfoJob represents a job record from the JES spool.
@@ -145,6 +146,10 @@ func (j InfoJobDetail) ReturnCode() (rc int, err error) {
 	if strings.Contains(j.job.Class.String(), "ABEND") {
 		err = ErrAbendedJob
 		regex = abendCodeRegex
+	}
+
+	if strings.Contains(j.job.Class.String(), "JCL error") {
+		return -1, ErrJCLError
 	}
 
 	result := regex.FindStringSubmatch(j.job.Class.String())

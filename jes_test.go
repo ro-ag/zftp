@@ -1,6 +1,7 @@
 package zftp_test
 
 import (
+	"errors"
 	"gopkg.in/ro-ag/zftp.v0/hfs"
 	"regexp"
 	"strings"
@@ -115,4 +116,88 @@ HELLO, WORLD!
 		}
 
 	})
+}
+
+func TestSubmitLISTDS(t *testing.T) {
+	// Create a new FTP session
+	s, err := zftp.Open(hostname)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer s.Close()
+
+	// Login to the FTP server
+	err = s.Login(username, password)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// Define the JCL string
+	jcl := `
+//LISTCAT JOB NOTIFY=&SYSUID,MSGLEVEL=(1,1)
+//STEP1    EXEC PGM=IKJEFT01,DYNAMNBR=20
+//SYSTSPRT DD  SYSOUT=*
+//SYSTSIN  DD  *
+  LISTDS 'Z33500.SAMPDATA.SEC.EBCDCIC'
+/*
+`
+	job, err := s.SubmitJesGetByDSN(jcl)
+	if err != nil {
+		t.Errorf("Failed to submit JCL: %s", err)
+	}
+
+	if job.ReturnCode != 0 {
+		t.Errorf("Job failed with ReturnCode %d", job.ReturnCode)
+	}
+
+	t.Logf("Job ID   : %s", job.ID)
+	t.Logf("Job Name : %s", job.DisplayName)
+	t.Logf("Job DSN  : %s", job.DSN)
+	t.Logf("Job RC   : %d", job.ReturnCode)
+	t.Logf("Spool:\n%s", strings.Join(job.Spool, "\n")) // Print the spool
+
+}
+
+func TestSubmitDITTO(t *testing.T) {
+	//log.SetLevel(log.All)
+	// Create a new FTP session
+	s, err := zftp.Open(hostname)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer s.Close()
+
+	// Login to the FTP server
+	err = s.Login(username, password)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// Define the JCL string
+	jcl := `
+//DITTOK JOB NOTIFY=&SYSUID,MSGLEVEL=(1,1)                                                          
+//STEP1    EXEC PGM=DITTO,PARM='JOBSTREAM'                              
+//STEPLIB  DD DSN=DIT.V1R3M0.SDITMOD1,DISP=SHR                     
+//SYSPRINT DD SYSOUT=A                                             
+//S10A     DD DUMMY                                                
+//TAPEIN   DD DSN=CMDT.CASA.ARF.MILLION.TSOA.NAMES,VOL=SER=I02073, 
+// UNIT=TAPE3480,DISP=SHR LABEL=(2,BLP,EXPDT=98000)                
+//SYSIN    DD *                                                    
+$$DITTO TLB INPUT=TAPEIN    
+`
+	job, err := s.SubmitJesGetByDSN(jcl)
+	if !errors.Is(err, zftp.ErrIEF) {
+		t.Errorf("Failed to submit JCL: %s", err)
+	}
+
+	if job.ReturnCode == 0 {
+		t.Errorf("Expected job to failure, got ReturnCode %d", job.ReturnCode)
+	}
+
+	t.Logf("Job ID   : %s", job.ID)
+	t.Logf("Job Name : %s", job.DisplayName)
+	t.Logf("Job DSN  : %s", job.DSN)
+	t.Logf("Job RC   : %d", job.ReturnCode)
+	t.Logf("Expected Error: %s", err)
+	t.Logf("Spool:\n%s", strings.Join(job.Spool, "\n")) // Print the spool
 }

@@ -1,6 +1,7 @@
 package zftp
 
 import (
+	"errors"
 	"fmt"
 	"gopkg.in/ro-ag/zftp.v0/hfs"
 	"gopkg.in/ro-ag/zftp.v0/internal/utils"
@@ -76,8 +77,9 @@ type JobResult struct {
 }
 
 var (
-	jesJobDoneRegexp   = regexp.MustCompile(`When\s+(J\w+\d+)\s+is\s+done`)
-	jesJobDoneRcRegexp = regexp.MustCompile(`\$HASP395\s+(\w+)\s+ENDED\s+-\s+RC=(\d+)`)
+	jesJobDoneRegexp          = regexp.MustCompile(`When\s+(J\w+\d+)\s+is\s+done`)
+	jesJobDoneRcRegexp        = regexp.MustCompile(`\$HASP395\s+(\w+)\s+ENDED\s+-\s+RC=(\d+)`)
+	jesJobDoneEndedNoRcRegexp = regexp.MustCompile(`\$HASP395\s+(\w+)\s+ENDED`)
 )
 
 // SubmitJesGetByDSN puts JCL to the FTP server and returns the DSN, this uses StringToJCL internally
@@ -124,6 +126,7 @@ func (s *FTPSession) SubmitJesGetByDSN(jcl string) (*JobResult, error) {
 		return nil, fmt.Errorf("failed to retrieve job output: %w", err)
 	}
 
+	/* get job-id from response */
 	res := jesJobDoneRegexp.FindStringSubmatch(msg)
 	if len(res) != 2 {
 		return nil, fmt.Errorf("failed to retrieve job-id from response: %s", msg)
@@ -138,14 +141,55 @@ func (s *FTPSession) SubmitJesGetByDSN(jcl string) (*JobResult, error) {
 		job.Spool[i] = strings.TrimSpace(job.Spool[i])
 	}
 
+	/* check if job has ended */
+	if !jesJobDoneEndedNoRcRegexp.MatchString(jobOutput.String()) {
+		return job, fmt.Errorf("job has not ended: %s", msg)
+	}
+
+	/* get job name from response */
+	res = jesJobDoneEndedNoRcRegexp.FindStringSubmatch(jobOutput.String())
+	job.DisplayName = res[1]
+
+	/* analyze for job abending or IEF errors */
+
+	errDetails := make([]string, 0)
+	var errType error
+	lines := strings.Split(jobOutput.String(), "\n")
+	/* analyze if job has abend errors */
+	for _, line := range lines {
+		for key := range abaMessages {
+			if strings.Contains(line, key) {
+				errDetails = append(errDetails, strings.TrimSpace(line))
+				errType = ErrAba
+			}
+		}
+	}
+
+	/* analyze if job has errors */
+	for _, line := range lines {
+		for key := range iefMessages {
+			if strings.Contains(line, key) {
+				errDetails = append(errDetails, strings.TrimSpace(line))
+				if errors.Is(errType, ErrAba) || errors.Is(errType, ErrIEFAndABA) {
+					errType = ErrIEFAndABA
+				} else {
+					errType = ErrIEF
+				}
+			}
+		}
+	}
+
+	/* get job return code from response */
 	res = jesJobDoneRcRegexp.FindStringSubmatch(jobOutput.String())
 	if len(res) != 3 {
+		job.ReturnCode = -1
+		if errType != nil {
+			return job, fmt.Errorf("%s: %w", strings.Join(errDetails, ": "), errType)
+		}
 		return job, fmt.Errorf("failed to retrieve job-id from response: %s", msg)
 	}
 
-	job.DisplayName = res[1]
 	job.ReturnCode, err = strconv.Atoi(res[2])
-
 	return job, nil
 }
 
@@ -168,30 +212,38 @@ func generateJobFileName() string {
 }
 
 // GetJobStatus retrieves the status of a JES job by ID.
+// This function is setting the LIST parameters to retrieve JOBS instead of FILES.
+//
+// It restores the original "global" list parameters after the function returns.
 func (s *FTPSession) GetJobStatus(jobID string) (*hfs.InfoJobDetail, error) {
 
+	// validate the job-id format is correct
 	if utils.RegexSearchPattern.MatchString(jobID) {
 		return nil, fmt.Errorf("invalid job-id: %s", jobID)
 	}
 
+	// set JES parameters and restore them after the function returns
 	FileType, err := utils.SetValueAndGetCurrent("JES", s.SetStatusOf().FileType, s.StatusOf().FileType)
 	if err != nil {
 		return nil, err
 	}
 	defer FileType.Restore()
 
+	// set jes job name to * and restore it after the function returns
 	JesJobName, err := utils.SetValueAndGetCurrent("*", s.SetStatusOf().JesJobName, s.StatusOf().JesJobName)
 	if err != nil {
 		return nil, err
 	}
 	defer JesJobName.Restore()
 
+	// list for job details
 	records, err := s.List(jobID)
 	if err != nil {
 		return nil, err
 	}
 
-	return hfs.ParseInfoJobDetail(records)
+	jr, err := hfs.ParseInfoJobDetail(records)
+	return jr, err
 }
 
 func WithJesEntryLimit(limit int) JesSpec {
