@@ -2,8 +2,8 @@ package zftp
 
 import (
 	"fmt"
-	"gopkg.in/ro-ag/zftp.v0/internal/log"
-	"gopkg.in/ro-ag/zftp.v0/internal/utils"
+	"gopkg.in/ro-ag/zftp.v1/internal/log"
+	"gopkg.in/ro-ag/zftp.v1/internal/utils"
 	"os"
 	"strings"
 )

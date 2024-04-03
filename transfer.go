@@ -2,9 +2,9 @@ package zftp
 
 import (
 	"fmt"
-	"gopkg.in/ro-ag/zftp.v0/eol"
-	"gopkg.in/ro-ag/zftp.v0/internal/log"
-	"gopkg.in/ro-ag/zftp.v0/internal/transfer"
+	"gopkg.in/ro-ag/zftp.v1/eol"
+	"gopkg.in/ro-ag/zftp.v1/internal/log"
+	"gopkg.in/ro-ag/zftp.v1/internal/transfer"
 	"io"
 )
 

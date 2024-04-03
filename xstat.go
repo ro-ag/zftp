@@ -2,7 +2,7 @@ package zftp
 
 import (
 	"fmt"
-	"gopkg.in/ro-ag/zftp.v0/internal/helper"
+	"gopkg.in/ro-ag/zftp.v1/internal/helper"
 	"strings"
 )
 
@@ -142,7 +142,7 @@ type StatusOf interface {
 
 	// JesStatus Indicates what type of information should be returned on LIST and NLST commands.
 	JesStatus() (string, error)
-	
+
 	// ListLevel Indicates which format the FTP server will use when it replies to the LIST command.
 	ListLevel() (int, error)
 

@@ -2,13 +2,12 @@ package zftp_test
 
 import (
 	"errors"
-	"gopkg.in/ro-ag/zftp.v0/hfs"
+	"gopkg.in/ro-ag/zftp.v1"
+	"gopkg.in/ro-ag/zftp.v1/hfs"
 	"regexp"
 	"strings"
 	"testing"
 	"time"
-
-	"gopkg.in/ro-ag/zftp.v0"
 )
 
 func TestSubmitJCL(t *testing.T) {

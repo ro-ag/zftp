@@ -1,6 +1,6 @@
 package zftp
 
-import "gopkg.in/ro-ag/zftp.v0/internal/log"
+import "gopkg.in/ro-ag/zftp.v1/internal/log"
 
 type logLevel log.Level
 

@@ -3,8 +3,8 @@ package zftp
 import (
 	"errors"
 	"fmt"
-	"gopkg.in/ro-ag/zftp.v0/hfs"
-	"gopkg.in/ro-ag/zftp.v0/internal/utils"
+	"gopkg.in/ro-ag/zftp.v1/hfs"
+	"gopkg.in/ro-ag/zftp.v1/internal/utils"
 	"io"
 	"os"
 	"regexp"

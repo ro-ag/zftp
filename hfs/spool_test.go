@@ -1,7 +1,7 @@
 package hfs_test
 
 import (
-	"gopkg.in/ro-ag/zftp.v0/hfs"
+	"gopkg.in/ro-ag/zftp.v1/hfs"
 	"os"
 	"strings"
 	"testing"

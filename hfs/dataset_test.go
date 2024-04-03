@@ -4,7 +4,7 @@ import (
 	"bufio"
 	"encoding/csv"
 	"encoding/json"
-	"gopkg.in/ro-ag/zftp.v0/hfs"
+	"gopkg.in/ro-ag/zftp.v1/hfs"
 	"os"
 	"testing"
 )
