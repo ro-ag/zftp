@@ -1,6 +1,6 @@
 # zFTP
 
-[![Go Reference](https://pkg.go.dev/badge/gopkg.in/ro-ag/zftp.v0.svg)](https://pkg.go.dev/gopkg.in/ro-ag/zftp.v0)
+[![Go Reference](https://pkg.go.dev/badge/gopkg.in/ro-ag/zftp.v1.svg)](https://pkg.go.dev/gopkg.in/ro-ag/zftp.v1)
 
 The zftp package provides a convenient and feature-rich way to work with mainframe FTP servers, specifically designed for z/OS systems. It offers capabilities to interact with z/OS datasets, execute FTP commands tailored for mainframe operations, and handle mainframe-specific attributes and file transfer modes.
 
@@ -22,7 +22,7 @@ The zftp package provides a convenient and feature-rich way to work with mainfra
 To install the zftp package, use the following `go get` command:
 
 ```bash
-go get gopkg.in/ro-ag/zftp.v0
+go get gopkg.in/ro-ag/zftp.v1
 ```
 
 ## Usage

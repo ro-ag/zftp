@@ -67,7 +67,7 @@ func Open(server string) (*FTPSession, error) {
 }
 
 // SetVerbose sets the verbose flag
-func (s *FTPSession) SetVerbose(level logLevel) {
+func (s *FTPSession) SetVerbose(level LogLevel) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	log.SetLevel(log.Level(level))

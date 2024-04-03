@@ -2,10 +2,10 @@ package zftp
 
 import "gopkg.in/ro-ag/zftp.v1/internal/log"
 
-type logLevel log.Level
+type LogLevel log.Level
 
 const (
-	NoLog logLevel = iota << 1
+	NoLog LogLevel = iota << 1
 	LogServer
 	LogPassive
 	LogCommand
