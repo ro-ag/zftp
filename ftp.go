@@ -10,6 +10,7 @@ import (
 	"net"
 	"os"
 	"os/signal"
+	"regexp"
 	"strings"
 	"sync"
 	"sync/atomic"
@@ -22,6 +23,7 @@ type FTPSession struct {
 	system      string
 	user        string
 	currType    TransferType
+	jobPrefix   *regexp.Regexp
 	isClosed    atomic.Bool
 	reader      *bufio.Reader
 	lastMessage strings.Builder
@@ -58,6 +60,8 @@ func Open(server string) (*FTPSession, error) {
 		}
 		os.Exit(0)
 	}()
+
+	session.jobPrefix = regexp.MustCompile(`(JOB\d{5})`)
 
 	return session, nil
 }

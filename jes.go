@@ -13,8 +13,6 @@ import (
 	"time"
 )
 
-var jesJobNameRegexp = regexp.MustCompile(`(JOB\d{5})`)
-
 // JesJob represents a JES job on the FTP server
 type JesJob struct {
 	ID  string
@@ -46,7 +44,7 @@ func (s *FTPSession) SubmitIO(jr io.Reader, options ...JesSpec) (*JesJob, error)
 		return nil, fmt.Errorf("failed to write JCL to FTP server: %w", err)
 	}
 
-	match := jesJobNameRegexp.FindStringSubmatch(msg)
+	match := s.jobPrefix.FindStringSubmatch(msg)
 	if len(match) != 2 {
 		return job, fmt.Errorf("failed to retrieve job-id from response: %s", msg)
 	}
@@ -57,16 +55,18 @@ func (s *FTPSession) SubmitIO(jr io.Reader, options ...JesSpec) (*JesJob, error)
 }
 
 // SubmitJCL submits JCL to the FTP server and returns the Job-ID
-func (s *FTPSession) SubmitJCL(jcl string) (*JesJob, error) {
-	return s.SubmitIO(strings.NewReader(jcl))
+func (s *FTPSession) SubmitJCL(jcl string, options ...JesSpec) (*JesJob, error) {
+	return s.SubmitIO(strings.NewReader(jcl), options...)
 }
 
-func (s *FTPSession) SubmitJCLFile(jclFile string) (*JesJob, error) {
+// SubmitJCLFile submits JCL from a file to the FTP server and returns the Job-ID
+// Optionally, JesSpec options to set additional parameters
+func (s *FTPSession) SubmitJCLFile(jclFile string, options ...JesSpec) (*JesJob, error) {
 	jcl, err := os.Open(jclFile)
 	if err != nil {
 		return nil, fmt.Errorf("failed to read JCL file %s: %w", jclFile, err)
 	}
-	return s.SubmitIO(jcl)
+	return s.SubmitIO(jcl, options...)
 }
 
 type JobResult struct {
@@ -246,27 +246,44 @@ func (s *FTPSession) GetJobStatus(jobID string) (*hfs.InfoJobDetail, error) {
 	return jr, err
 }
 
+// WithJesEntryLimit sets the maximum number of entries to retrieve from JES
 func WithJesEntryLimit(limit int) JesSpec {
 	return JesOptionFunc(func(s *FTPSession) error {
 		return s.SetStatusOf().JesEntryLimit(limit)
 	})
 }
 
+// WithJesGetByDSN sets the JESGETBYDSN parameter to true or false
 func WithJesGetByDSN(option bool) JesSpec {
 	return JesOptionFunc(func(s *FTPSession) error {
 		return s.SetStatusOf().JesGetByDSN(option)
 	})
 }
 
+// WithJesLrecl sets the LRECL parameter for JES
 func WithJesLrecl(len int) JesSpec {
 	return JesOptionFunc(func(s *FTPSession) error {
 		return s.SetStatusOf().JesLrecl(len)
 	})
 }
 
+// WithJesPutGetTimeOut sets the timeout for JES PUT and GET commands
 func WithJesPutGetTimeOut(seconds int) JesSpec {
 	return JesOptionFunc(func(s *FTPSession) error {
 		return s.SetStatusOf().JesPutGetTimeOut(seconds)
+	})
+}
+
+// WithJesJobPattern changes the search pattern for job-id in the response message
+// default pattern is `(JOB\d{5})`
+func WithJesJobPattern(pattern string) JesSpec {
+	return JesOptionFunc(func(s *FTPSession) error {
+		var err error
+		s.jobPrefix, err = regexp.Compile(pattern)
+		if err != nil {
+			return err
+		}
+		return nil
 	})
 }
 
