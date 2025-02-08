@@ -75,6 +75,11 @@ func (s *FTPSession) SendCommand(expect ReturnCode, command string, a ...string)
 	return s.SendCommandWithContext(context.Background(), expect, command, a...)
 }
 
+// CheckLast reads the server message buffer and validate the return code.
+func (s *FTPSession) CheckLast(expect ReturnCode) (string, error) {
+	return s.checkLast(expect)
+}
+
 func (s *FTPSession) checkLast(expect ReturnCode) (string, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
