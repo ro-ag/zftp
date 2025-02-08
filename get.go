@@ -16,16 +16,16 @@ func (s *FTPSession) Get(remote string, localFile string, mode TransferType) err
 	log.Debug("creating local file: ", localFile)
 	file, err := os.Create(localFile)
 	if err != nil {
-		return fmt.Errorf("failed to create local file: %s", err)
+		return fmt.Errorf("failed to create local file: %w", err)
 	}
 
 	defer func() {
 		cerr := file.Close()
 		if cerr != nil {
 			if err != nil {
-				err = fmt.Errorf("%s; also failed to close file: %s", err, cerr)
+				err = fmt.Errorf("%w; also failed to close file: %w", err, cerr)
 			} else {
-				err = fmt.Errorf("failed to close file: %s", cerr)
+				err = fmt.Errorf("failed to close file: %w", cerr)
 			}
 		}
 	}()
@@ -33,7 +33,7 @@ func (s *FTPSession) Get(remote string, localFile string, mode TransferType) err
 	log.Debug("starting transfer from: ", remote)
 	bytesTransferred, _, err := s.RetrieveIO(remote, file, mode)
 	if err != nil {
-		return fmt.Errorf("failed to retrieve file: %s", err)
+		return fmt.Errorf("failed to retrieve file: %w", err)
 	}
 
 	log.Debugf("Successfully transferred %d bytes from %s", bytesTransferred, remote)
@@ -53,7 +53,7 @@ func (s *FTPSession) GetAndGzip(remote string, localFile string, mode TransferTy
 	log.Debug("creating local file: ", localFile)
 	file, err := os.Create(localFile)
 	if err != nil {
-		return fmt.Errorf("failed to create local file: %s", err)
+		return fmt.Errorf("failed to create local file: %w", err)
 	}
 
 	gzWriter := gzip.NewWriter(file)
@@ -65,17 +65,17 @@ func (s *FTPSession) GetAndGzip(remote string, localFile string, mode TransferTy
 	log.Debug("starting transfer from: ", remote)
 	bytesTransferred, _, err := s.RetrieveIO(remote, gzWriter, mode)
 	if err != nil {
-		return fmt.Errorf("failed to retrieve and compress file: %s", err)
+		return fmt.Errorf("failed to retrieve and compress file: %w", err)
 	}
 
 	err = gzWriter.Flush()
 	if err != nil {
-		return fmt.Errorf("failed to flush gzip writer: %s", err)
+		return fmt.Errorf("failed to flush gzip writer: %w", err)
 	}
 
 	err = gzWriter.Close()
 	if err != nil {
-		return fmt.Errorf("failed to close gzip writer: %s", err)
+		return fmt.Errorf("failed to close gzip writer: %w", err)
 	}
 
 	log.Debugf("successfully transferred and compressed %d bytes from %s", bytesTransferred, remote)
@@ -92,18 +92,18 @@ func closeGzHandler(err error, gzWriter *gzip.Writer, file *os.File) error {
 	cerr := gzWriter.Close()
 	if cerr != nil {
 		if err != nil {
-			err = fmt.Errorf("%s; also failed to close gzip writer: %s", err, cerr)
+			err = fmt.Errorf("%w; also failed to close gzip writer: %w", err, cerr)
 		} else {
-			err = fmt.Errorf("failed to close gzip writer: %s", cerr)
+			err = fmt.Errorf("failed to close gzip writer: %w", cerr)
 		}
 	}
 
 	cerr = file.Close()
 	if cerr != nil {
 		if err != nil {
-			err = fmt.Errorf("%s; also failed to close file: %s", err, cerr)
+			err = fmt.Errorf("%w; also failed to close file: %w", err, cerr)
 		} else {
-			err = fmt.Errorf("failed to close file: %s", cerr)
+			err = fmt.Errorf("failed to close file: %w", cerr)
 		}
 	}
 	return err

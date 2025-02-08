@@ -92,15 +92,16 @@ func (s *FTPSession) transfer(t transfer.DataTransfer, remote string) (int64, st
 
 	msg2, err := s.checkLast(CodeFileActionOK)
 	if err != nil {
-		return sz, "", fmt.Errorf("error while checking last response: %s", err)
+		return sz, "", fmt.Errorf("error while checking last response: %w", err)
 	}
 
 	return sz, fmt.Sprintf("%s\n%s", msg1, msg2), nil
 }
 
-// StoreIO stores the contents of the reader to the remote file in the specified mode
-// and returns the number of bytes transferred
-// The transfer type is restored to the previous value after the transfer
+// StoreIO stores the contents of the reader to the remote file in the specified
+// mode and returns the number of bytes transferred.
+//
+// The original transfer type is restored to the previous value after the transfer,
 // supports ASCII and binary/Image transfers
 func (s *FTPSession) StoreIO(remote string, src io.Reader, t TransferType) (int64, string, error) {
 
@@ -119,17 +120,11 @@ func (s *FTPSession) StoreIO(remote string, src io.Reader, t TransferType) (int6
 
 	sz, msg, err := s.transfer(format, remote)
 	if err != nil {
-		goto setDefault
+		return sz, msg, err
 	}
 
-setDefault:
-
-	if errDef := s.SetType(current); errDef != nil {
-		if err != nil {
-			err = fmt.Errorf("%s| %s", err, errDef)
-		} else {
-			err = errDef
-		}
+	if err = s.SetType(current); err != nil {
+		return sz, msg, fmt.Errorf("error while setting back the transfer type: %w", err)
 	}
 
 	return sz, msg, err
@@ -151,17 +146,11 @@ func (s *FTPSession) RetrieveIO(remote string, dest io.Writer, t TransferType) (
 
 	sz, msg, err := s.transfer(transfer.NewRetrieve(dest), remote)
 	if err != nil {
-		goto setDefault
+		return sz, msg, err
 	}
 
-setDefault:
-
-	if errDef := s.SetType(current); errDef != nil {
-		if err != nil {
-			err = fmt.Errorf("%s| %s", err, errDef)
-		} else {
-			err = errDef
-		}
+	if err = s.SetType(current); err != nil {
+		return sz, msg, fmt.Errorf("error while setting back the transfer type: %w", err)
 	}
 
 	return sz, msg, err

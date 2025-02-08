@@ -56,7 +56,7 @@ func (f *FieldInt) parse(data string) error {
 	}
 	value, err := strconv.Atoi(data)
 	if err != nil {
-		return fmt.Errorf("failed to parse integer field: %v", err)
+		return fmt.Errorf("failed to parse integer field: %w", err)
 	}
 	f.data = uint16(value)
 	return nil
@@ -107,7 +107,7 @@ func (f *FieldFloat) parse(data string) error {
 	}
 	value, err := strconv.ParseFloat(data, 32)
 	if err != nil {
-		return fmt.Errorf("failed to parse float field: %v", err)
+		return fmt.Errorf("failed to parse float field: %w", err)
 	}
 	f.data = float32(value)
 	return nil
@@ -159,7 +159,7 @@ func (f *FieldDate) parse(data string) error {
 	}
 	t, err := time.Parse(layout, data)
 	if err != nil {
-		return fmt.Errorf("failed to parse date field: %v", err)
+		return fmt.Errorf("failed to parse date field: %w", err)
 	}
 	f.data = t
 	return nil
@@ -203,7 +203,7 @@ func (f *FieldTime) parse(data string) error {
 	}
 	t, err := time.Parse(layout, data)
 	if err != nil {
-		return fmt.Errorf("failed to parse time field: %v", err)
+		return fmt.Errorf("failed to parse time field: %w", err)
 	}
 	f.data = t
 	return nil

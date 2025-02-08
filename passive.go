@@ -112,12 +112,12 @@ func (c *childConnection) Close() error {
 
 	x, ok := c.maps.Load(c.RemoteAddr().String())
 	if !ok {
-		log.Panicf("<%s> cannot find child connection in map: %p | %p", caller, c, x)
+		log.Panicf("<%s>: cannot find child connection in map: %p | %p", caller, c, x)
 	}
 
 	err := c.conn.Close()
 	if err != nil {
-		err = fmt.Errorf("<%s> %s", caller, err)
+		err = fmt.Errorf("<%s>: %w", caller, err)
 	}
 
 	c.isClosed.Store(true)

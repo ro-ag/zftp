@@ -84,12 +84,12 @@ func VerifyGzSize(file *os.File, size int64) error {
 
 	fileInfo, err := file.Stat()
 	if err != nil {
-		return fmt.Errorf("failed to get file info: %s", err)
+		return fmt.Errorf("failed to get file info: %w", err)
 	}
 
 	_, err = file.ReadAt(footer, int64(fileInfo.Size())-footerSize)
 	if err != nil {
-		return fmt.Errorf("failed to read gzip footer: %s", err)
+		return fmt.Errorf("failed to read gzip footer: %w", err)
 	}
 
 	// gzip's footer contains the original file's size modulo 2^32 in the last four bytes
@@ -166,12 +166,12 @@ type SetRestorer struct {
 func SetValueAndGetCurrent(value string, set func(string) error, get func() (string, error)) (*SetRestorer, error) {
 	orig, err := get()
 	if err != nil {
-		return nil, fmt.Errorf("failed to get current value: %s", err)
+		return nil, fmt.Errorf("failed to get current value: %w", err)
 	}
 
 	err = set(value)
 	if err != nil {
-		return nil, fmt.Errorf("failed to set value: %s", err)
+		return nil, fmt.Errorf("failed to set value: %w", err)
 	}
 
 	return &SetRestorer{

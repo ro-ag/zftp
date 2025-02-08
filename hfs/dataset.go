@@ -141,14 +141,14 @@ func ParseInfoDataset(record string) (InfoDataset, error) {
 
 	err := dataset.Dsname.parse(record[dsnameOffset:])
 	if err != nil {
-		return InfoDataset{}, fmt.Errorf("failed to parse Dsname field: %v", err)
+		return InfoDataset{}, fmt.Errorf("failed to parse Dsname field: %w", err)
 	}
 
 	if strings.HasPrefix(strings.TrimSpace(record), "Migrated") {
 		dataset.isMigrated = true
 		err = dataset.Volume.parse("Migrated")
 		if err != nil {
-			return InfoDataset{}, fmt.Errorf("failed to parse Volume field: %v", err)
+			return InfoDataset{}, fmt.Errorf("failed to parse Volume field: %w", err)
 		}
 		return dataset, nil
 	}
@@ -157,29 +157,29 @@ func ParseInfoDataset(record string) (InfoDataset, error) {
 		dataset.isNotMount = true
 		err = dataset.Volume.parse("Not Mounted")
 		if err != nil {
-			return InfoDataset{}, fmt.Errorf("failed to parse Volume field: %v", err)
+			return InfoDataset{}, fmt.Errorf("failed to parse Volume field: %w", err)
 		}
 		return dataset, nil
 	}
 
 	err = dataset.Volume.parse(record[volumeOffset : volumeOffset+volumeSize])
 	if err != nil {
-		return InfoDataset{}, fmt.Errorf("failed to parse Volume field: %v", err)
+		return InfoDataset{}, fmt.Errorf("failed to parse Volume field: %w", err)
 	}
 
 	err = dataset.Unit.parse(record[unitOffset : unitOffset+unitSize])
 	if err != nil {
-		return InfoDataset{}, fmt.Errorf("failed to parse Unit field: %v", err)
+		return InfoDataset{}, fmt.Errorf("failed to parse Unit field: %w", err)
 	}
 
 	err = dataset.Referred.parse(record[referredOffset : referredOffset+referredSize])
 	if err != nil {
-		return InfoDataset{}, fmt.Errorf("failed to parse Referred field: %v", err)
+		return InfoDataset{}, fmt.Errorf("failed to parse Referred field: %w", err)
 	}
 
 	err = dataset.Ext.parse(record[extOffset : extOffset+extSize])
 	if err != nil {
-		return InfoDataset{}, fmt.Errorf("failed to parse Ext field: %v", err)
+		return InfoDataset{}, fmt.Errorf("failed to parse Ext field: %w", err)
 	}
 
 	err = dataset.Used.parse(record[usedOffset : usedOffset+usedSize])

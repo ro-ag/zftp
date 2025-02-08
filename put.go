@@ -32,7 +32,7 @@ func (s *FTPSession) Put(srcLocal string, destRemote string, mode TransferType, 
 
 	file, err := os.Open(srcLocal)
 	if err != nil {
-		return fmt.Errorf("failed to open source file: %s", err)
+		return fmt.Errorf("failed to open source file: %w", err)
 	}
 
 	defer func() {
@@ -55,7 +55,7 @@ func (s *FTPSession) Put(srcLocal string, destRemote string, mode TransferType, 
 
 	bytesTransferred, _, err := s.StoreIO(destRemote, file, mode)
 	if err != nil {
-		return fmt.Errorf("failed to store file: %s", err)
+		return fmt.Errorf("failed to store file: %w", err)
 	}
 
 	log.Debugf("successfully transferred %d bytes to %s", bytesTransferred, destRemote)

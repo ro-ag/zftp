@@ -54,7 +54,7 @@ func (s *FTPSession) anyList(cmd, expression string) ([]string, string, error) {
 
 	resp, err := s.SendCommand(CodeListOK, cmd, expression)
 	if err != nil {
-		return nil, resp, fmt.Errorf("error while sending list command: %s", err)
+		return nil, resp, fmt.Errorf("error while sending list command: %w", err)
 	}
 
 	lines, err := make([]string, 0), error(nil)
@@ -68,7 +68,7 @@ func (s *FTPSession) anyList(cmd, expression string) ([]string, string, error) {
 			if err.Error() == "EOF" {
 				break
 			}
-			return nil, resp, fmt.Errorf("error while scanning child connection: %s", err)
+			return nil, resp, fmt.Errorf("error while scanning child connection: %w", err)
 		}
 		if trimLine {
 			line = strings.TrimSpace(line)
@@ -84,7 +84,7 @@ func (s *FTPSession) anyList(cmd, expression string) ([]string, string, error) {
 
 	_, err = s.checkLast(CodeFileActionOK)
 	if err != nil {
-		return nil, resp, fmt.Errorf("error while checking last response: %s", err)
+		return nil, resp, fmt.Errorf("error while checking last response: %w", err)
 	}
 	return lines, resp, nil
 }
@@ -121,7 +121,7 @@ func (s *FTPSession) ListDatasets(expression string) ([]hfs.InfoDataset, error) 
 		}
 		dataset, errParsing := hfs.ParseInfoDataset(lines[i])
 		if errParsing != nil {
-			return nil, fmt.Errorf("error while parsing record \"%s\": %s", lines[i], errParsing)
+			return nil, fmt.Errorf("error while parsing record \"%s\": %w", lines[i], errParsing)
 		}
 		datasets = append(datasets, dataset)
 	}

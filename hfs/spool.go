@@ -78,39 +78,39 @@ func parseLineJob(line string, level int) (j InfoJob, err error) {
 
 	err = j.Name.parse(fields[0])
 	if err != nil {
-		return j, fmt.Errorf("failed to parse JobName field: %v", err)
+		return j, fmt.Errorf("failed to parse JobName field: %w", err)
 	}
 
 	err = j.JobId.parse(fields[1])
 	if err != nil {
-		return j, fmt.Errorf("failed to parse JobID field: %v", err)
+		return j, fmt.Errorf("failed to parse JobID field: %w", err)
 	}
 
 	if level == jesInterfaceLevel1 {
 		err = j.Status.parse(fields[2])
 		if err != nil {
-			return j, fmt.Errorf("failed to parse JobStatus field: %v", err)
+			return j, fmt.Errorf("failed to parse JobStatus field: %w", err)
 		}
 
 		err = j.Class.parse(fields[3])
 		if err != nil {
-			return j, fmt.Errorf("failed to parse JobClass field: %v", err)
+			return j, fmt.Errorf("failed to parse JobClass field: %w", err)
 		}
 
 	} else {
 		err = j.Owner.parse(fields[2])
 		if err != nil {
-			return j, fmt.Errorf("failed to parse JobOwner field: %v", err)
+			return j, fmt.Errorf("failed to parse JobOwner field: %w", err)
 		}
 
 		err = j.Status.parse(fields[3])
 		if err != nil {
-			return j, fmt.Errorf("failed to parse JobStatus field: %v", err)
+			return j, fmt.Errorf("failed to parse JobStatus field: %w", err)
 		}
 
 		err = j.Class.parse(fields[4])
 		if err != nil {
-			return j, fmt.Errorf("failed to parse JobClass field: %v", err)
+			return j, fmt.Errorf("failed to parse JobClass field: %w", err)
 		}
 	}
 	return j, nil

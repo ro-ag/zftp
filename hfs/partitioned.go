@@ -91,42 +91,42 @@ func ParseInfoPdsMember(record string) (InfoPdsMember, error) {
 
 	err := member.Name.parse(record[nameOffset : nameOffset+nameSize])
 	if err != nil {
-		return InfoPdsMember{}, fmt.Errorf("failed to parse Name field: %v", err)
+		return InfoPdsMember{}, fmt.Errorf("failed to parse Name field: %w", err)
 	}
 
 	err = member.VvMm.parse(record[vvMmOffset : vvMmOffset+vvMmSize])
 	if err != nil {
-		return InfoPdsMember{}, fmt.Errorf("failed to parse VvMm field: %v", err)
+		return InfoPdsMember{}, fmt.Errorf("failed to parse VvMm field: %w", err)
 	}
 
 	err = member.Created.parse(record[createdOffset : createdOffset+createdSize])
 	if err != nil {
-		return InfoPdsMember{}, fmt.Errorf("failed to parse Created field: %v", err)
+		return InfoPdsMember{}, fmt.Errorf("failed to parse Created field: %w", err)
 	}
 
 	err = member.Changed.parse(record[changedOffset : changedOffset+changedSize])
 	if err != nil {
-		return InfoPdsMember{}, fmt.Errorf("failed to parse Changed field: %v", err)
+		return InfoPdsMember{}, fmt.Errorf("failed to parse Changed field: %w", err)
 	}
 
 	err = member.Size.parse(record[sizeOffset : sizeOffset+sizeSize])
 	if err != nil {
-		return InfoPdsMember{}, fmt.Errorf("failed to parse Size field: %v", err)
+		return InfoPdsMember{}, fmt.Errorf("failed to parse Size field: %w", err)
 	}
 
 	err = member.Init.parse(record[initOffset : initOffset+initSize])
 	if err != nil {
-		return InfoPdsMember{}, fmt.Errorf("failed to parse Init field: %v", err)
+		return InfoPdsMember{}, fmt.Errorf("failed to parse Init field: %w", err)
 	}
 
 	err = member.Mod.parse(record[modOffset : modOffset+modSize])
 	if err != nil {
-		return InfoPdsMember{}, fmt.Errorf("failed to parse Mod field: %v", err)
+		return InfoPdsMember{}, fmt.Errorf("failed to parse Mod field: %w", err)
 	}
 
 	err = member.Id.parse(record[idOffset:])
 	if err != nil {
-		return InfoPdsMember{}, fmt.Errorf("failed to parse Id field: %v", err)
+		return InfoPdsMember{}, fmt.Errorf("failed to parse Id field: %w", err)
 	}
 
 	return member, nil
