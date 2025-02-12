@@ -77,17 +77,17 @@ func (s *FTPSession) transfer(t transfer.DataTransfer, remote string) (int64, st
 
 	msg1, err := s.SendCommand(CodeListOK, t.Command(), remote)
 	if err != nil {
-		return 0, "", err
+		return 0, msg1, err
 	}
 
 	sz, err := t.Transfer(child)
 	if err != nil {
-		return sz, "", err
+		return sz, msg1, err
 	}
 
 	err = child.Close()
 	if err != nil {
-		return sz, "", err
+		return sz, msg1, err
 	}
 
 	msg2, err := s.checkLast(CodeFileActionOK)
