@@ -12,7 +12,14 @@ var (
 	password = os.Getenv("ZFTP_PASSWORD")
 )
 
+func requireEnv(t *testing.T) {
+	if hostname == "" || username == "" || password == "" {
+		t.Skip("FTP server credentials not configured")
+	}
+}
+
 func TestOpen(t *testing.T) {
+	requireEnv(t)
 
 	s, err := zftp.Open(hostname)
 	if err != nil {

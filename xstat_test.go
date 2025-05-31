@@ -8,6 +8,7 @@ import (
 )
 
 func TestFTPSession_StatusOf(t *testing.T) {
+	requireEnv(t)
 	// Create a new FTP session
 	s, err := zftp.Open(hostname)
 	if err != nil {

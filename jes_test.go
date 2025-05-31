@@ -11,6 +11,7 @@ import (
 )
 
 func TestSubmitJCL(t *testing.T) {
+	requireEnv(t)
 	// Create a new FTP session
 	s, err := zftp.Open(hostname)
 	if err != nil {
@@ -118,6 +119,7 @@ HELLO, WORLD!
 }
 
 func TestSubmitLISTDS(t *testing.T) {
+	requireEnv(t)
 	// Create a new FTP session
 	s, err := zftp.Open(hostname)
 	if err != nil {
@@ -159,6 +161,7 @@ func TestSubmitLISTDS(t *testing.T) {
 
 func TestSubmitDITTO(t *testing.T) {
 	//log.SetLevel(log.All)
+	requireEnv(t)
 	// Create a new FTP session
 	s, err := zftp.Open(hostname)
 	if err != nil {

@@ -6,6 +6,7 @@ import (
 )
 
 func TestFTPSession_Get(t *testing.T) {
+	requireEnv(t)
 
 	s, err := zftp.Open(hostname)
 	if err != nil {
