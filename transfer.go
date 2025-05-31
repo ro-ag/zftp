@@ -55,8 +55,10 @@ func (t transferType) IsBinary() bool {
 	return t == TypeBinary
 }
 
-// transfer is a helper function that performs a data transfer
-func (s *FTPSession) transfer(t transfer.DataTransfer, remote string) (int64, string, error) {
+// transfer is a helper function that performs a data transfer.
+// If offset is greater than zero, a REST command is issued before
+// starting the transfer to resume at the given byte position.
+func (s *FTPSession) transfer(t transfer.DataTransfer, remote string, offset int64) (int64, string, error) {
 
 	port, err := s.SetPassiveMode()
 	if err != nil {
@@ -74,6 +76,12 @@ func (s *FTPSession) transfer(t transfer.DataTransfer, remote string) (int64, st
 			}
 		}
 	}(child)
+
+	if offset > 0 {
+		if _, err := s.SendCommand(CodeNeedInfo, "REST", fmt.Sprintf("%d", offset)); err != nil {
+			return 0, "", err
+		}
+	}
 
 	msg1, err := s.SendCommand(CodeListOK, t.Command(), remote)
 	if err != nil {
@@ -118,7 +126,7 @@ func (s *FTPSession) StoreIO(remote string, src io.Reader, t TransferType) (int6
 		format = transfer.NewStore(src)
 	}
 
-	sz, msg, err := s.transfer(format, remote)
+	sz, msg, err := s.transfer(format, remote, 0)
 	if err != nil {
 		return sz, msg, err
 	}
@@ -144,7 +152,61 @@ func (s *FTPSession) RetrieveIO(remote string, dest io.Writer, t TransferType) (
 		return 0, "", err
 	}
 
-	sz, msg, err := s.transfer(transfer.NewRetrieve(dest), remote)
+	sz, msg, err := s.transfer(transfer.NewRetrieve(dest), remote, 0)
+	if err != nil {
+		return sz, msg, err
+	}
+
+	if err = s.SetType(current); err != nil {
+		return sz, msg, fmt.Errorf("error while setting back the transfer type: %w", err)
+	}
+
+	return sz, msg, err
+}
+
+// StoreIOAt performs a store operation starting at the given offset on the remote file.
+// The transfer type is restored to the previous value after the transfer.
+func (s *FTPSession) StoreIOAt(remote string, src io.Reader, t TransferType, offset int64) (int64, string, error) {
+
+	current := s.currType
+	if err := s.SetType(t); err != nil {
+		return 0, "", err
+	}
+
+	var format transfer.DataTransfer
+
+	if t.IsAscii() {
+		format = transfer.NewStoreAscii(src)
+	} else {
+		format = transfer.NewStore(src)
+	}
+
+	sz, msg, err := s.transfer(format, remote, offset)
+	if err != nil {
+		return sz, msg, err
+	}
+
+	if err = s.SetType(current); err != nil {
+		return sz, msg, fmt.Errorf("error while setting back the transfer type: %w", err)
+	}
+
+	return sz, msg, err
+}
+
+// RetrieveIOAt performs a retrieve operation starting from the given offset of the remote file.
+// The transfer type is restored to the previous value after the transfer.
+func (s *FTPSession) RetrieveIOAt(remote string, dest io.Writer, t TransferType, offset int64) (int64, string, error) {
+	current := s.currType
+	if t.IsAscii() {
+		if err := s.SetStatusOf().SBSendEol(eol.System); err != nil {
+			return 0, "", err
+		}
+	}
+	if err := s.SetType(t); err != nil {
+		return 0, "", err
+	}
+
+	sz, msg, err := s.transfer(transfer.NewRetrieve(dest), remote, offset)
 	if err != nil {
 		return sz, msg, err
 	}

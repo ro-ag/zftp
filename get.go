@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"gopkg.in/ro-ag/zftp.v1/internal/log"
 	"gopkg.in/ro-ag/zftp.v1/internal/utils"
+	"io"
 	"os"
 	"path/filepath"
 )
@@ -37,6 +38,49 @@ func (s *FTPSession) Get(remote string, localFile string, mode TransferType) err
 	}
 
 	log.Debugf("Successfully transferred %d bytes from %s", bytesTransferred, remote)
+	return nil
+}
+
+// GetAt retrieves a file from the FTP server starting at a given offset.
+// The data is written to the local file beginning at the same offset.
+func (s *FTPSession) GetAt(remote string, localFile string, mode TransferType, offset int64) error {
+	log.Debug("opening local file: ", localFile)
+
+	file, err := os.OpenFile(localFile, os.O_CREATE|os.O_WRONLY, 0644)
+	if err != nil {
+		return fmt.Errorf("failed to open local file: %w", err)
+	}
+
+	if offset == 0 {
+		if err = file.Truncate(0); err != nil {
+			_ = file.Close()
+			return fmt.Errorf("failed to truncate file: %w", err)
+		}
+	}
+
+	if _, err = file.Seek(offset, io.SeekStart); err != nil {
+		_ = file.Close()
+		return fmt.Errorf("failed to seek: %w", err)
+	}
+
+	defer func() {
+		cerr := file.Close()
+		if cerr != nil {
+			if err != nil {
+				err = fmt.Errorf("%w; also failed to close file: %w", err, cerr)
+			} else {
+				err = fmt.Errorf("failed to close file: %w", cerr)
+			}
+		}
+	}()
+
+	log.Debugf("starting transfer from %s at offset %d", remote, offset)
+	bytesTransferred, _, err := s.RetrieveIOAt(remote, file, mode, offset)
+	if err != nil {
+		return fmt.Errorf("failed to retrieve file: %w", err)
+	}
+
+	log.Debugf("successfully transferred %d bytes from %s", bytesTransferred, remote)
 	return nil
 }
 
