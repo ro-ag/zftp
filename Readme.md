@@ -29,7 +29,7 @@ go get gopkg.in/ro-ag/zftp.v1
 
 Here are some of the most important functions provided by the zftp package:
 
-- `Open(hostname string) (*FTPSession, error)`: Open an FTP session to the specified hostname, returning a session instance for further operations.
+- `Open(hostname string, opts ...Option) (*FTPSession, error)`: Open an FTP session to the specified hostname. Optional `Option` values allow you to configure timeouts or TCP keep-alives for the underlying connections.
 
 - `(*FTPSession) Login(username, password string) error`: Log in to the FTP server using the provided username and password.
 
@@ -55,13 +55,14 @@ Here's an example that demonstrates the basic usage of the zftp package:
 package main
 
 import (
-	"fmt"
-	"gopkg.in/ro-ag/zftp.v0"
+        "fmt"
+        "time"
+        "gopkg.in/ro-ag/zftp.v0"
 )
 
 func main() {
-	// Open an FTP session to the mainframe server
-	s, err := zftp.Open("example.com")
+        // Open an FTP session to the mainframe server with a 30s timeout
+        s, err := zftp.Open("example.com", zftp.WithTimeout(30*time.Second))
 	if err != nil {
 		fmt.Println("Failed to open FTP session:", err)
 		return

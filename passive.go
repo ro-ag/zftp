@@ -188,9 +188,20 @@ func (s *FTPSession) newChildConnection(port int) (*childConnection, error) {
 	}
 
 	host = net.JoinHostPort(host, fmt.Sprintf("%d", port))
-	conn, err := net.Dial("tcp", host)
+
+	dialer := net.Dialer{Timeout: s.dialCfg.DialTimeout}
+	if s.dialCfg.KeepAlivePeriod > 0 {
+		dialer.KeepAlive = s.dialCfg.KeepAlivePeriod
+	}
+
+	conn, err := dialer.Dial("tcp", host)
 	if err != nil {
 		return nil, err
+	}
+
+	if tcp, ok := conn.(*net.TCPConn); ok && s.dialCfg.KeepAlivePeriod > 0 {
+		_ = tcp.SetKeepAlive(true)
+		_ = tcp.SetKeepAlivePeriod(s.dialCfg.KeepAlivePeriod)
 	}
 
 	if s.tlsConfig != nil {
