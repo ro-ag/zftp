@@ -42,6 +42,8 @@ Here are some of the most important functions provided by the zftp package:
 - `(*FTPSession) ListDatasets(remotePath string) ([]hfs.Dataset, error)`: List z/OS datasets at the specified remote path, including dataset attributes.
 
 - `(*FTPSession) GetAndGzip(remoteFile, localFile string, transferType TransferType) error`: Retrieve a file from the FTP server, compress it using gzip format, and store it locally in a single step.
+- `(*FTPSession) Conn() net.Conn`: Retrieve the underlying connection so you can
+  apply custom options such as TCP keep-alives.
 
 Refer to the [GoDoc](https://pkg.go.dev/gopkg.in/ro-ag/zftp.v0) for detailed documentation and more functions provided by the package.
 
