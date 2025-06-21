@@ -29,19 +29,34 @@ type FTPSession struct {
 	lastMessage strings.Builder
 	dataConns   sync.Map
 	tlsConfig   *tls.Config
+	dialCfg     dialOptions
 	mu          sync.Mutex
 }
 
 // Open opens a Net connection to the FTP server and returns an FTPSession
-func Open(server string) (*FTPSession, error) {
-	conn, err := net.Dial("tcp", server)
+func Open(server string, opts ...Option) (*FTPSession, error) {
+	var cfg dialOptions
+	cfg.apply(opts)
+
+	dialer := net.Dialer{Timeout: cfg.DialTimeout}
+	if cfg.KeepAlivePeriod > 0 {
+		dialer.KeepAlive = cfg.KeepAlivePeriod
+	}
+
+	conn, err := dialer.Dial("tcp", server)
 	if err != nil {
 		return nil, err
 	}
 
+	if tcp, ok := conn.(*net.TCPConn); ok && cfg.KeepAlivePeriod > 0 {
+		_ = tcp.SetKeepAlive(true)
+		_ = tcp.SetKeepAlivePeriod(cfg.KeepAlivePeriod)
+	}
+
 	session := &FTPSession{
-		conn:   conn,
-		reader: bufio.NewReader(conn),
+		conn:    conn,
+		reader:  bufio.NewReader(conn),
+		dialCfg: cfg,
 	}
 
 	msg, err := CodeSvcReadySoon.check(session.reader)
