@@ -73,6 +73,12 @@ func (s *FTPSession) SetVerbose(level LogLevel) {
 	log.SetLevel(log.Level(level))
 }
 
+// Conn exposes the underlying network connection used by the session.
+// This allows the caller to apply custom options such as TCP keep alive.
+func (s *FTPSession) Conn() net.Conn {
+	return s.conn
+}
+
 // AuthTLS sends the AUTH TLS command to the FTP server and sets up the TLS connection
 func (s *FTPSession) AuthTLS(tlsConfig *tls.Config) error {
 	s.mu.Lock()
