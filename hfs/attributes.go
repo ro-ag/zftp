@@ -54,6 +54,11 @@ func (f *FieldInt) parse(data string) error {
 		f.data = 0
 		return nil
 	}
+	// Handle overflow indicator (z/OS displays '+++++' when value exceeds display width)
+	if strings.Contains(data, "+") {
+		f.data = 65535 // max uint16 to indicate overflow
+		return nil
+	}
 	value, err := strconv.Atoi(data)
 	if err != nil {
 		return fmt.Errorf("failed to parse integer field: %w", err)
