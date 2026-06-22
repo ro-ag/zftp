@@ -65,7 +65,9 @@ HELLO, WORLD!
 				t.Logf("Job is still active")
 				time.Sleep(5 * time.Second)
 				status, err = s.GetJobStatus(job.ID)
-
+				if err != nil {
+					t.Fatal(err)
+				}
 			} else {
 				t.Fatal(err)
 			}

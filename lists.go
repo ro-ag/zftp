@@ -18,10 +18,8 @@ func (s *FTPSession) anyList(cmd, expression string) ([]string, string, error) {
 	trimLine := false
 	switch cmd {
 	case "LIST":
-		break
 	case "NLST":
 		trimLine = true
-		break
 	default:
 		log.Panicf("invalid command: %s", cmd)
 	}

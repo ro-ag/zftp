@@ -192,6 +192,9 @@ func (s *FTPSession) SubmitJesGetByDSN(jcl string) (*JobResult, error) {
 	}
 
 	job.ReturnCode, err = strconv.Atoi(res[2])
+	if err != nil {
+		return job, fmt.Errorf("failed to parse job return code %q: %w", res[2], err)
+	}
 	return job, nil
 }
 

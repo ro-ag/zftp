@@ -51,7 +51,7 @@ func findPort(line string) (int, error) {
 	line = strings.ReplaceAll(line, " ", "")
 
 	matches := regexPort.FindStringSubmatch(line)
-	if matches == nil || len(matches) < 3 {
+	if len(matches) < 3 {
 		return 0, fmt.Errorf("cannot find port in text: %s", line)
 	}
 
