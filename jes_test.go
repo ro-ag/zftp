@@ -1,9 +1,11 @@
+// SPDX-License-Identifier: Apache-2.0
+
 package zftp_test
 
 import (
 	"errors"
-	"gopkg.in/ro-ag/zftp.v1"
-	"gopkg.in/ro-ag/zftp.v1/hfs"
+	"gopkg.in/ro-ag/zftp.v2"
+	"gopkg.in/ro-ag/zftp.v2/hfs"
 	"regexp"
 	"strings"
 	"testing"
@@ -63,7 +65,9 @@ HELLO, WORLD!
 				t.Logf("Job is still active")
 				time.Sleep(5 * time.Second)
 				status, err = s.GetJobStatus(job.ID)
-
+				if err != nil {
+					t.Fatal(err)
+				}
 			} else {
 				t.Fatal(err)
 			}

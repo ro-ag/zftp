@@ -1,58 +1,59 @@
+// SPDX-License-Identifier: Apache-2.0
+
 package zftp
 
 import (
 	"fmt"
-	"gopkg.in/ro-ag/zftp.v1/eol"
-	"gopkg.in/ro-ag/zftp.v1/internal/log"
-	"gopkg.in/ro-ag/zftp.v1/internal/transfer"
+	"gopkg.in/ro-ag/zftp.v2/eol"
+	"gopkg.in/ro-ag/zftp.v2/internal/log"
+	"gopkg.in/ro-ag/zftp.v2/internal/transfer"
 	"io"
 )
 
-type TransferType interface {
-	strCommand() string
-	IsAscii() bool
-	IsBinary() bool
-	Name() string
-}
-
-type transferType uint8
+// TransferType is the FTP representation type for a transfer. It is a concrete
+// enum (not an interface): callers pass one of the exported values rather than
+// implementing it.
+type TransferType uint8
 
 const (
-	TypeAscii  transferType = 'A'
-	TypeImage  transferType = 'I'
-	TypeBinary              = TypeImage
+	// TypeAscii selects ASCII mode (TYPE A), with end-of-line conversion.
+	TypeAscii TransferType = 'A'
+	// TypeImage selects binary/image mode (TYPE I), byte-for-byte.
+	TypeImage TransferType = 'I'
+	// TypeBinary is an alias for TypeImage.
+	TypeBinary = TypeImage
 )
 
-// StrCommand returns the command string for the transfer type
-func (t transferType) strCommand() string {
+// strCommand returns the FTP command string for the transfer type.
+func (t TransferType) strCommand() string {
 	return fmt.Sprintf("TYPE %c", t)
 }
 
-// Name returns the name of the transfer type
-func (t transferType) Name() string {
+// Name returns the human-readable name of the transfer type.
+func (t TransferType) Name() string {
 	if t.IsAscii() {
 		return "ASCII"
 	}
 	return "BINARY"
 }
 
-// SetType sets the transfer type and stores it in the FTPSession
+// IsAscii reports whether the transfer type is ASCII.
+func (t TransferType) IsAscii() bool {
+	return t == TypeAscii
+}
+
+// IsBinary reports whether the transfer type is binary/image.
+func (t TransferType) IsBinary() bool {
+	return t == TypeBinary
+}
+
+// SetType sets the transfer type and stores it in the FTPSession.
 func (s *FTPSession) SetType(t TransferType) error {
 	_, err := s.SendCommand(CodeCmdOK, t.strCommand())
 	if err == nil {
 		s.currType = t
 	}
 	return err
-}
-
-// IsAscii returns true if the transfer type is ASCII
-func (t transferType) IsAscii() bool {
-	return t == TypeAscii
-}
-
-// IsBinary returns true if the transfer type is binary
-func (t transferType) IsBinary() bool {
-	return t == TypeBinary
 }
 
 // transfer is a helper function that performs a data transfer.

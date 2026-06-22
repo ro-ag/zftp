@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: Apache-2.0
+
 package hfs
 
 import (
@@ -62,71 +64,59 @@ func (m *InfoPdsMember) Headers() []string {
 	return headers
 }
 
-const (
-	nameOffset    = 0
-	nameSize      = 8
-	vvMmOffset    = 8
-	vvMmSize      = 7
-	createdOffset = 15
-	createdSize   = 11
-	changedOffset = 26
-	changedSize   = 17
-	sizeOffset    = 43
-	sizeSize      = 6
-	initOffset    = 49
-	initSize      = 6
-	modOffset     = 55
-	modSize       = 6
-	idOffset      = 61
-	idSize        = 9
-)
+// idStart is the byte offset of the trailing Id column; a record must reach it
+// to be considered a parseable member line.
+const idStart = 61
 
-// ParseInfoPdsMember parses a Partitioned Dataset member recordß
+// pdsFields is the fixed-width column layout of a z/OS PDS member listing.
+// The Id column (width 0) runs to the end of the record.
+var pdsFields = []field{
+	{"Name", 0, 8},
+	{"VvMm", 8, 7},
+	{"Created", 15, 11},
+	{"Changed", 26, 17},
+	{"Size", 43, 6},
+	{"Init", 49, 6},
+	{"Mod", 55, 6},
+	{"Id", idStart, 0},
+}
+
+// setField routes a raw column value to its typed destination on the member.
+func (m *InfoPdsMember) setField(name, raw string) error {
+	switch name {
+	case "Name":
+		return m.Name.parse(raw)
+	case "VvMm":
+		return m.VvMm.parse(raw)
+	case "Created":
+		return m.Created.parse(raw)
+	case "Changed":
+		return m.Changed.parse(raw)
+	case "Size":
+		return m.Size.parse(raw)
+	case "Init":
+		return m.Init.parse(raw)
+	case "Mod":
+		return m.Mod.parse(raw)
+	case "Id":
+		return m.Id.parse(raw)
+	default:
+		return fmt.Errorf("unknown PDS member field %q", name)
+	}
+}
+
+// ParseInfoPdsMember parses a single Partitioned Dataset member record from the
+// z/OS FTP listing output.
 func ParseInfoPdsMember(record string) (InfoPdsMember, error) {
-	if len(record) < idOffset {
+	if len(record) < idStart {
 		return InfoPdsMember{}, fmt.Errorf("record too short: %d", len(record))
 	}
 
 	member := InfoPdsMember{}
-
-	err := member.Name.parse(record[nameOffset : nameOffset+nameSize])
-	if err != nil {
-		return InfoPdsMember{}, fmt.Errorf("failed to parse Name field: %w", err)
-	}
-
-	err = member.VvMm.parse(record[vvMmOffset : vvMmOffset+vvMmSize])
-	if err != nil {
-		return InfoPdsMember{}, fmt.Errorf("failed to parse VvMm field: %w", err)
-	}
-
-	err = member.Created.parse(record[createdOffset : createdOffset+createdSize])
-	if err != nil {
-		return InfoPdsMember{}, fmt.Errorf("failed to parse Created field: %w", err)
-	}
-
-	err = member.Changed.parse(record[changedOffset : changedOffset+changedSize])
-	if err != nil {
-		return InfoPdsMember{}, fmt.Errorf("failed to parse Changed field: %w", err)
-	}
-
-	err = member.Size.parse(record[sizeOffset : sizeOffset+sizeSize])
-	if err != nil {
-		return InfoPdsMember{}, fmt.Errorf("failed to parse Size field: %w", err)
-	}
-
-	err = member.Init.parse(record[initOffset : initOffset+initSize])
-	if err != nil {
-		return InfoPdsMember{}, fmt.Errorf("failed to parse Init field: %w", err)
-	}
-
-	err = member.Mod.parse(record[modOffset : modOffset+modSize])
-	if err != nil {
-		return InfoPdsMember{}, fmt.Errorf("failed to parse Mod field: %w", err)
-	}
-
-	err = member.Id.parse(record[idOffset:])
-	if err != nil {
-		return InfoPdsMember{}, fmt.Errorf("failed to parse Id field: %w", err)
+	for _, f := range pdsFields {
+		if err := member.setField(f.name, f.slice(record)); err != nil {
+			return InfoPdsMember{}, fmt.Errorf("failed to parse %s field: %w", f.name, err)
+		}
 	}
 
 	return member, nil

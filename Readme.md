@@ -1,113 +1,126 @@
-# zFTP
+# zftp
 
-[![Go Reference](https://pkg.go.dev/badge/gopkg.in/ro-ag/zftp.v1.svg)](https://pkg.go.dev/gopkg.in/ro-ag/zftp.v1)
+[![Go Reference](https://pkg.go.dev/badge/gopkg.in/ro-ag/zftp.v2.svg)](https://pkg.go.dev/gopkg.in/ro-ag/zftp.v2)
+[![CI](https://github.com/ro-ag/zftp/actions/workflows/ci.yml/badge.svg)](https://github.com/ro-ag/zftp/actions/workflows/ci.yml)
+[![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](./LICENSE)
 
-The zftp package provides a convenient and feature-rich way to work with mainframe FTP servers, specifically designed for z/OS systems. It offers capabilities to interact with z/OS datasets, execute FTP commands tailored for mainframe operations, and handle mainframe-specific attributes and file transfer modes.
+A **pure-Go FTP client specialized for IBM z/OS mainframes** — datasets, JES
+spool, HFS attributes, SITE parameters, and mainframe transfer modes. No cgo, no
+external dependencies.
+
+```bash
+go get gopkg.in/ro-ag/zftp.v2
+```
+
+> v2 is the current line. It is a clean, SemVer-correct break from v1: the public
+> API returns concrete types instead of interfaces. Existing v1 tags are
+> unaffected.
 
 ## Features
 
-- **FTP Session Management**: Establish and manage FTP sessions with a mainframe server. Send commands to the server and handle the server's responses.
+- **Session management** — connect, authenticate, and run z/OS FTP commands; a
+  custom `ReturnError` carries the received and expected reply codes.
+- **File transfer** — ASCII and binary (image) modes, end-of-line conversion for
+  ASCII transfers, and offset/`REST`-based resume.
+- **Datasets** — list with full attributes (volume, unit, RECFM, LRECL, BLKSIZE,
+  DSORG) and classify sequential, partitioned (PDS), migrated, not-mounted, and
+  VSAM datasets.
+- **JES** — submit jobs (JCL) and parse the spool, including interface levels 1
+  and 2, return codes, ABENDs, and JCL errors.
+- **SITE / status** — read server status via `XSTA` (`StatusOf`) and set dataset
+  allocation attributes via `SITE` (`SetStatusOf`, `SetDataSpecs`).
+- **Passive mode** and TLS (`AUTH TLS`).
 
-- **File Transfer**: Retrieve and upload files to/from the FTP server. The package supports both ASCII and binary transfer modes, and includes functions to handle end-of-line sequence conversions between different operating systems.
-
-- **FTP Commands**: Implement various FTP commands specific to z/OS systems, including listing datasets, executing JES commands, managing site parameters, and handling passive mode connections.
-
-- **Dataset Management**: Interact with z/OS datasets, including retrieving attributes, checking migration status, and verifying dataset size. The package also provides functions to handle different types of datasets, such as partitioned and sequential datasets.
-
-- **HFS Attributes**: Handle HFS attributes, manage HFS datasets, and work with partitioned datasets. The package also provides functions to parse job records and details from the JES spool.
-
-- **Error Handling**: Define a set of FTP return codes and provide functions to check the server's response against these codes. The package includes a custom error type for FTP return code errors, which includes the received and expected return codes and an error message.
-## Installation
-
-To install the zftp package, use the following `go get` command:
-
-```bash
-go get gopkg.in/ro-ag/zftp.v1
-```
-
-## Usage
-
-Here are some of the most important functions provided by the zftp package:
-
-- `Open(hostname string, opts ...Option) (*FTPSession, error)`: Open an FTP session to the specified hostname. Optional `Option` values allow you to configure timeouts or TCP keep-alives for the underlying connections.
-
-- `(*FTPSession) Login(username, password string) error`: Log in to the FTP server using the provided username and password.
-
-- `(*FTPSession) Get(remoteFile, localFile string, transferType TransferType) error`: Retrieve a file from the FTP server and store it locally, specifying the transfer type as ASCII or binary.
-
-- `(*FTPSession) Put(localFile, remoteFile string, transferType TransferType) error`: Upload a local file to the FTP server, specifying the transfer type as ASCII or binary.
-
-- `(*FTPSession) List(remotePath string) ([]string, error)`: List files and directories at the specified remote path on the FTP server.
-
-- `(*FTPSession) ListDatasets(remotePath string) ([]hfs.Dataset, error)`: List z/OS datasets at the specified remote path, including dataset attributes.
-
-- `(*FTPSession) GetAndGzip(remoteFile, localFile string, transferType TransferType) error`: Retrieve a file from the FTP server, compress it using gzip format, and store it locally in a single step.
-- `(*FTPSession) Conn() net.Conn`: Retrieve the underlying connection so you can
-  apply custom options such as TCP keep-alives.
-
-Refer to the [GoDoc](https://pkg.go.dev/gopkg.in/ro-ag/zftp.v0) for detailed documentation and more functions provided by the package.
-
-## Example
-
-Here's an example that demonstrates the basic usage of the zftp package:
+## Quick start
 
 ```go
 package main
 
 import (
-        "fmt"
-        "time"
-        "gopkg.in/ro-ag/zftp.v0"
+	"fmt"
+	"log"
+
+	zftp "gopkg.in/ro-ag/zftp.v2"
 )
 
 func main() {
-        // Open an FTP session to the mainframe server with a 30s timeout
-        s, err := zftp.Open("example.com", zftp.WithTimeout(30*time.Second))
+	// Address is host:port.
+	s, err := zftp.Open("mainframe.example.com:21")
 	if err != nil {
-		fmt.Println("Failed to open FTP session:", err)
-		return
+		log.Fatal(err)
+	}
+	defer s.Close()
+
+	if err := s.Login("USER", "PASSWORD"); err != nil {
+		log.Fatal(err)
 	}
 
-	// Log in to the FTP server
-	err = s.Login("username", "password")
+	// List datasets with their attributes.
+	datasets, err := s.ListDatasets("USER.*")
 	if err != nil {
-		fmt.Println("Failed to log in:", err)
-		return
+		log.Fatal(err)
+	}
+	for _, d := range datasets {
+		fmt.Printf("%-44s recfm=%-4s lrecl=%s\n", d.Name(), d.Recfm.String(), d.Lrecl.String())
 	}
 
-	// Retrieve a file from the FTP server and store it locally
-	err = s.Get("remote_file.txt", "local_file.txt", zftp.TypeAscii)
-	if err != nil {
-		fmt.Println("Failed to retrieve file:", err)
-		return
+	// Download a member in binary mode.
+	if err := s.Get("USER.SOURCE(MEMBER)", "member.txt", zftp.TypeBinary); err != nil {
+		log.Fatal(err)
 	}
-
-	// Retrieve and compress a file from the FTP server using gzip format
-	err = s.GetAndGzip("remote_file.txt", "local_file.txt.gz", zftp.TypeAscii)
-	if err != nil {
-		fmt.Println("Failed to retrieve and compress file:", err)
-		return
-	}
-
-	// Close the FTP session
-	err = s.Close()
-	if err != nil {
-		fmt.Println("Failed to close FTP session:", err)
-		return
-	}
-
-	fmt.Println("File retrieved and compressed successfully!")
 }
 ```
 
-The `GetAndGzip` function allows you to retrieve a file from the FTP server and compress it using gzip format in a single step. This can be beneficial in scenarios where you need to conserve bandwidth and storage space. By compressing the file during the retrieval process, you reduce the size of the transferred data, resulting in faster downloads and reduced storage requirements. The `GetAndGzip` function simplifies this process by handling the retrieval and compression in a single function call, streamlining your file transfer operations.
+A compile-checked version of this snippet lives in
+[`example_test.go`](./example_test.go).
+
+## Commonly used API
+
+- `Open(address string, opts ...Option) (*FTPSession, error)` — open a session
+  to `host:port`. Options include `WithTimeout`, `WithKeepAlive`, `WithDialer`,
+  and `WithSignalHandler`.
+- `(*FTPSession) Login(user, pass string) error`
+- `(*FTPSession) Get(remote, local string, mode TransferType) error` /
+  `Put(local, remote string, mode TransferType, a ...DataSpec) error`
+- `(*FTPSession) RetrieveIO(remote string, w io.Writer, mode TransferType)` /
+  `StoreIO(remote string, r io.Reader, mode TransferType)` — stream without
+  touching the local filesystem.
+- `(*FTPSession) ListDatasets(pattern string) ([]hfs.InfoDataset, error)`
+- `(*FTPSession) ListPds(pattern string) ([]hfs.InfoPdsMember, error)`
+- `(*FTPSession) ListSpool(pattern string) ([]hfs.InfoJob, error)`
+- `(*FTPSession) SubmitJCL(jcl string, opts ...JesSpec) (*JesJob, error)`
+- `(*FTPSession) GetAndGzip(remote, local string, mode TransferType) error` —
+  retrieve and gzip in one step.
+
+Full reference: [pkg.go.dev/gopkg.in/ro-ag/zftp.v2](https://pkg.go.dev/gopkg.in/ro-ag/zftp.v2).
+
+## Testing without a mainframe
+
+The package ships an in-process mock z/OS FTP server (`internal/mockzos`) used by
+the unit tests, so the full client — dial, passive negotiation, data transfer,
+multiline reply parsing, dataset/JES parsing — is exercised over loopback with no
+real host. The fixed-width parsers are verified by exact-match golden tests
+against captured z/OS output (`hfs/testdata`). Run them with:
+
+```bash
+go test -race ./...
+```
+
+Integration tests that require a live host are skipped unless `ZFTP_HOSTNAME`,
+`ZFTP_USERNAME`, and `ZFTP_PASSWORD` are set.
+
+## Command-line client
+
+A CLI built on this library lives in [`cli/`](./cli) as a separate module, which
+keeps the library itself dependency-free. It is currently a skeleton; the full
+client and downloadable binaries are planned.
 
 ## Contributing
 
-Contributions to the zftp package are welcome! Please open an issue to discuss any proposed changes or improvements.
+Issues and pull requests are welcome. Please open an issue to discuss substantial
+changes first.
 
 ## License
 
-The zftp package is licensed under the MIT License. See the [LICENSE](./LICENSE) file for more information.
-
----
+Licensed under the Apache License 2.0. See [LICENSE](./LICENSE) and
+[NOTICE](./NOTICE).

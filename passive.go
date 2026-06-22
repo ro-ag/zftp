@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: Apache-2.0
+
 package zftp
 
 import (
@@ -5,8 +7,8 @@ import (
 	"context"
 	"crypto/tls"
 	"fmt"
-	"gopkg.in/ro-ag/zftp.v1/internal/log"
-	"gopkg.in/ro-ag/zftp.v1/internal/utils"
+	"gopkg.in/ro-ag/zftp.v2/internal/log"
+	"gopkg.in/ro-ag/zftp.v2/internal/utils"
 	"net"
 	"regexp"
 	"strconv"
@@ -49,7 +51,7 @@ func findPort(line string) (int, error) {
 	line = strings.ReplaceAll(line, " ", "")
 
 	matches := regexPort.FindStringSubmatch(line)
-	if matches == nil || len(matches) < 3 {
+	if len(matches) < 3 {
 		return 0, fmt.Errorf("cannot find port in text: %s", line)
 	}
 

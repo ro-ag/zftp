@@ -1,10 +1,12 @@
+// SPDX-License-Identifier: Apache-2.0
+
 package hfs_test
 
 import (
 	"bufio"
 	"encoding/csv"
 	"encoding/json"
-	"gopkg.in/ro-ag/zftp.v1/hfs"
+	"gopkg.in/ro-ag/zftp.v2/hfs"
 	"os"
 	"testing"
 )

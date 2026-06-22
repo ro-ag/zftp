@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: Apache-2.0
+
 package eol
 
 // LineBreaker is an interface for end-of-line sequences.

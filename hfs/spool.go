@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: Apache-2.0
+
 package hfs
 
 import (
@@ -47,15 +49,23 @@ func (j *InfoJob) String() string {
 }
 
 // ParseInfoJob parses a slice of strings into a slice of InfoJob structs.
+// Blank lines (common when the raw server response is split on newlines, e.g. a
+// trailing newline) are ignored so callers need not pre-trim the input.
 func ParseInfoJob(records []string) ([]InfoJob, error) {
-	if len(records) == 0 {
+	cleaned := make([]string, 0, len(records))
+	for _, r := range records {
+		if strings.TrimSpace(r) != "" {
+			cleaned = append(cleaned, r)
+		}
+	}
+	if len(cleaned) == 0 {
 		return nil, fmt.Errorf("no records provided")
 	}
 
-	kind := getInterfaceLevel(records[0])
-	jobs := make([]InfoJob, 0)
+	kind := getInterfaceLevel(cleaned[0])
+	jobs := make([]InfoJob, 0, len(cleaned))
 
-	for i, record := range records {
+	for i, record := range cleaned {
 		if i == 0 && kind == jesInterfaceLevel2 {
 			continue
 		}
@@ -242,7 +252,7 @@ func ParseInfoJobDetail(records []string) (*InfoJobDetail, error) {
 		if numberPrefixRegex.MatchString(records[i]) {
 			spoolFiles := numberPrefixRegex.FindStringSubmatch(records[i])
 			if len(spoolFiles) != 2 {
-				return jd, fmt.Errorf("failed to parse %s record at line %d: %w", jesLevel(kind), i+1, err)
+				return jd, fmt.Errorf("failed to parse spool-file count at line %d: %q", i+1, records[i])
 			}
 			n, _ := strconv.Atoi(spoolFiles[1])
 			if len(dt) != n {

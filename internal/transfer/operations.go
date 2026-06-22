@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: Apache-2.0
+
 package transfer
 
 import (
@@ -99,7 +101,6 @@ func (s *StoreAscii) Transfer(conn net.Conn) (int64, error) {
 		default:
 			size += int64(n)
 		}
-		size += int64(n)
 	}
 
 	if err := s.scanner.Err(); err != nil {
