@@ -18,14 +18,16 @@ import (
 	"sync"
 	"sync/atomic"
 	"syscall"
+	"time"
 )
 
 // FTPSession represents an FTP session
 type FTPSession struct {
 	conn        net.Conn
+	rawConn     net.Conn // underlying socket, never swapped on TLS upgrade; lets Close interrupt a blocked control read
 	system      string
 	user        string
-	currType    TransferType
+	currType    atomic.Uint32 // current TransferType; atomic so transfers can read it lock-free
 	jobPrefix   *regexp.Regexp
 	isClosed    atomic.Bool
 	reader      *bufio.Reader
@@ -94,6 +96,7 @@ func dialControl(server string, cfg dialOptions) (net.Conn, error) {
 func newSession(conn net.Conn, cfg dialOptions) *FTPSession {
 	return &FTPSession{
 		conn:      conn,
+		rawConn:   conn,
 		reader:    bufio.NewReader(conn),
 		dialCfg:   cfg,
 		jobPrefix: regexp.MustCompile(`(JOB\d{5})`),
@@ -133,7 +136,9 @@ func (s *FTPSession) AuthTLS(tlsConfig *tls.Config) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
-	_, err := s.SendCommand(CodeSecurityOk, "AUTH", "TLS")
+	// Already holding s.mu: use sendLocked to avoid re-entrant deadlock, and keep
+	// the AUTH negotiation and the conn/reader swap atomic against other commands.
+	_, err := s.sendLocked(context.Background(), CodeSecurityOk, "AUTH", "TLS")
 	if err != nil {
 		return err
 	}
@@ -145,13 +150,13 @@ func (s *FTPSession) AuthTLS(tlsConfig *tls.Config) error {
 	s.reader = bufio.NewReader(s.conn)
 
 	// Protection Buffer Size
-	_, err = s.SendCommand(CodeCmdOK, "PBSZ", "0")
+	_, err = s.sendLocked(context.Background(), CodeCmdOK, "PBSZ", "0")
 	if err != nil {
 		return err
 	}
 
 	// data Channel Protection Level
-	_, err = s.SendCommand(CodeCmdOK, "PROT", "P")
+	_, err = s.sendLocked(context.Background(), CodeCmdOK, "PROT", "P")
 	if err != nil {
 		return err
 	}
@@ -159,32 +164,55 @@ func (s *FTPSession) AuthTLS(tlsConfig *tls.Config) error {
 	return nil
 }
 
-// Close closes all connections to the FTP server
+// Close closes all connections to the FTP server. It is idempotent and safe to
+// call concurrently with in-flight commands: Close and the command path both take
+// the session mutex, so a command in progress finishes before the connection is
+// torn down (and a command that starts after Close fails cleanly).
 func (s *FTPSession) Close() error {
+	// Interrupt any control read currently blocked under s.mu so its goroutine
+	// returns and releases the lock; otherwise Close would block forever behind a
+	// command stalled on a silent peer. rawConn is the underlying socket (never
+	// swapped on a TLS upgrade), so this interrupts plaintext and TLS reads alike.
+	// It is safe to touch without the lock: rawConn is set once at construction.
+	_ = s.rawConn.SetDeadline(time.Now())
+
 	s.mu.Lock()
 	defer s.mu.Unlock()
-	// Close all data connections
+	return s.closeLocked()
+}
+
+// closeLocked tears down the control connection and every data connection. It is
+// idempotent. The caller must hold s.mu. It is also invoked from the send path
+// when an I/O error leaves the control stream unrecoverable.
+func (s *FTPSession) closeLocked() error {
+	if s.isClosed.Swap(true) {
+		return nil
+	}
+
+	// Close all data connections.
 	s.dataConns.Range(func(name, conn any) bool {
 		child := conn.(*childConnection)
 		log.Debugf("closing child net connection %s", child.RemoteAddr())
-		err := child.Close()
-		if err != nil {
+		if err := child.Close(); err != nil {
 			log.Warningf("Error closing child net connection %s: %s", child.RemoteAddr(), err)
 		}
 		return true
 	})
 
-	// Send QUIT command and close main connection
-
 	log.Debugf("closing session connection %s", s.conn.RemoteAddr())
-
-	err := s.conn.Close()
-	if err != nil {
+	if err := s.conn.Close(); err != nil {
 		log.Warningf("Error closing session connection: %s", err)
 		return err
 	}
-	s.isClosed.Store(true)
 	return nil
+}
+
+// IsClosed reports whether the session has been closed — either explicitly via
+// Close or implicitly after an unrecoverable control-connection error (for
+// example a context timeout that aborts an in-flight command). A closed session
+// rejects further commands.
+func (s *FTPSession) IsClosed() bool {
+	return s.isClosed.Load()
 }
 
 // Login sends the USER and PASS commands to the FTP server
@@ -194,41 +222,44 @@ func (s *FTPSession) Login(user, pass string) error {
 
 	s.user = strings.ToUpper(user)
 
-	_, err := s.SendCommand(CodeNeedPwd, "USER", user)
+	// The whole login handshake runs under s.mu, so every step uses the locked
+	// helpers (sendLocked / setTypeLocked / setStatusOfLocked) to avoid the
+	// re-entrant deadlock a sync.Mutex would otherwise cause.
+	_, err := s.sendLocked(context.Background(), CodeNeedPwd, "USER", user)
 	if err != nil {
 		return err
 	}
 
-	_, err = s.SendCommand(CodeLoggedInProceed, "PASS", pass)
+	_, err = s.sendLocked(context.Background(), CodeLoggedInProceed, "PASS", pass)
 	if err != nil {
 		return err
 	}
 	// set passive mode
-	_, err = s.SendCommand(CodeEnteringPassiveMode, "PASV")
+	_, err = s.sendLocked(context.Background(), CodeEnteringPassiveMode, "PASV")
 	if err != nil {
 		return err
 	}
 
 	/* Set default type to Image or Binary */
-	err = s.SetType(TypeImage)
+	err = s.setTypeLocked(TypeImage)
 	if err != nil {
 		return err
 	}
 
 	/* Indicate mainframe set End of line default per system */
-	err = s.SetStatusOf().SBSendEol(eol.System)
+	err = s.setStatusOfLocked().SBSendEol(eol.System)
 	if err != nil {
 		return err
 	}
 
 	/* Indicate mainframe set End of line default per system */
-	err = s.SetStatusOf().MBSendEol(eol.System)
+	err = s.setStatusOfLocked().MBSendEol(eol.System)
 	if err != nil {
 		return err
 	}
 
 	/* Check */
-	syt, err := s.SendCommand(CodeSysType, "SYST")
+	syt, err := s.sendLocked(context.Background(), CodeSysType, "SYST")
 	if err != nil {
 		return err
 	}
@@ -244,5 +275,7 @@ func (s *FTPSession) Login(user, pass string) error {
 
 // GetUser returns the current username
 func (s *FTPSession) GetUser() string {
+	s.mu.Lock()
+	defer s.mu.Unlock()
 	return s.user
 }

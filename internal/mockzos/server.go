@@ -33,13 +33,16 @@ type Server struct {
 	closed atomic.Bool
 	wg     sync.WaitGroup
 
-	mu          sync.Mutex
-	lineScripts map[string][]string // full command line (upper) -> raw reply lines
-	verbScripts map[string][]string // verb (upper) -> raw reply lines
-	dataByLine  map[string]string   // full command line (upper) -> payload to send
-	dataByVerb  map[string]string   // verb (upper) -> payload to send
-	stored      map[string][]byte   // STOR arg (upper) -> captured payload
-	received    []string            // every command line received, in order
+	mu            sync.Mutex
+	lineScripts   map[string][]string // full command line (upper) -> raw reply lines
+	verbScripts   map[string][]string // verb (upper) -> raw reply lines
+	dataByLine    map[string]string   // full command line (upper) -> payload to send
+	dataByVerb    map[string]string   // verb (upper) -> payload to send
+	stored        map[string][]byte   // STOR arg (upper) -> captured payload
+	withheld      map[string]bool     // full line or verb (upper) -> swallow without replying
+	hangup        map[string]bool     // full line or verb (upper) -> drop the control conn without replying
+	dropAfterData map[string]bool     // download verb (upper) -> drop control after data, before the closing reply
+	received      []string            // every command line received, in order
 }
 
 // New starts a Server on 127.0.0.1:0 and registers cleanup with the test.
@@ -50,13 +53,16 @@ func New(tb testing.TB) *Server {
 		tb.Fatalf("mockzos listen: %v", err)
 	}
 	s := &Server{
-		tb:          tb,
-		ln:          ln,
-		lineScripts: map[string][]string{},
-		verbScripts: map[string][]string{},
-		dataByLine:  map[string]string{},
-		dataByVerb:  map[string]string{},
-		stored:      map[string][]byte{},
+		tb:            tb,
+		ln:            ln,
+		lineScripts:   map[string][]string{},
+		verbScripts:   map[string][]string{},
+		dataByLine:    map[string]string{},
+		dataByVerb:    map[string]string{},
+		stored:        map[string][]byte{},
+		withheld:      map[string]bool{},
+		hangup:        map[string]bool{},
+		dropAfterData: map[string]bool{},
 	}
 	s.wg.Add(1)
 	go s.serve()
@@ -128,6 +134,17 @@ func (s *Server) handle(conn net.Conn) {
 // dispatch handles a single command. It returns true when the connection should
 // close (QUIT).
 func (s *Server) dispatch(sess *session, line, verb, arg string) bool {
+	// A withheld command is consumed without any reply, modeling a hung control
+	// connection so the client's timeout/cancel paths can be exercised. The
+	// connection stays open; the client is expected to give up and close it.
+	if s.isWithheld(line, verb) {
+		return false
+	}
+	// A hung-up command drops the control connection with no reply, modeling a
+	// peer that closes the control stream (EOF) instead of answering.
+	if s.isHangup(line, verb) {
+		return true
+	}
 	// Explicit scripted replies take precedence over defaults.
 	if reply, ok := s.scriptFor(line, verb); ok {
 		writeLines(sess.conn, reply)
@@ -204,6 +221,12 @@ func (s *Server) handleDownload(sess *session, line, verb, arg string) {
 	writeLines(sess.conn, []string{"125 data connection already open; transfer starting"})
 	_, _ = dc.Write([]byte(payload))
 	_ = dc.Close()
+	// Optionally drop the control connection after the data has been delivered but
+	// before the closing reply, so the client's post-transfer reply read hits EOF.
+	if s.isDropAfterData(verb) {
+		_ = sess.conn.Close()
+		return
+	}
 	writeLines(sess.conn, []string{"250 transfer completed successfully"})
 }
 

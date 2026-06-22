@@ -86,8 +86,16 @@ func (code ReturnCode) check(reader *bufio.Reader) (msg string, err error) {
 	for {
 		line, isPrefix, err := reader.ReadLine()
 		if err != nil {
-			// If ReadLine returns an io.EOF error, we return what we have
 			if err == io.EOF {
+				// EOF before any complete reply line means the peer closed the
+				// control stream mid-reply: an unrecoverable I/O failure, not a
+				// valid (if unexpected) FTP reply. Surface it as a plain error so
+				// callers close the desynchronized session instead of mistaking it
+				// for a ReturnError. If a complete reply was already read, fall
+				// through and let the code-mismatch logic below report it.
+				if receivedCode == 0 {
+					return response.String(), io.ErrUnexpectedEOF
+				}
 				break
 			}
 			return "", err

@@ -100,33 +100,34 @@ func (c *childConnection) Write(b []byte) (n int, err error) {
 // It updates the isClosed flag and deletes the connection from the maps.
 // Returns an error if closing the connection fails.
 func (c *childConnection) Close() error {
-	c.mu.Lock()
-	defer c.mu.Unlock()
-
-	alreadyClosed := c.isClosed.Load()
 	caller := utils.Caller()
 
-	log.Debugf("<%s> attempting to close child connection: %s = %p | closed=%v", caller, c.RemoteAddr().String(), c, alreadyClosed)
-
-	if c.isClosed.Load() {
+	// Flip the closed flag first (atomically) so concurrent closes are mutually
+	// exclusive and any in-flight scan/read sees the closure immediately.
+	if c.isClosed.Swap(true) {
+		log.Debugf("<%s> child connection already closed: %s = %p", caller, c.RemoteAddr().String(), c)
 		return nil
 	}
 
-	x, ok := c.maps.Load(c.RemoteAddr().String())
-	if !ok {
-		log.Panicf("<%s>: cannot find child connection in map: %p | %p", caller, c, x)
+	// Interrupt any read currently blocked on this connection so it returns
+	// promptly and releases its read lock; this keeps Close from blocking behind
+	// a stalled scan and serializes close against scan on the data connection.
+	_ = c.conn.SetDeadline(time.Now())
+
+	c.mu.Lock()
+	defer c.mu.Unlock()
+
+	if _, ok := c.maps.Load(c.RemoteAddr().String()); !ok {
+		log.Debugf("<%s>: child connection not present in map: %p", caller, c)
 	}
 
 	err := c.conn.Close()
 	if err != nil {
 		err = fmt.Errorf("<%s>: %w", caller, err)
 	}
-
-	c.isClosed.Store(true)
 	c.maps.Delete(c.RemoteAddr().String())
 
-	log.Debugf("closed child connection: %s = %p | closed=%v", c.RemoteAddr().String(), c, c.isClosed.Load())
-
+	log.Debugf("closed child connection: %s = %p", c.RemoteAddr().String(), c)
 	return err
 }
 

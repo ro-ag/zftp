@@ -4,49 +4,80 @@ package zftp
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"gopkg.in/ro-ag/zftp.v2/internal/log"
 	"gopkg.in/ro-ag/zftp.v2/internal/utils"
 	"strings"
+	"time"
 )
 
-// SendCommandWithContext sends a command to the FTP server and expects a specific return code.
-// The context allows for cancellation or timeouts.
+// SendCommandWithContext sends a command to the FTP server and expects a specific
+// return code. The context allows for cancellation or timeouts.
+//
+// The whole round-trip (write + reply) is serialized on the session mutex so the
+// control stream is never read or written by two goroutines at once, making
+// *FTPSession safe to share across goroutines.
 func (s *FTPSession) SendCommandWithContext(ctx context.Context, expect ReturnCode, command string, a ...string) (string, error) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	return s.sendLocked(ctx, expect, command, a...)
+}
 
-	var (
-		errChan     = make(chan error, 1)
-		respChan    = make(chan string, 1)
-		fullCommand = parseCommand(command, a...)
-	)
-
-	go func() {
-		// log has already been printed in parseCommand
-		_, err := s.conn.Write(fullCommand)
-		if err != nil {
-			log.Commandf("error %s", err)
-			errChan <- err
-			return
-		}
-
-		msg, err := expect.check(s.reader)
-		if err != nil {
-			log.Serverf("error %s", err)
-			errChan <- err
-			return
-		}
-
-		respChan <- msg
-	}()
-
-	select {
-	case <-ctx.Done():
-		return "", ctx.Err()
-	case err := <-errChan:
-		return "", err
-	case resp := <-respChan:
-		return resp, nil
+// sendLocked performs a single control-connection round-trip. The caller must
+// hold s.mu.
+//
+// Cancellation is honored by pushing the context deadline onto the connection and
+// doing the write/read inline (no spawned goroutine). FTP has no in-band way to
+// resynchronize a control stream once a reply is partially read, so any I/O-level
+// failure — a deadline firing, EOF, or a reset — leaves the stream unrecoverable:
+// the session is closed so later commands fail fast instead of reading a stale
+// reply. A complete-but-unexpected reply (a *ReturnError) keeps the stream in
+// sync and does not close the session.
+func (s *FTPSession) sendLocked(ctx context.Context, expect ReturnCode, command string, a ...string) (string, error) {
+	if s.isClosed.Load() {
+		return "", fmt.Errorf("zftp: cannot send %s: session is closed", strings.ToUpper(strings.TrimSpace(command)))
 	}
+	if err := ctx.Err(); err != nil {
+		return "", err
+	}
+
+	conn, reader := s.conn, s.reader
+	fullCommand := parseCommand(command, a...)
+
+	if dl, ok := ctx.Deadline(); ok {
+		if err := conn.SetDeadline(dl); err != nil {
+			return "", err
+		}
+		defer func() { _ = conn.SetDeadline(time.Time{}) }()
+	}
+
+	// log has already been printed in parseCommand
+	if _, err := conn.Write(fullCommand); err != nil {
+		log.Commandf("error %s", err)
+		s.closeLocked()
+		return "", fmt.Errorf("zftp: control connection write failed, session closed: %w", err)
+	}
+
+	msg, err := expect.check(reader)
+	if err != nil {
+		log.Serverf("error %s", err)
+		var re *ReturnError
+		if errors.As(err, &re) {
+			// Reply read in full but with an unexpected (yet valid) FTP code; the
+			// control stream is still in sync, so keep the session usable.
+			return msg, err
+		}
+		// I/O-level failure: the control stream is desynchronized for good.
+		s.closeLocked()
+		if ctxErr := ctx.Err(); ctxErr != nil {
+			return "", fmt.Errorf("zftp: command %s aborted (%w), session closed: %w",
+				strings.ToUpper(strings.TrimSpace(command)), ctxErr, err)
+		}
+		return "", fmt.Errorf("zftp: control connection error, session closed: %w", err)
+	}
+
+	return msg, nil
 }
 
 // parseCommand parses a command and its arguments into a byte slice.
@@ -99,6 +130,12 @@ func (s *FTPSession) checkLast(expect ReturnCode) (string, error) {
 
 	if err != nil {
 		log.Serverf("[res|error] %s", err)
+		var re *ReturnError
+		if !errors.As(err, &re) {
+			// I/O-level failure on the post-transfer reply read: like sendLocked,
+			// the control stream is desynchronized for good, so close the session.
+			s.closeLocked()
+		}
 		return "", err
 	}
 
@@ -107,8 +144,11 @@ func (s *FTPSession) checkLast(expect ReturnCode) (string, error) {
 
 // System get the system type of the FTP server. will panic
 func (s *FTPSession) System() string {
-	if s.system != "" {
-		return s.system
+	s.mu.Lock()
+	sys := s.system
+	s.mu.Unlock()
+	if sys != "" {
+		return sys
 	}
 
 	system, err := s.SendCommand(CodeSysType, "SYST")
