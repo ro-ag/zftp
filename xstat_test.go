@@ -64,6 +64,4 @@ func TestFTPSession_StatusOf(t *testing.T) {
 		})
 
 	}
-
-	return
 }

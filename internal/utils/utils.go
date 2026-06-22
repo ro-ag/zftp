@@ -160,7 +160,6 @@ func LastWordToBool(str string) (bool, error) {
 
 type SetRestorer struct {
 	orig string
-	want string
 	set  func(string) error
 	get  func() (string, error)
 }
