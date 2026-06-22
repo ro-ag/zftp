@@ -4,8 +4,8 @@ package zftp_test
 
 import (
 	"errors"
-	"gopkg.in/ro-ag/zftp.v1"
-	"gopkg.in/ro-ag/zftp.v1/hfs"
+	"gopkg.in/ro-ag/zftp.v2"
+	"gopkg.in/ro-ag/zftp.v2/hfs"
 	"regexp"
 	"strings"
 	"testing"

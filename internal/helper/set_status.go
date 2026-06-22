@@ -4,7 +4,7 @@ package helper
 
 import (
 	"fmt"
-	"gopkg.in/ro-ag/zftp.v1/eol"
+	"gopkg.in/ro-ag/zftp.v2/eol"
 	"strings"
 )
 
