@@ -4,6 +4,7 @@ package zftp
 
 import (
 	"bufio"
+	"context"
 	"crypto/tls"
 	"fmt"
 	"gopkg.in/ro-ag/zftp.v2/eol"
@@ -35,10 +36,40 @@ type FTPSession struct {
 	mu          sync.Mutex
 }
 
-// Open opens a Net connection to the FTP server and returns an FTPSession
+// Open opens a network connection to the FTP server, reads the greeting, and
+// returns an FTPSession. The control connection is obtained through the
+// configured Dialer (see WithDialer); by default a standard *net.Dialer is used.
 func Open(server string, opts ...Option) (*FTPSession, error) {
 	var cfg dialOptions
 	cfg.apply(opts)
+
+	conn, err := dialControl(server, cfg)
+	if err != nil {
+		return nil, err
+	}
+
+	session := newSession(conn, cfg)
+
+	msg, err := CodeSvcReadySoon.check(session.reader)
+	if err != nil {
+		_ = conn.Close()
+		return nil, err
+	}
+	log.Debug(utils.WrapText(msg))
+
+	if cfg.signalHandler {
+		session.installSignalHandler()
+	}
+
+	return session, nil
+}
+
+// dialControl establishes the control connection using the configured dialer,
+// falling back to a standard *net.Dialer with the configured timeout/keep-alive.
+func dialControl(server string, cfg dialOptions) (net.Conn, error) {
+	if cfg.dialer != nil {
+		return cfg.dialer.DialContext(context.Background(), "tcp", server)
+	}
 
 	dialer := net.Dialer{Timeout: cfg.DialTimeout}
 	if cfg.KeepAlivePeriod > 0 {
@@ -55,32 +86,33 @@ func Open(server string, opts ...Option) (*FTPSession, error) {
 		_ = tcp.SetKeepAlivePeriod(cfg.KeepAlivePeriod)
 	}
 
-	session := &FTPSession{
-		conn:    conn,
-		reader:  bufio.NewReader(conn),
-		dialCfg: cfg,
-	}
+	return conn, nil
+}
 
-	msg, err := CodeSvcReadySoon.check(session.reader)
-	if err != nil {
-		return nil, err
+// newSession wraps an established control connection in an FTPSession. It is the
+// unexported construction seam shared by Open and by in-process tests.
+func newSession(conn net.Conn, cfg dialOptions) *FTPSession {
+	return &FTPSession{
+		conn:      conn,
+		reader:    bufio.NewReader(conn),
+		dialCfg:   cfg,
+		jobPrefix: regexp.MustCompile(`(JOB\d{5})`),
 	}
-	log.Debug(utils.WrapText(msg))
-	// Setup signal handler
+}
+
+// installSignalHandler tears the session down on SIGINT/SIGTERM and exits.
+// Only installed when WithSignalHandler is set.
+func (s *FTPSession) installSignalHandler() {
 	c := make(chan os.Signal, 1)
 	signal.Notify(c, os.Interrupt, syscall.SIGTERM)
 	go func() {
 		<-c
-		if err = session.Close(); err != nil {
+		if err := s.Close(); err != nil {
 			log.Errorf("error closing FTP session: %s", err)
 			os.Exit(1)
 		}
 		os.Exit(0)
 	}()
-
-	session.jobPrefix = regexp.MustCompile(`(JOB\d{5})`)
-
-	return session, nil
 }
 
 // SetVerbose sets the verbose flag
