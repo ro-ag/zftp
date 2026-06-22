@@ -9,6 +9,7 @@ package hfs
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"strconv"
 	"strings"
@@ -46,57 +47,107 @@ func (f *FieldString) UnmarshalJSON(b []byte) error {
 
 /* ------------------------------------------------------------------------------------------------------------------ */
 
+// overflowMarker is the token z/OS prints in a fixed-width numeric column when
+// the underlying value is too wide to display (e.g. "+++++"). It is surfaced
+// verbatim by String/MarshalJSON so a display overflow can never be mistaken for
+// a real number such as 65535.
+const overflowMarker = "+++++"
+
+// errFieldIntJSON is returned when decoding a FieldInt from a JSON string that
+// is not the recognised overflow marker.
+var errFieldIntJSON = errors.New("invalid FieldInt JSON value")
+
+// FieldInt holds a non-negative integer column from a z/OS listing. The value is
+// stored as a uint32 so the full width of the source columns (up to six digits)
+// is representable without truncation. A z/OS display overflow is recorded out
+// of band via overflow rather than by reusing a magic numeric value, so callers
+// can always tell a genuine maximum from an undisplayable one (see IsOverflow).
 type FieldInt struct {
-	data uint16
+	data     uint32
+	overflow bool
 }
 
 func (f *FieldInt) parse(data string) error {
 	data = strings.TrimSpace(data)
+	f.data = 0
+	f.overflow = false
 	if len(data) == 0 {
-		f.data = 0
 		return nil
 	}
-	// Handle overflow indicator (z/OS displays '+++++' when value exceeds display width)
-	if strings.Contains(data, "+") {
-		f.data = 65535 // max uint16 to indicate overflow
+	// z/OS fills a numeric column with '+' when the value exceeds the column's
+	// display width. That is a display-overflow indicator, not a number: flag it
+	// out of band so it stays distinguishable from any real value.
+	if strings.ContainsRune(data, '+') {
+		f.overflow = true
 		return nil
 	}
-	value, err := strconv.Atoi(data)
+	// ParseUint (base 10, 32-bit) rejects a sign prefix and any value past
+	// uint32, so an out-of-range or negative column errors instead of silently
+	// wrapping the way uint16(value) used to.
+	value, err := strconv.ParseUint(data, 10, 32)
 	if err != nil {
-		return fmt.Errorf("failed to parse integer field: %w", err)
+		return fmt.Errorf("failed to parse integer field %q: %w", data, err)
 	}
-	f.data = uint16(value)
+	f.data = uint32(value)
 	return nil
 }
 
 func (f *FieldInt) String() string {
+	if f.overflow {
+		return overflowMarker
+	}
 	if f.data == 0 {
 		return ""
 	}
-	return strconv.Itoa(int(f.data))
+	return strconv.FormatUint(uint64(f.data), 10)
 }
 
-func (f *FieldInt) Value() uint16 {
+// IsOverflow reports whether the source column held a z/OS display-overflow
+// indicator ("+++++") rather than a representable number. When true, Value() is
+// 0 and carries no meaning.
+func (f *FieldInt) IsOverflow() bool {
+	return f.overflow
+}
+
+// Value returns the parsed integer. It is 0 for both an absent column and a
+// display overflow; use IsOverflow to tell the two apart.
+func (f *FieldInt) Value() uint32 {
 	return f.data
 }
 
 func (f *FieldInt) MarshalJSON() ([]byte, error) {
+	if f.overflow {
+		return json.Marshal(overflowMarker)
+	}
 	if f.data == 0 {
 		return []byte("null"), nil
 	}
-	return json.Marshal(f.Value())
+	return json.Marshal(f.data)
 }
 
 func (f *FieldInt) UnmarshalJSON(b []byte) error {
-	var i int
+	f.data = 0
+	f.overflow = false
 	if string(b) == "null" {
-		f.data = 0
 		return nil
 	}
-	if err := json.Unmarshal(b, &i); err != nil {
+	// Overflow is serialised as the marker string; a real value is a JSON number.
+	if len(b) > 0 && b[0] == '"' {
+		var s string
+		if err := json.Unmarshal(b, &s); err != nil {
+			return err
+		}
+		if s != overflowMarker {
+			return fmt.Errorf("%w: %q", errFieldIntJSON, s)
+		}
+		f.overflow = true
+		return nil
+	}
+	var v uint32
+	if err := json.Unmarshal(b, &v); err != nil {
 		return err
 	}
-	f.data = uint16(i)
+	f.data = v
 	return nil
 }
 
