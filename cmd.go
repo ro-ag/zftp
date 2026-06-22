@@ -114,12 +114,24 @@ func (s *FTPSession) CheckLast(expect ReturnCode) (string, error) {
 }
 
 func (s *FTPSession) checkLast(expect ReturnCode) (string, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), s.dialCfg.replyTimeout())
+	defer cancel()
+
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
 	if s.isClosed.Load() {
 		log.Warningf("<%s> session %s is closed", utils.Caller(), s.conn.RemoteAddr().String())
 		return "", nil
+	}
+
+	// Bound the reply read: z/OS sends the terminal 226/250 asynchronously to the
+	// data-connection close and it can be lost, which would otherwise hang here.
+	if dl, ok := ctx.Deadline(); ok {
+		if err := s.conn.SetDeadline(dl); err != nil {
+			return "", err
+		}
+		defer func() { _ = s.conn.SetDeadline(time.Time{}) }()
 	}
 
 	s.lastMessage.Reset()

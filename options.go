@@ -11,8 +11,24 @@ type Option func(*dialOptions)
 type dialOptions struct {
 	DialTimeout     time.Duration
 	KeepAlivePeriod time.Duration
+	ReplyTimeout    time.Duration
 	dialer          Dialer
 	signalHandler   bool
+}
+
+// defaultReplyTimeout bounds the wait for a post-transfer control reply. It is
+// generous (a well-behaved z/OS server answers in well under a second) but finite,
+// so a lost reply cannot hang the caller forever. It mirrors the z/OS DATATIMEOUT
+// default of 120s.
+const defaultReplyTimeout = 120 * time.Second
+
+// replyTimeout returns the configured post-transfer reply timeout, falling back to
+// defaultReplyTimeout when unset.
+func (o dialOptions) replyTimeout() time.Duration {
+	if o.ReplyTimeout <= 0 {
+		return defaultReplyTimeout
+	}
+	return o.ReplyTimeout
 }
 
 // apply runs the option functions on a dialOptions struct.
@@ -49,4 +65,14 @@ func WithTimeout(d time.Duration) Option {
 // A zero duration disables keep-alives.
 func WithKeepAlive(d time.Duration) Option {
 	return func(o *dialOptions) { o.KeepAlivePeriod = d }
+}
+
+// WithReplyTimeout bounds how long the client waits for the terminal reply (the
+// 226/250 that follows a data transfer). z/OS sends that reply asynchronously to
+// the data-connection close, and it can be lost — for example a NAT dropping an
+// idle control link during a long transfer — so bounding the read keeps a lost
+// reply from hanging the caller. Defaults to 120s; a non-positive duration
+// restores the default.
+func WithReplyTimeout(d time.Duration) Option {
+	return func(o *dialOptions) { o.ReplyTimeout = d }
 }
