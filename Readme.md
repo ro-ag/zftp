@@ -1,6 +1,6 @@
 # zFTP
 
-[![Go Reference](https://pkg.go.dev/badge/gopkg.in/ro-ag/zftp.v1.svg)](https://pkg.go.dev/gopkg.in/ro-ag/zftp.v1)
+[![Go Reference](https://pkg.go.dev/badge/gopkg.in/ro-ag/zftp.v1.svg)](https://pkg.go.dev/gopkg.in/ro-ag/zftp.v1) [![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](./LICENSE)
 
 The zftp package provides a convenient and feature-rich way to work with mainframe FTP servers, specifically designed for z/OS systems. It offers capabilities to interact with z/OS datasets, execute FTP commands tailored for mainframe operations, and handle mainframe-specific attributes and file transfer modes.
 
@@ -108,6 +108,6 @@ Contributions to the zftp package are welcome! Please open an issue to discuss a
 
 ## License
 
-The zftp package is licensed under the MIT License. See the [LICENSE](./LICENSE) file for more information.
+The zftp package is licensed under the Apache License 2.0. See the [LICENSE](./LICENSE) and [NOTICE](./NOTICE) files for more information.
 
 ---

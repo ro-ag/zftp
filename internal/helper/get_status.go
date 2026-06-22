@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: Apache-2.0
+
 // package helper provides a set of funcitons that are exposed as Interface.
 // these are not core functions, just wrappers around the core ones
 
