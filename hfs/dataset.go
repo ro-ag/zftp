@@ -54,9 +54,11 @@ func (d *InfoDataset) IsSequential() bool {
 	return d.Dsorg.String() == "PS"
 }
 
-// IsVSAM returns true if the dataset is VSAM
+// IsVSAM returns true if the dataset is a VSAM cluster. z/OS reports VSAM
+// entries with "VSAM" in the Dsorg column (volume/unit may be blank or set),
+// so detection keys off Dsorg.
 func (d *InfoDataset) IsVSAM() bool {
-	return strings.ToLower(d.Volume.String()) == "vsam" || strings.ToLower(d.Volume.String()) == "vsam"
+	return strings.EqualFold(d.Dsorg.String(), "VSAM")
 }
 
 // IsTape returns true if the dataset is a tape
@@ -110,103 +112,112 @@ func (d *InfoDataset) Headers() []string {
 	return headers
 }
 
-// Constants for field offsets and sizes
+// dsnameStart is the byte offset at which the (always-present) dataset name
+// column begins. A record must reach at least this column to be parseable.
+const dsnameStart = 56
+
+// dsnameField is parsed for every record kind, including migrated and
+// not-mounted entries that carry no other attributes.
+var dsnameField = field{"Dsname", dsnameStart, 0}
+
+// datasetFields is the fixed-width column layout of a z/OS dataset LIST record
+// (excluding Dsname, which is handled separately). Offsets and widths are
+// derived from real server output; see hfs/dataset_test.txt and the golden
+// fixtures in hfs/testdata.
+var datasetFields = []field{
+	{"Volume", 0, 6},
+	{"Unit", 6, 5},
+	{"Referred", 11, 13},
+	{"Ext", 24, 3},
+	{"Used", 27, 5},
+	{"Recfm", 32, 6},
+	{"Lrecl", 38, 6},
+	{"BlkSz", 44, 6},
+	{"Dsorg", 51, 5},
+}
+
+// datasetKind classifies a raw LIST record before column parsing.
+type datasetKind int
+
 const (
-	volumeOffset   = 0
-	volumeSize     = 6
-	unitOffset     = 6
-	unitSize       = 5
-	referredOffset = 11
-	referredSize   = 13
-	extOffset      = 24
-	extSize        = 3
-	usedOffset     = 27
-	usedSize       = 5
-	recfmOffset    = 32
-	recfmSize      = 6
-	lreclOffset    = 38
-	lreclSize      = 6
-	blkSzOffset    = 44
-	blkSzSize      = 6
-	dsorgOffset    = 51
-	dsorgSize      = 5
-	dsnameOffset   = 56
-	dsnameSize     = 34
+	dsNormal datasetKind = iota
+	dsMigrated
+	dsNotMounted
 )
 
-// ParseInfoDataset parses a dataset record from the HFS command	"LIST"
+// classifyDataset detects the special non-columnar record states that z/OS
+// emits in place of attribute columns.
+func classifyDataset(record string) datasetKind {
+	trimmed := strings.TrimSpace(record)
+	switch {
+	case strings.HasPrefix(trimmed, "Migrated"):
+		return dsMigrated
+	case strings.Contains(trimmed, "Not Mounted"):
+		return dsNotMounted
+	default:
+		return dsNormal
+	}
+}
+
+// setField routes a raw column value to its typed destination on the dataset.
+func (d *InfoDataset) setField(name, raw string) error {
+	switch name {
+	case "Volume":
+		return d.Volume.parse(raw)
+	case "Unit":
+		return d.Unit.parse(raw)
+	case "Referred":
+		return d.Referred.parse(raw)
+	case "Ext":
+		return d.Ext.parse(raw)
+	case "Used":
+		return d.Used.parse(raw)
+	case "Recfm":
+		return d.Recfm.parse(raw)
+	case "Lrecl":
+		return d.Lrecl.parse(raw)
+	case "BlkSz":
+		return d.BlkSz.parse(raw)
+	case "Dsorg":
+		return d.Dsorg.parse(raw)
+	default:
+		return fmt.Errorf("unknown dataset field %q", name)
+	}
+}
+
+// ParseInfoDataset parses a single dataset record from the z/OS FTP "LIST"
+// command output. Migrated and not-mounted datasets carry only a name; their
+// volume column is set to the state label and the remaining attributes are left
+// zero-valued.
 func ParseInfoDataset(record string) (InfoDataset, error) {
-	if len(record) < dsnameOffset+1 {
+	if len(record) < dsnameStart+1 {
 		return InfoDataset{}, fmt.Errorf("invalid record size: %d", len(record))
 	}
-	dataset := InfoDataset{}
 
-	err := dataset.Dsname.parse(record[dsnameOffset:])
-	if err != nil {
+	dataset := InfoDataset{}
+	if err := dataset.Dsname.parse(dsnameField.slice(record)); err != nil {
 		return InfoDataset{}, fmt.Errorf("failed to parse Dsname field: %w", err)
 	}
 
-	if strings.HasPrefix(strings.TrimSpace(record), "Migrated") {
+	switch classifyDataset(record) {
+	case dsMigrated:
 		dataset.isMigrated = true
-		err = dataset.Volume.parse("Migrated")
-		if err != nil {
+		if err := dataset.Volume.parse("Migrated"); err != nil {
 			return InfoDataset{}, fmt.Errorf("failed to parse Volume field: %w", err)
 		}
 		return dataset, nil
-	}
-
-	if strings.Contains(strings.TrimSpace(record), "Not Mounted") {
+	case dsNotMounted:
 		dataset.isNotMount = true
-		err = dataset.Volume.parse("Not Mounted")
-		if err != nil {
+		if err := dataset.Volume.parse("Not Mounted"); err != nil {
 			return InfoDataset{}, fmt.Errorf("failed to parse Volume field: %w", err)
 		}
 		return dataset, nil
 	}
 
-	err = dataset.Volume.parse(record[volumeOffset : volumeOffset+volumeSize])
-	if err != nil {
-		return InfoDataset{}, fmt.Errorf("failed to parse Volume field: %w", err)
-	}
-
-	err = dataset.Unit.parse(record[unitOffset : unitOffset+unitSize])
-	if err != nil {
-		return InfoDataset{}, fmt.Errorf("failed to parse Unit field: %w", err)
-	}
-
-	err = dataset.Referred.parse(record[referredOffset : referredOffset+referredSize])
-	if err != nil {
-		return InfoDataset{}, fmt.Errorf("failed to parse Referred field: %w", err)
-	}
-
-	err = dataset.Ext.parse(record[extOffset : extOffset+extSize])
-	if err != nil {
-		return InfoDataset{}, fmt.Errorf("failed to parse Ext field: %w", err)
-	}
-
-	err = dataset.Used.parse(record[usedOffset : usedOffset+usedSize])
-	if err != nil {
-		return InfoDataset{}, fmt.Errorf("failed to parse Used field: %v", err)
-	}
-
-	err = dataset.Recfm.parse(record[recfmOffset : recfmOffset+recfmSize])
-	if err != nil {
-		return InfoDataset{}, fmt.Errorf("failed to parse Recfm field: %v", err)
-	}
-
-	err = dataset.Lrecl.parse(record[lreclOffset : lreclOffset+lreclSize])
-	if err != nil {
-		return InfoDataset{}, fmt.Errorf("failed to parse Lrecl field: %v", err)
-	}
-
-	err = dataset.BlkSz.parse(record[blkSzOffset : blkSzOffset+blkSzSize])
-	if err != nil {
-		return InfoDataset{}, fmt.Errorf("failed to parse BlkSz field: %v", err)
-	}
-
-	err = dataset.Dsorg.parse(record[dsorgOffset : dsorgOffset+dsorgSize])
-	if err != nil {
-		return InfoDataset{}, fmt.Errorf("failed to parse Dsorg field: %v", err)
+	for _, f := range datasetFields {
+		if err := dataset.setField(f.name, f.slice(record)); err != nil {
+			return InfoDataset{}, fmt.Errorf("failed to parse %s field: %w", f.name, err)
+		}
 	}
 
 	return dataset, nil

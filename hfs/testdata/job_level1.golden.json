@@ -1,0 +1,1402 @@
+[
+  {
+    "Name": "Z33552",
+    "JobId": "TSU06321",
+    "Owner": "",
+    "Status": "OUTPUT",
+    "Class": "3 spool files"
+  },
+  {
+    "Name": "SMFDUMPS",
+    "JobId": "STC06320",
+    "Owner": "",
+    "Status": "OUTPUT",
+    "Class": "3 spool files"
+  },
+  {
+    "Name": "@@USS2",
+    "JobId": "JOB06319",
+    "Owner": "",
+    "Status": "OUTPUT",
+    "Class": "4 spool files"
+  },
+  {
+    "Name": "JCL2",
+    "JobId": "JOB06318",
+    "Owner": "",
+    "Status": "OUTPUT",
+    "Class": "7 spool files"
+  },
+  {
+    "Name": "REPRO2",
+    "JobId": "JOB06316",
+    "Owner": "",
+    "Status": "OUTPUT",
+    "Class": "4 spool files"
+  },
+  {
+    "Name": "@@USS2",
+    "JobId": "JOB06315",
+    "Owner": "",
+    "Status": "OUTPUT",
+    "Class": "4 spool files"
+  },
+  {
+    "Name": "CBLJSONJ",
+    "JobId": "JOB06314",
+    "Owner": "",
+    "Status": "OUTPUT",
+    "Class": "5 spool files"
+  },
+  {
+    "Name": "REPRO2",
+    "JobId": "JOB06312",
+    "Owner": "",
+    "Status": "OUTPUT",
+    "Class": "4 spool files"
+  },
+  {
+    "Name": "@@USS2",
+    "JobId": "JOB06310",
+    "Owner": "",
+    "Status": "OUTPUT",
+    "Class": "4 spool files"
+  },
+  {
+    "Name": "@@USS2",
+    "JobId": "JOB06309",
+    "Owner": "",
+    "Status": "OUTPUT",
+    "Class": "4 spool files"
+  },
+  {
+    "Name": "NSPECT5",
+    "JobId": "JOB06308",
+    "Owner": "",
+    "Status": "OUTPUT",
+    "Class": "5 spool files"
+  },
+  {
+    "Name": "@@RACF1",
+    "JobId": "JOB06306",
+    "Owner": "",
+    "Status": "OUTPUT",
+    "Class": "4 spool files"
+  },
+  {
+    "Name": "JES2JOB1",
+    "JobId": "JOB06304",
+    "Owner": "",
+    "Status": "OUTPUT",
+    "Class": "3 spool files"
+  },
+  {
+    "Name": "JES2JOB1",
+    "JobId": "JOB06303",
+    "Owner": "",
+    "Status": "OUTPUT",
+    "Class": "3 spool files"
+  },
+  {
+    "Name": "JCLSETUP",
+    "JobId": "JOB06300",
+    "Owner": "",
+    "Status": "OUTPUT",
+    "Class": "3 spool files"
+  },
+  {
+    "Name": "JES2JOB1",
+    "JobId": "JOB06299",
+    "Owner": "",
+    "Status": "OUTPUT",
+    "Class": "3 spool files"
+  },
+  {
+    "Name": "@@USS2",
+    "JobId": "JOB06298",
+    "Owner": "",
+    "Status": "OUTPUT",
+    "Class": "4 spool files"
+  },
+  {
+    "Name": "CBLJSONJ",
+    "JobId": "JOB06296",
+    "Owner": "",
+    "Status": "OUTPUT",
+    "Class": "5 spool files"
+  },
+  {
+    "Name": "@@USS",
+    "JobId": "JOB06295",
+    "Owner": "",
+    "Status": "OUTPUT",
+    "Class": "4 spool files"
+  },
+  {
+    "Name": "E378859C",
+    "JobId": "JOB06284",
+    "Owner": "",
+    "Status": "OUTPUT",
+    "Class": "4 spool files"
+  },
+  {
+    "Name": "@@USS",
+    "JobId": "JOB06278",
+    "Owner": "",
+    "Status": "OUTPUT",
+    "Class": "4 spool files"
+  },
+  {
+    "Name": "@@USS2",
+    "JobId": "JOB06277",
+    "Owner": "",
+    "Status": "OUTPUT",
+    "Class": "4 spool files"
+  },
+  {
+    "Name": "@@JCL1",
+    "JobId": "JOB06274",
+    "Owner": "",
+    "Status": "OUTPUT",
+    "Class": "4 spool files"
+  },
+  {
+    "Name": "@@USS2",
+    "JobId": "JOB06272",
+    "Owner": "",
+    "Status": "OUTPUT",
+    "Class": "4 spool files"
+  },
+  {
+    "Name": "E378859C",
+    "JobId": "JOB06271",
+    "Owner": "",
+    "Status": "OUTPUT",
+    "Class": "4 spool files"
+  },
+  {
+    "Name": "JCL2",
+    "JobId": "JOB06270",
+    "Owner": "",
+    "Status": "OUTPUT",
+    "Class": "7 spool files"
+  },
+  {
+    "Name": "JCLSETUP",
+    "JobId": "JOB06269",
+    "Owner": "",
+    "Status": "OUTPUT",
+    "Class": "3 spool files"
+  },
+  {
+    "Name": "JCLSETUP",
+    "JobId": "JOB06267",
+    "Owner": "",
+    "Status": "OUTPUT",
+    "Class": "3 spool files"
+  },
+  {
+    "Name": "JCL2",
+    "JobId": "JOB06265",
+    "Owner": "",
+    "Status": "OUTPUT",
+    "Class": "6 spool files"
+  },
+  {
+    "Name": "CBLJSONJ",
+    "JobId": "JOB06262",
+    "Owner": "",
+    "Status": "OUTPUT",
+    "Class": "5 spool files"
+  },
+  {
+    "Name": "JCL2",
+    "JobId": "JOB06261",
+    "Owner": "",
+    "Status": "OUTPUT",
+    "Class": "7 spool files"
+  },
+  {
+    "Name": "REPRO2",
+    "JobId": "JOB06260",
+    "Owner": "",
+    "Status": "OUTPUT",
+    "Class": "4 spool files"
+  },
+  {
+    "Name": "JES2JOB1",
+    "JobId": "JOB06259",
+    "Owner": "",
+    "Status": "OUTPUT",
+    "Class": "3 spool files"
+  },
+  {
+    "Name": "JCL2",
+    "JobId": "JOB06258",
+    "Owner": "",
+    "Status": "OUTPUT",
+    "Class": "7 spool files"
+  },
+  {
+    "Name": "REPRO2",
+    "JobId": "JOB06257",
+    "Owner": "",
+    "Status": "OUTPUT",
+    "Class": "4 spool files"
+  },
+  {
+    "Name": "REPRO2",
+    "JobId": "JOB06256",
+    "Owner": "",
+    "Status": "OUTPUT",
+    "Class": "4 spool files"
+  },
+  {
+    "Name": "CBLJSONJ",
+    "JobId": "JOB06255",
+    "Owner": "",
+    "Status": "OUTPUT",
+    "Class": "3 spool files"
+  },
+  {
+    "Name": "CBLJSONJ",
+    "JobId": "JOB06254",
+    "Owner": "",
+    "Status": "OUTPUT",
+    "Class": "5 spool files"
+  },
+  {
+    "Name": "REPRO2",
+    "JobId": "JOB06252",
+    "Owner": "",
+    "Status": "OUTPUT",
+    "Class": "4 spool files"
+  },
+  {
+    "Name": "@@ACLI",
+    "JobId": "JOB06251",
+    "Owner": "",
+    "Status": "OUTPUT",
+    "Class": "4 spool files"
+  },
+  {
+    "Name": "REPRO2",
+    "JobId": "JOB06250",
+    "Owner": "",
+    "Status": "OUTPUT",
+    "Class": "4 spool files"
+  },
+  {
+    "Name": "REPRO2",
+    "JobId": "JOB06249",
+    "Owner": "",
+    "Status": "OUTPUT",
+    "Class": "4 spool files"
+  },
+  {
+    "Name": "JCL3",
+    "JobId": "JOB06248",
+    "Owner": "",
+    "Status": "OUTPUT",
+    "Class": "3 spool files"
+  },
+  {
+    "Name": "JCL3",
+    "JobId": "JOB06247",
+    "Owner": "",
+    "Status": "OUTPUT",
+    "Class": "3 spool files"
+  },
+  {
+    "Name": "REPRO2",
+    "JobId": "JOB06246",
+    "Owner": "",
+    "Status": "OUTPUT",
+    "Class": "4 spool files"
+  },
+  {
+    "Name": "JCL3",
+    "JobId": "JOB06244",
+    "Owner": "",
+    "Status": "OUTPUT",
+    "Class": "3 spool files"
+  },
+  {
+    "Name": "JCL3",
+    "JobId": "JOB06243",
+    "Owner": "",
+    "Status": "OUTPUT",
+    "Class": "3 spool files"
+  },
+  {
+    "Name": "@@ACLI",
+    "JobId": "JOB06242",
+    "Owner": "",
+    "Status": "OUTPUT",
+    "Class": "4 spool files"
+  },
+  {
+    "Name": "JCL3",
+    "JobId": "JOB06241",
+    "Owner": "",
+    "Status": "OUTPUT",
+    "Class": "3 spool files"
+  },
+  {
+    "Name": "@@JCL1",
+    "JobId": "JOB06238",
+    "Owner": "",
+    "Status": "OUTPUT",
+    "Class": "4 spool files"
+  },
+  {
+    "Name": "JCL2",
+    "JobId": "JOB06236",
+    "Owner": "",
+    "Status": "OUTPUT",
+    "Class": "7 spool files"
+  },
+  {
+    "Name": "JCL2",
+    "JobId": "JOB06235",
+    "Owner": "",
+    "Status": "OUTPUT",
+    "Class": "7 spool files"
+  },
+  {
+    "Name": "JCL2",
+    "JobId": "JOB06233",
+    "Owner": "",
+    "Status": "OUTPUT",
+    "Class": "7 spool files"
+  },
+  {
+    "Name": "@@JCL1",
+    "JobId": "JOB06230",
+    "Owner": "",
+    "Status": "OUTPUT",
+    "Class": "4 spool files"
+  },
+  {
+    "Name": "JCL3",
+    "JobId": "JOB06229",
+    "Owner": "",
+    "Status": "OUTPUT",
+    "Class": "3 spool files"
+  },
+  {
+    "Name": "REPRO2",
+    "JobId": "JOB06226",
+    "Owner": "",
+    "Status": "OUTPUT",
+    "Class": "4 spool files"
+  },
+  {
+    "Name": "JCL3",
+    "JobId": "JOB06225",
+    "Owner": "",
+    "Status": "OUTPUT",
+    "Class": "3 spool files"
+  },
+  {
+    "Name": "JCL2",
+    "JobId": "JOB06224",
+    "Owner": "",
+    "Status": "OUTPUT",
+    "Class": "7 spool files"
+  },
+  {
+    "Name": "JCL3",
+    "JobId": "JOB06223",
+    "Owner": "",
+    "Status": "OUTPUT",
+    "Class": "3 spool files"
+  },
+  {
+    "Name": "REPRO2",
+    "JobId": "JOB06221",
+    "Owner": "",
+    "Status": "OUTPUT",
+    "Class": "4 spool files"
+  },
+  {
+    "Name": "JCL3",
+    "JobId": "JOB06220",
+    "Owner": "",
+    "Status": "OUTPUT",
+    "Class": "3 spool files"
+  },
+  {
+    "Name": "REPRO2",
+    "JobId": "JOB06219",
+    "Owner": "",
+    "Status": "OUTPUT",
+    "Class": "4 spool files"
+  },
+  {
+    "Name": "JCL2",
+    "JobId": "JOB06217",
+    "Owner": "",
+    "Status": "OUTPUT",
+    "Class": "7 spool files"
+  },
+  {
+    "Name": "JCL3",
+    "JobId": "JOB06216",
+    "Owner": "",
+    "Status": "OUTPUT",
+    "Class": "3 spool files"
+  },
+  {
+    "Name": "JCL2",
+    "JobId": "JOB06215",
+    "Owner": "",
+    "Status": "OUTPUT",
+    "Class": "7 spool files"
+  },
+  {
+    "Name": "JCL2",
+    "JobId": "JOB06214",
+    "Owner": "",
+    "Status": "OUTPUT",
+    "Class": "7 spool files"
+  },
+  {
+    "Name": "JCL2",
+    "JobId": "JOB06213",
+    "Owner": "",
+    "Status": "OUTPUT",
+    "Class": "7 spool files"
+  },
+  {
+    "Name": "JCL2",
+    "JobId": "JOB06212",
+    "Owner": "",
+    "Status": "OUTPUT",
+    "Class": "7 spool files"
+  },
+  {
+    "Name": "JCL2",
+    "JobId": "JOB06211",
+    "Owner": "",
+    "Status": "OUTPUT",
+    "Class": "7 spool files"
+  },
+  {
+    "Name": "REPRO2",
+    "JobId": "JOB06210",
+    "Owner": "",
+    "Status": "OUTPUT",
+    "Class": "4 spool files"
+  },
+  {
+    "Name": "PRINT3",
+    "JobId": "JOB06209",
+    "Owner": "",
+    "Status": "OUTPUT",
+    "Class": "3 spool files"
+  },
+  {
+    "Name": "PRINT3",
+    "JobId": "JOB06208",
+    "Owner": "",
+    "Status": "OUTPUT",
+    "Class": "3 spool files"
+  },
+  {
+    "Name": "JCL2",
+    "JobId": "JOB06207",
+    "Owner": "",
+    "Status": "OUTPUT",
+    "Class": "7 spool files"
+  },
+  {
+    "Name": "JCL2",
+    "JobId": "JOB06206",
+    "Owner": "",
+    "Status": "OUTPUT",
+    "Class": "7 spool files"
+  },
+  {
+    "Name": "JCL2",
+    "JobId": "JOB06205",
+    "Owner": "",
+    "Status": "OUTPUT",
+    "Class": "7 spool files"
+  },
+  {
+    "Name": "JCLSETUP",
+    "JobId": "JOB06204",
+    "Owner": "",
+    "Status": "OUTPUT",
+    "Class": "3 spool files"
+  },
+  {
+    "Name": "PRINT3",
+    "JobId": "JOB06202",
+    "Owner": "",
+    "Status": "OUTPUT",
+    "Class": "3 spool files"
+  },
+  {
+    "Name": "JCLSETUP",
+    "JobId": "JOB06201",
+    "Owner": "",
+    "Status": "OUTPUT",
+    "Class": "3 spool files"
+  },
+  {
+    "Name": "@@FILES1",
+    "JobId": "JOB06199",
+    "Owner": "",
+    "Status": "OUTPUT",
+    "Class": "4 spool files"
+  },
+  {
+    "Name": "@@AANS2",
+    "JobId": "JOB06198",
+    "Owner": "",
+    "Status": "OUTPUT",
+    "Class": "4 spool files"
+  },
+  {
+    "Name": "CBLJSONJ",
+    "JobId": "JOB06197",
+    "Owner": "",
+    "Status": "OUTPUT",
+    "Class": "5 spool files"
+  },
+  {
+    "Name": "CBLJSONJ",
+    "JobId": "JOB06193",
+    "Owner": "",
+    "Status": "OUTPUT",
+    "Class": "5 spool files"
+  },
+  {
+    "Name": "PDSBUILD",
+    "JobId": "JOB06190",
+    "Owner": "",
+    "Status": "OUTPUT",
+    "Class": "5 spool files"
+  },
+  {
+    "Name": "JCL2",
+    "JobId": "JOB06189",
+    "Owner": "",
+    "Status": "OUTPUT",
+    "Class": "7 spool files"
+  },
+  {
+    "Name": "@@AANS2",
+    "JobId": "JOB06188",
+    "Owner": "",
+    "Status": "OUTPUT",
+    "Class": "4 spool files"
+  },
+  {
+    "Name": "JCL2",
+    "JobId": "JOB06187",
+    "Owner": "",
+    "Status": "OUTPUT",
+    "Class": "7 spool files"
+  },
+  {
+    "Name": "@@VSC1",
+    "JobId": "JOB06185",
+    "Owner": "",
+    "Status": "OUTPUT",
+    "Class": "4 spool files"
+  },
+  {
+    "Name": "ANOTHER",
+    "JobId": "JOB06184",
+    "Owner": "",
+    "Status": "OUTPUT",
+    "Class": "4 spool files"
+  },
+  {
+    "Name": "HELLO",
+    "JobId": "JOB06183",
+    "Owner": "",
+    "Status": "OUTPUT",
+    "Class": "4 spool files"
+  },
+  {
+    "Name": "HELLO",
+    "JobId": "JOB06181",
+    "Owner": "",
+    "Status": "OUTPUT",
+    "Class": "4 spool files"
+  },
+  {
+    "Name": "HELLO",
+    "JobId": "JOB06180",
+    "Owner": "",
+    "Status": "OUTPUT",
+    "Class": "4 spool files"
+  },
+  {
+    "Name": "@@JCL1",
+    "JobId": "JOB06176",
+    "Owner": "",
+    "Status": "OUTPUT",
+    "Class": "4 spool files"
+  },
+  {
+    "Name": "HELLO",
+    "JobId": "JOB06175",
+    "Owner": "",
+    "Status": "OUTPUT",
+    "Class": "4 spool files"
+  },
+  {
+    "Name": "@@JCL1",
+    "JobId": "JOB06173",
+    "Owner": "",
+    "Status": "OUTPUT",
+    "Class": "4 spool files"
+  },
+  {
+    "Name": "@@AUTO",
+    "JobId": "JOB06161",
+    "Owner": "",
+    "Status": "OUTPUT",
+    "Class": "4 spool files"
+  },
+  {
+    "Name": "CBLJSONJ",
+    "JobId": "JOB06160",
+    "Owner": "",
+    "Status": "OUTPUT",
+    "Class": "5 spool files"
+  },
+  {
+    "Name": "CBLJSONJ",
+    "JobId": "JOB06159",
+    "Owner": "",
+    "Status": "OUTPUT",
+    "Class": "5 spool files"
+  },
+  {
+    "Name": "CBLJSONJ",
+    "JobId": "JOB06156",
+    "Owner": "",
+    "Status": "OUTPUT",
+    "Class": "5 spool files"
+  },
+  {
+    "Name": "CBLJSONJ",
+    "JobId": "JOB06152",
+    "Owner": "",
+    "Status": "OUTPUT",
+    "Class": "4 spool files"
+  },
+  {
+    "Name": "@@SQL1",
+    "JobId": "JOB06143",
+    "Owner": "",
+    "Status": "OUTPUT",
+    "Class": "4 spool files"
+  },
+  {
+    "Name": "CBLJSONJ",
+    "JobId": "JOB06140",
+    "Owner": "",
+    "Status": "OUTPUT",
+    "Class": "4 spool files"
+  },
+  {
+    "Name": "@@SQL1",
+    "JobId": "JOB06138",
+    "Owner": "",
+    "Status": "OUTPUT",
+    "Class": "4 spool files"
+  },
+  {
+    "Name": "@@REXX1",
+    "JobId": "JOB06134",
+    "Owner": "",
+    "Status": "OUTPUT",
+    "Class": "4 spool files"
+  },
+  {
+    "Name": "@@USS",
+    "JobId": "JOB06132",
+    "Owner": "",
+    "Status": "OUTPUT",
+    "Class": "4 spool files"
+  },
+  {
+    "Name": "@@RACF1",
+    "JobId": "JOB06129",
+    "Owner": "",
+    "Status": "OUTPUT",
+    "Class": "4 spool files"
+  },
+  {
+    "Name": "@@USS2",
+    "JobId": "JOB06119",
+    "Owner": "",
+    "Status": "OUTPUT",
+    "Class": "4 spool files"
+  },
+  {
+    "Name": "@@APDS2",
+    "JobId": "JOB06118",
+    "Owner": "",
+    "Status": "OUTPUT",
+    "Class": "4 spool files"
+  },
+  {
+    "Name": "MERGSORT",
+    "JobId": "JOB06117",
+    "Owner": "",
+    "Status": "OUTPUT",
+    "Class": "4 spool files"
+  },
+  {
+    "Name": "@@USS2",
+    "JobId": "JOB06116",
+    "Owner": "",
+    "Status": "OUTPUT",
+    "Class": "4 spool files"
+  },
+  {
+    "Name": "@@APDS1",
+    "JobId": "JOB06104",
+    "Owner": "",
+    "Status": "OUTPUT",
+    "Class": "4 spool files"
+  },
+  {
+    "Name": "PDS1CCAT",
+    "JobId": "JOB06102",
+    "Owner": "",
+    "Status": "OUTPUT",
+    "Class": "4 spool files"
+  },
+  {
+    "Name": "CBLJSONJ",
+    "JobId": "JOB06099",
+    "Owner": "",
+    "Status": "OUTPUT",
+    "Class": "5 spool files"
+  },
+  {
+    "Name": "JCLSETUP",
+    "JobId": "JOB06080",
+    "Owner": "",
+    "Status": "OUTPUT",
+    "Class": "3 spool files"
+  },
+  {
+    "Name": "JCLRESET",
+    "JobId": "JOB06079",
+    "Owner": "",
+    "Status": "OUTPUT",
+    "Class": "4 spool files"
+  },
+  {
+    "Name": "JCL3",
+    "JobId": "JOB06073",
+    "Owner": "",
+    "Status": "OUTPUT",
+    "Class": "3 spool files"
+  },
+  {
+    "Name": "@@ASM1",
+    "JobId": "JOB06065",
+    "Owner": "",
+    "Status": "OUTPUT",
+    "Class": "4 spool files"
+  },
+  {
+    "Name": "@@JCL1",
+    "JobId": "JOB06061",
+    "Owner": "",
+    "Status": "OUTPUT",
+    "Class": "4 spool files"
+  },
+  {
+    "Name": "@@CODE",
+    "JobId": "JOB06057",
+    "Owner": "",
+    "Status": "OUTPUT",
+    "Class": "4 spool files"
+  },
+  {
+    "Name": "JCL3",
+    "JobId": "JOB06053",
+    "Owner": "",
+    "Status": "OUTPUT",
+    "Class": "3 spool files"
+  },
+  {
+    "Name": "@@JCL1",
+    "JobId": "JOB06051",
+    "Owner": "",
+    "Status": "OUTPUT",
+    "Class": "4 spool files"
+  },
+  {
+    "Name": "PLICNT",
+    "JobId": "JOB06047",
+    "Owner": "",
+    "Status": "OUTPUT",
+    "Class": "6 spool files"
+  },
+  {
+    "Name": "JCLSETUP",
+    "JobId": "JOB06041",
+    "Owner": "",
+    "Status": "OUTPUT",
+    "Class": "3 spool files"
+  },
+  {
+    "Name": "@@REXX1",
+    "JobId": "JOB06038",
+    "Owner": "",
+    "Status": "OUTPUT",
+    "Class": "4 spool files"
+  },
+  {
+    "Name": "JCL3",
+    "JobId": "JOB06036",
+    "Owner": "",
+    "Status": "OUTPUT",
+    "Class": "3 spool files"
+  },
+  {
+    "Name": "ASMPGM",
+    "JobId": "JOB06035",
+    "Owner": "",
+    "Status": "OUTPUT",
+    "Class": "5 spool files"
+  },
+  {
+    "Name": "JCL3",
+    "JobId": "JOB06034",
+    "Owner": "",
+    "Status": "OUTPUT",
+    "Class": "3 spool files"
+  },
+  {
+    "Name": "@@FILES1",
+    "JobId": "JOB06028",
+    "Owner": "",
+    "Status": "OUTPUT",
+    "Class": "4 spool files"
+  },
+  {
+    "Name": "JCL3",
+    "JobId": "JOB06027",
+    "Owner": "",
+    "Status": "OUTPUT",
+    "Class": "3 spool files"
+  },
+  {
+    "Name": "JCL3",
+    "JobId": "JOB06019",
+    "Owner": "",
+    "Status": "OUTPUT",
+    "Class": "3 spool files"
+  },
+  {
+    "Name": "JCLSETUP",
+    "JobId": "JOB06018",
+    "Owner": "",
+    "Status": "OUTPUT",
+    "Class": "3 spool files"
+  },
+  {
+    "Name": "JCLRESET",
+    "JobId": "JOB06017",
+    "Owner": "",
+    "Status": "OUTPUT",
+    "Class": "4 spool files"
+  },
+  {
+    "Name": "JCL3",
+    "JobId": "JOB06015",
+    "Owner": "",
+    "Status": "OUTPUT",
+    "Class": "3 spool files"
+  },
+  {
+    "Name": "@@GO1",
+    "JobId": "JOB06010",
+    "Owner": "",
+    "Status": "OUTPUT",
+    "Class": "4 spool files"
+  },
+  {
+    "Name": "@@FILES1",
+    "JobId": "JOB06009",
+    "Owner": "",
+    "Status": "OUTPUT",
+    "Class": "4 spool files"
+  },
+  {
+    "Name": "JCL2",
+    "JobId": "JOB06007",
+    "Owner": "",
+    "Status": "OUTPUT",
+    "Class": "7 spool files"
+  },
+  {
+    "Name": "NSPECT3",
+    "JobId": "JOB06003",
+    "Owner": "",
+    "Status": "OUTPUT",
+    "Class": "4 spool files"
+  },
+  {
+    "Name": "@@VSC1",
+    "JobId": "JOB06001",
+    "Owner": "",
+    "Status": "OUTPUT",
+    "Class": "4 spool files"
+  },
+  {
+    "Name": "Z08593B",
+    "JobId": "JOB06000",
+    "Owner": "",
+    "Status": "OUTPUT",
+    "Class": "5 spool files"
+  },
+  {
+    "Name": "@@AUTO",
+    "JobId": "JOB05999",
+    "Owner": "",
+    "Status": "OUTPUT",
+    "Class": "4 spool files"
+  },
+  {
+    "Name": "@@AUTO",
+    "JobId": "JOB05990",
+    "Owner": "",
+    "Status": "OUTPUT",
+    "Class": "4 spool files"
+  },
+  {
+    "Name": "Z08593A",
+    "JobId": "JOB05989",
+    "Owner": "",
+    "Status": "OUTPUT",
+    "Class": "5 spool files"
+  },
+  {
+    "Name": "@@USS2",
+    "JobId": "JOB05984",
+    "Owner": "",
+    "Status": "OUTPUT",
+    "Class": "4 spool files"
+  },
+  {
+    "Name": "E378859C",
+    "JobId": "JOB05982",
+    "Owner": "",
+    "Status": "OUTPUT",
+    "Class": "4 spool files"
+  },
+  {
+    "Name": "@@ACLI",
+    "JobId": "JOB05978",
+    "Owner": "",
+    "Status": "OUTPUT",
+    "Class": "4 spool files"
+  },
+  {
+    "Name": "@@AUTO",
+    "JobId": "JOB05977",
+    "Owner": "",
+    "Status": "OUTPUT",
+    "Class": "4 spool files"
+  },
+  {
+    "Name": "JCL2",
+    "JobId": "JOB05972",
+    "Owner": "",
+    "Status": "OUTPUT",
+    "Class": "7 spool files"
+  },
+  {
+    "Name": "@@JCL1",
+    "JobId": "JOB05966",
+    "Owner": "",
+    "Status": "OUTPUT",
+    "Class": "4 spool files"
+  },
+  {
+    "Name": "JCL3",
+    "JobId": "JOB05959",
+    "Owner": "",
+    "Status": "OUTPUT",
+    "Class": "3 spool files"
+  },
+  {
+    "Name": "@@APDS2",
+    "JobId": "JOB05958",
+    "Owner": "",
+    "Status": "OUTPUT",
+    "Class": "4 spool files"
+  },
+  {
+    "Name": "REPRO2",
+    "JobId": "JOB05957",
+    "Owner": "",
+    "Status": "OUTPUT",
+    "Class": "4 spool files"
+  },
+  {
+    "Name": "@@CODE",
+    "JobId": "JOB05955",
+    "Owner": "",
+    "Status": "OUTPUT",
+    "Class": "4 spool files"
+  },
+  {
+    "Name": "@@USS",
+    "JobId": "JOB05954",
+    "Owner": "",
+    "Status": "OUTPUT",
+    "Class": "4 spool files"
+  },
+  {
+    "Name": "JCL2",
+    "JobId": "JOB05953",
+    "Owner": "",
+    "Status": "OUTPUT",
+    "Class": "7 spool files"
+  },
+  {
+    "Name": "@@CODE",
+    "JobId": "JOB05947",
+    "Owner": "",
+    "Status": "OUTPUT",
+    "Class": "4 spool files"
+  },
+  {
+    "Name": "@@REXX1",
+    "JobId": "JOB05948",
+    "Owner": "",
+    "Status": "OUTPUT",
+    "Class": "4 spool files"
+  },
+  {
+    "Name": "REPRO2",
+    "JobId": "JOB05942",
+    "Owner": "",
+    "Status": "OUTPUT",
+    "Class": "4 spool files"
+  },
+  {
+    "Name": "@@FILES1",
+    "JobId": "JOB05941",
+    "Owner": "",
+    "Status": "OUTPUT",
+    "Class": "4 spool files"
+  },
+  {
+    "Name": "@@APDS2",
+    "JobId": "JOB05940",
+    "Owner": "",
+    "Status": "OUTPUT",
+    "Class": "4 spool files"
+  },
+  {
+    "Name": "MERGSORT",
+    "JobId": "JOB05934",
+    "Owner": "",
+    "Status": "OUTPUT",
+    "Class": "4 spool files"
+  },
+  {
+    "Name": "JCLSETUP",
+    "JobId": "JOB05931",
+    "Owner": "",
+    "Status": "OUTPUT",
+    "Class": "3 spool files"
+  },
+  {
+    "Name": "JCLSETUP",
+    "JobId": "JOB05929",
+    "Owner": "",
+    "Status": "OUTPUT",
+    "Class": "3 spool files"
+  },
+  {
+    "Name": "REPRO2",
+    "JobId": "JOB05927",
+    "Owner": "",
+    "Status": "OUTPUT",
+    "Class": "4 spool files"
+  },
+  {
+    "Name": "@@REXX1",
+    "JobId": "JOB05926",
+    "Owner": "",
+    "Status": "OUTPUT",
+    "Class": "4 spool files"
+  },
+  {
+    "Name": "REPRO2",
+    "JobId": "JOB05925",
+    "Owner": "",
+    "Status": "OUTPUT",
+    "Class": "4 spool files"
+  },
+  {
+    "Name": "@@APDS1",
+    "JobId": "JOB05924",
+    "Owner": "",
+    "Status": "OUTPUT",
+    "Class": "4 spool files"
+  },
+  {
+    "Name": "PDS1CCAT",
+    "JobId": "JOB05916",
+    "Owner": "",
+    "Status": "OUTPUT",
+    "Class": "4 spool files"
+  },
+  {
+    "Name": "@@VSC1",
+    "JobId": "JOB05914",
+    "Owner": "",
+    "Status": "OUTPUT",
+    "Class": "4 spool files"
+  },
+  {
+    "Name": "PDSBUILD",
+    "JobId": "JOB05910",
+    "Owner": "",
+    "Status": "OUTPUT",
+    "Class": "5 spool files"
+  },
+  {
+    "Name": "@@APDS1",
+    "JobId": "JOB05909",
+    "Owner": "",
+    "Status": "OUTPUT",
+    "Class": "4 spool files"
+  },
+  {
+    "Name": "@@SQL1",
+    "JobId": "JOB05908",
+    "Owner": "",
+    "Status": "OUTPUT",
+    "Class": "4 spool files"
+  },
+  {
+    "Name": "@@FILES1",
+    "JobId": "JOB05907",
+    "Owner": "",
+    "Status": "OUTPUT",
+    "Class": "4 spool files"
+  },
+  {
+    "Name": "PDS1CCAT",
+    "JobId": "JOB05905",
+    "Owner": "",
+    "Status": "OUTPUT",
+    "Class": "4 spool files"
+  },
+  {
+    "Name": "@@APDS2",
+    "JobId": "JOB05886",
+    "Owner": "",
+    "Status": "OUTPUT",
+    "Class": "4 spool files"
+  },
+  {
+    "Name": "@@JCL2",
+    "JobId": "JOB05885",
+    "Owner": "",
+    "Status": "OUTPUT",
+    "Class": "4 spool files"
+  },
+  {
+    "Name": "JCLSETUP",
+    "JobId": "JOB05884",
+    "Owner": "",
+    "Status": "OUTPUT",
+    "Class": "3 spool files"
+  },
+  {
+    "Name": "JES2JOB1",
+    "JobId": "JOB05881",
+    "Owner": "",
+    "Status": "OUTPUT",
+    "Class": "3 spool files"
+  },
+  {
+    "Name": "MERGSORT",
+    "JobId": "JOB05879",
+    "Owner": "",
+    "Status": "OUTPUT",
+    "Class": "4 spool files"
+  },
+  {
+    "Name": "PDSBUILD",
+    "JobId": "JOB05876",
+    "Owner": "",
+    "Status": "OUTPUT",
+    "Class": "5 spool files"
+  },
+  {
+    "Name": "JES2JOB1",
+    "JobId": "JOB05874",
+    "Owner": "",
+    "Status": "OUTPUT",
+    "Class": "3 spool files"
+  },
+  {
+    "Name": "JCLSETUP",
+    "JobId": "JOB05868",
+    "Owner": "",
+    "Status": "OUTPUT",
+    "Class": "3 spool files"
+  },
+  {
+    "Name": "JCLRESET",
+    "JobId": "JOB05867",
+    "Owner": "",
+    "Status": "OUTPUT",
+    "Class": "4 spool files"
+  },
+  {
+    "Name": "JCLSETUP",
+    "JobId": "JOB05863",
+    "Owner": "",
+    "Status": "OUTPUT",
+    "Class": "3 spool files"
+  },
+  {
+    "Name": "JCLRESET",
+    "JobId": "JOB05862",
+    "Owner": "",
+    "Status": "OUTPUT",
+    "Class": "4 spool files"
+  },
+  {
+    "Name": "@@FILES1",
+    "JobId": "JOB05858",
+    "Owner": "",
+    "Status": "OUTPUT",
+    "Class": "4 spool files"
+  },
+  {
+    "Name": "JCLSETUP",
+    "JobId": "JOB05857",
+    "Owner": "",
+    "Status": "OUTPUT",
+    "Class": "3 spool files"
+  },
+  {
+    "Name": "@@USS2",
+    "JobId": "JOB05851",
+    "Owner": "",
+    "Status": "OUTPUT",
+    "Class": "4 spool files"
+  },
+  {
+    "Name": "PDSBUILD",
+    "JobId": "JOB05847",
+    "Owner": "",
+    "Status": "OUTPUT",
+    "Class": "5 spool files"
+  },
+  {
+    "Name": "@@ACBLH",
+    "JobId": "JOB05845",
+    "Owner": "",
+    "Status": "OUTPUT",
+    "Class": "4 spool files"
+  },
+  {
+    "Name": "@@JCL1",
+    "JobId": "JOB05843",
+    "Owner": "",
+    "Status": "OUTPUT",
+    "Class": "4 spool files"
+  },
+  {
+    "Name": "CBLJSONJ",
+    "JobId": "JOB05840",
+    "Owner": "",
+    "Status": "OUTPUT",
+    "Class": "5 spool files"
+  },
+  {
+    "Name": "JCL3",
+    "JobId": "JOB05839",
+    "Owner": "",
+    "Status": "OUTPUT",
+    "Class": "3 spool files"
+  },
+  {
+    "Name": "@@SQL1",
+    "JobId": "JOB05829",
+    "Owner": "",
+    "Status": "OUTPUT",
+    "Class": "4 spool files"
+  },
+  {
+    "Name": "@@CODE",
+    "JobId": "JOB05827",
+    "Owner": "",
+    "Status": "OUTPUT",
+    "Class": "4 spool files"
+  },
+  {
+    "Name": "@@SQL1",
+    "JobId": "JOB05823",
+    "Owner": "",
+    "Status": "OUTPUT",
+    "Class": "4 spool files"
+  },
+  {
+    "Name": "@@AUTO",
+    "JobId": "JOB05821",
+    "Owner": "",
+    "Status": "OUTPUT",
+    "Class": "4 spool files"
+  },
+  {
+    "Name": "JCL3",
+    "JobId": "JOB05811",
+    "Owner": "",
+    "Status": "OUTPUT",
+    "Class": "3 spool files"
+  },
+  {
+    "Name": "@@USS",
+    "JobId": "JOB05799",
+    "Owner": "",
+    "Status": "OUTPUT",
+    "Class": "4 spool files"
+  },
+  {
+    "Name": "@@FILES1",
+    "JobId": "JOB05795",
+    "Owner": "",
+    "Status": "OUTPUT",
+    "Class": "4 spool files"
+  },
+  {
+    "Name": "JCL2",
+    "JobId": "JOB05793",
+    "Owner": "",
+    "Status": "OUTPUT",
+    "Class": "7 spool files"
+  },
+  {
+    "Name": "@@USS",
+    "JobId": "JOB05779",
+    "Owner": "",
+    "Status": "OUTPUT",
+    "Class": "4 spool files"
+  }
+]
