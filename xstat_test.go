@@ -4,7 +4,7 @@ package zftp_test
 
 import (
 	"fmt"
-	"gopkg.in/ro-ag/zftp.v1"
+	"gopkg.in/ro-ag/zftp.v2"
 	"reflect"
 	"testing"
 )

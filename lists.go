@@ -4,9 +4,9 @@ package zftp
 
 import (
 	"fmt"
-	"gopkg.in/ro-ag/zftp.v1/hfs"
-	"gopkg.in/ro-ag/zftp.v1/internal/log"
-	"gopkg.in/ro-ag/zftp.v1/internal/utils"
+	"gopkg.in/ro-ag/zftp.v2/hfs"
+	"gopkg.in/ro-ag/zftp.v2/internal/log"
+	"gopkg.in/ro-ag/zftp.v2/internal/utils"
 	"strings"
 )
 

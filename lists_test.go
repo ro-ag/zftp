@@ -3,7 +3,7 @@
 package zftp_test
 
 import (
-	"gopkg.in/ro-ag/zftp.v1"
+	"gopkg.in/ro-ag/zftp.v2"
 	"testing"
 )
 

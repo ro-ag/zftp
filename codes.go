@@ -5,7 +5,7 @@ package zftp
 import (
 	"bufio"
 	"fmt"
-	"gopkg.in/ro-ag/zftp.v1/internal/log"
+	"gopkg.in/ro-ag/zftp.v2/internal/log"
 	"io"
 	"strconv"
 	"strings"
