@@ -6,3 +6,19 @@ venv/
 dummy/
 .vscode/
 .claude/
+
+# Compiled CLI binaries / build output
+/cli/cli
+/cli/zftp
+/zftp
+*.exe
+
+# Test and coverage artifacts
+*.test
+*.out
+coverage.txt
+coverage.html
+
+# Go workspace files
+go.work
+go.work.sum
