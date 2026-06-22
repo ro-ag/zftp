@@ -3,6 +3,7 @@
 package zftp
 
 import (
+	"context"
 	"fmt"
 	"strings"
 )
@@ -11,10 +12,18 @@ import (
 // translating z/OS "Unrecognized parameter" / "Parameter ignored" replies into
 // errors.
 func (s *FTPSession) Site(subCommand string, a ...string) (string, error) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	return s.siteLocked(subCommand, a...)
+}
+
+// siteLocked issues a single SITE subcommand and interprets z/OS rejection
+// replies. The caller must hold s.mu.
+func (s *FTPSession) siteLocked(subCommand string, a ...string) (string, error) {
 	args := strings.Join(a, " ")
 	subCommand = strings.TrimSpace(strings.ToUpper(subCommand))
 	subCommandWithArgs := fmt.Sprintf("%s %s", subCommand, args)
-	str, err := s.SendCommand(CodeCmdOK, "SITE", subCommandWithArgs)
+	str, err := s.sendLocked(context.Background(), CodeCmdOK, "SITE", subCommandWithArgs)
 	lines := strings.Split(str, "\n")
 	switch {
 	case err != nil:
@@ -32,4 +41,11 @@ func (s *FTPSession) Site(subCommand string, a ...string) (string, error) {
 // SITE) on the current session. See StatusSetter for the available setters.
 func (s *FTPSession) SetStatusOf() *StatusSetter {
 	return &StatusSetter{site: s.Site}
+}
+
+// setStatusOfLocked is like SetStatusOf but its setters assume s.mu is already
+// held. It is used by methods that run a whole sequence under the lock, such as
+// Login, where calling the public (locking) Site would deadlock.
+func (s *FTPSession) setStatusOfLocked() *StatusSetter {
+	return &StatusSetter{site: s.siteLocked}
 }

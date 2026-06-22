@@ -3,6 +3,7 @@
 package zftp
 
 import (
+	"context"
 	"fmt"
 	"gopkg.in/ro-ag/zftp.v2/eol"
 	"gopkg.in/ro-ag/zftp.v2/internal/log"
@@ -49,11 +50,25 @@ func (t TransferType) IsBinary() bool {
 
 // SetType sets the transfer type and stores it in the FTPSession.
 func (s *FTPSession) SetType(t TransferType) error {
-	_, err := s.SendCommand(CodeCmdOK, t.strCommand())
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	return s.setTypeLocked(t)
+}
+
+// setTypeLocked issues the TYPE command and records the new transfer type on
+// success. The caller must hold s.mu.
+func (s *FTPSession) setTypeLocked(t TransferType) error {
+	_, err := s.sendLocked(context.Background(), CodeCmdOK, t.strCommand())
 	if err == nil {
-		s.currType = t
+		s.currType.Store(uint32(t))
 	}
 	return err
+}
+
+// currentType returns the session's current transfer type. It is safe to call
+// without holding s.mu.
+func (s *FTPSession) currentType() TransferType {
+	return TransferType(s.currType.Load())
 }
 
 // transfer is a helper function that performs a data transfer.
@@ -114,7 +129,7 @@ func (s *FTPSession) transfer(t transfer.DataTransfer, remote string, offset int
 // supports ASCII and binary/Image transfers
 func (s *FTPSession) StoreIO(remote string, src io.Reader, t TransferType) (int64, string, error) {
 
-	current := s.currType
+	current := s.currentType()
 	if err := s.SetType(t); err != nil {
 		return 0, "", err
 	}
@@ -143,7 +158,7 @@ func (s *FTPSession) StoreIO(remote string, src io.Reader, t TransferType) (int6
 // The transfer type is restored to the previous value after the transfer
 // supports ASCII and binary/Image transfers
 func (s *FTPSession) RetrieveIO(remote string, dest io.Writer, t TransferType) (int64, string, error) {
-	current := s.currType
+	current := s.currentType()
 	if t.IsAscii() {
 		if err := s.SetStatusOf().SBSendEol(eol.System); err != nil {
 			return 0, "", err
@@ -169,7 +184,7 @@ func (s *FTPSession) RetrieveIO(remote string, dest io.Writer, t TransferType) (
 // The transfer type is restored to the previous value after the transfer.
 func (s *FTPSession) StoreIOAt(remote string, src io.Reader, t TransferType, offset int64) (int64, string, error) {
 
-	current := s.currType
+	current := s.currentType()
 	if err := s.SetType(t); err != nil {
 		return 0, "", err
 	}
@@ -197,7 +212,7 @@ func (s *FTPSession) StoreIOAt(remote string, src io.Reader, t TransferType, off
 // RetrieveIOAt performs a retrieve operation starting from the given offset of the remote file.
 // The transfer type is restored to the previous value after the transfer.
 func (s *FTPSession) RetrieveIOAt(remote string, dest io.Writer, t TransferType, offset int64) (int64, string, error) {
-	current := s.currType
+	current := s.currentType()
 	if t.IsAscii() {
 		if err := s.SetStatusOf().SBSendEol(eol.System); err != nil {
 			return 0, "", err

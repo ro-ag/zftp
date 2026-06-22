@@ -24,7 +24,7 @@ func (s *FTPSession) anyList(cmd, expression string) ([]string, string, error) {
 		log.Panicf("invalid command: %s", cmd)
 	}
 
-	current := s.currType
+	current := s.currentType()
 
 	if current != TypeAscii {
 		if err := s.SetType(TypeAscii); err != nil {
