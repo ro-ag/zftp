@@ -78,18 +78,46 @@ jobs:
           check-latest: true
       - run: go run golang.org/x/vuln/cmd/govulncheck@latest ./...
 
-  # Single required status check that aggregates the matrix and lint jobs.
+  cli:
+    name: cli build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+      - uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5.6.0
+        with:
+          go-version: stable
+          check-latest: true
+      # The CLI is a separate module; build it on its own.
+      - name: build cli module
+        run: cd cli && go build ./...
+        env:
+          CGO_ENABLED: "0"
+      # Guard the zero-dependency promise of the library module: `go list -m all`
+      # lists the main module plus every dependency, so a dependency-free module
+      # yields exactly one line.
+      - name: library has no external dependencies
+        run: |
+          n="$(go list -m all | wc -l | tr -d ' ')"
+          if [ "$n" != "1" ]; then
+            echo "library gained external dependencies:"
+            go list -m all
+            exit 1
+          fi
+          echo "library module is dependency-free"
+
+  # Single required status check that aggregates every other job.
   ci-success:
     name: CI Success
     if: always()
-    needs: [test, lint, govulncheck]
+    needs: [test, lint, govulncheck, cli]
     runs-on: ubuntu-latest
     steps:
       - name: Verify all jobs succeeded
         run: |
           if [ "${{ needs.test.result }}" != "success" ] || \
              [ "${{ needs.lint.result }}" != "success" ] || \
-             [ "${{ needs.govulncheck.result }}" != "success" ]; then
+             [ "${{ needs.govulncheck.result }}" != "success" ] || \
+             [ "${{ needs.cli.result }}" != "success" ]; then
             echo "one or more CI jobs failed"
             exit 1
           fi
