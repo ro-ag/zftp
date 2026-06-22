@@ -75,12 +75,23 @@ func (e *ReturnError) Error() string {
 	return fmt.Sprintf("FTP response code: got %d, want %d, message: %s", e.rc, e.wantRc, e.message)
 }
 
-// check checks the response code and returns the message
+// check reads a (possibly multiline) FTP reply and returns its message.
+//
+// Per RFC 959 §4.2 a reply is one or more lines; the first parseable line sets
+// the reply's code, and the reply terminates only on a line that repeats that
+// exact OPENING code followed by a space. Intermediate continuation lines may
+// contain anything — including text that itself begins with "NNN " for some
+// other code (e.g. a z/OS message quoting "550 dataset..." inside a 211 block),
+// which must NOT be mistaken for the terminator. Anchoring the terminator to the
+// opening code keeps such replies whole and the control stream in sync for the
+// next command. Every line is appended (including lines shorter than 4 bytes) so
+// no reply text is lost.
 func (code ReturnCode) check(reader *bufio.Reader) (msg string, err error) {
 
 	var (
-		response     strings.Builder
-		receivedCode = 0
+		response    strings.Builder
+		openingCode = 0
+		haveOpening = false
 	)
 
 	for {
@@ -93,7 +104,7 @@ func (code ReturnCode) check(reader *bufio.Reader) (msg string, err error) {
 				// callers close the desynchronized session instead of mistaking it
 				// for a ReturnError. If a complete reply was already read, fall
 				// through and let the code-mismatch logic below report it.
-				if receivedCode == 0 {
+				if !haveOpening {
 					return response.String(), io.ErrUnexpectedEOF
 				}
 				break
@@ -103,44 +114,47 @@ func (code ReturnCode) check(reader *bufio.Reader) (msg string, err error) {
 
 		log.Serverf("%s", line)
 
-		// We only check the response code if we've read a complete line
+		// Parse the leading 3-digit code when the line is long enough to carry
+		// one. The first line that parses fixes the reply's opening code.
+		lineCode := 0
+		haveLineCode := false
 		if len(line) >= 4 {
-
-			tempReceivedCode, atoiErr := strconv.Atoi(string(line[:3]))
-			if atoiErr != nil {
+			if c, atoiErr := strconv.Atoi(string(line[:3])); atoiErr != nil {
 				log.Errorf("converting response code to integer: %s", atoiErr)
 			} else {
-				receivedCode = tempReceivedCode
-			}
-
-			if receivedCode == int(code) {
-				response.Write(line[4:])
-			} else {
-				response.Write(line) // Keep thew whole response to isolate the error
-			}
-
-			if isPrefix {
-				// If the line is too long to fit in the buffer, we read the rest of the line
-				response.WriteString("\n")
-				continue
-			}
-
-			if line[3] == '-' {
-				response.WriteString("\n")
-				continue
-			}
-
-			if line[3] == ' ' {
-				// If we've found the expected response code and the line ends with a space,
-				// we can return that the code is OK, along with the response
-				break
+				lineCode = c
+				haveLineCode = true
+				if !haveOpening {
+					openingCode = lineCode
+					haveOpening = true
+				}
 			}
 		}
+
+		// Append every line so no reply text is lost. Strip the redundant "NNN "
+		// prefix only on lines that carry the expected code; keep continuation or
+		// error lines whole so their codes stay visible in the message.
+		if haveLineCode && lineCode == int(code) {
+			response.Write(line[4:])
+		} else {
+			response.Write(line)
+		}
+
+		// The reply terminates only on a complete line that repeats the OPENING
+		// code followed by a space. A line whose 4th byte is a space but whose
+		// code differs is a continuation, not the end; line[3] == '-' is always a
+		// continuation; isPrefix means the line was truncated by the read buffer
+		// and so cannot be a terminator.
+		if !isPrefix && haveLineCode && line[3] == ' ' && lineCode == openingCode {
+			break
+		}
+
+		response.WriteString("\n")
 	}
 
-	if receivedCode != int(code) {
+	if !haveOpening || openingCode != int(code) {
 		return response.String(), &ReturnError{
-			rc:      receivedCode,
+			rc:      openingCode,
 			message: response.String(),
 			wantRc:  int(code),
 		}
