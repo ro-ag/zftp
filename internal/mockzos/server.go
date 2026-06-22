@@ -42,6 +42,9 @@ type Server struct {
 	withheld      map[string]bool     // full line or verb (upper) -> swallow without replying
 	hangup        map[string]bool     // full line or verb (upper) -> drop the control conn without replying
 	dropAfterData map[string]bool     // download verb (upper) -> drop control after data, before the closing reply
+	truncate      map[string]bool     // download verb (upper) -> RST the data conn instead of a clean close
+	hangData      map[string]bool     // download verb (upper) -> hold the data conn open after sending payload
+	withholdReply map[string]bool     // download verb (upper) -> deliver data + clean close, but send no closing reply
 	received      []string            // every command line received, in order
 }
 
@@ -63,6 +66,9 @@ func New(tb testing.TB) *Server {
 		withheld:      map[string]bool{},
 		hangup:        map[string]bool{},
 		dropAfterData: map[string]bool{},
+		truncate:      map[string]bool{},
+		hangData:      map[string]bool{},
+		withholdReply: map[string]bool{},
 	}
 	s.wg.Add(1)
 	go s.serve()
@@ -220,11 +226,39 @@ func (s *Server) handleDownload(sess *session, line, verb, arg string) {
 	}
 	writeLines(sess.conn, []string{"125 data connection already open; transfer starting"})
 	_, _ = dc.Write([]byte(payload))
+
+	// HangData: hold the data connection open after sending the payload so the
+	// client's scan blocks; block here until the client tears the connection down
+	// (e.g. via a concurrent Close).
+	if s.isHangData(verb) {
+		var sink strings.Builder
+		_, _ = copyAll(&sink, dc)
+		return
+	}
+
+	// TruncateData: abort the data connection with a RST (SO_LINGER 0) instead of a
+	// clean FIN, modeling a failed/aborted z/OS transfer. The control reply still
+	// says 250, so only the data-stream error should fail the operation.
+	if s.isTruncateData(verb) {
+		if tcp, ok := dc.(*net.TCPConn); ok {
+			_ = tcp.SetLinger(0)
+		}
+		_ = dc.Close()
+		writeLines(sess.conn, []string{"250 transfer completed successfully"})
+		return
+	}
+
 	_ = dc.Close()
-	// Optionally drop the control connection after the data has been delivered but
-	// before the closing reply, so the client's post-transfer reply read hits EOF.
+	// DropControlAfterData: drop the control connection after the data has been
+	// delivered but before the closing reply, so the reply read hits EOF.
 	if s.isDropAfterData(verb) {
 		_ = sess.conn.Close()
+		return
+	}
+	// WithholdReplyAfterData: deliver and cleanly close the data, but never send the
+	// closing reply, leaving the control connection open so the reply read blocks
+	// and must time out.
+	if s.isWithholdReplyAfterData(verb) {
 		return
 	}
 	writeLines(sess.conn, []string{"250 transfer completed successfully"})

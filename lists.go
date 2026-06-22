@@ -3,6 +3,7 @@
 package zftp
 
 import (
+	"errors"
 	"fmt"
 	"gopkg.in/ro-ag/zftp.v2/hfs"
 	"gopkg.in/ro-ag/zftp.v2/internal/log"
@@ -57,19 +58,10 @@ func (s *FTPSession) anyList(cmd, expression string) ([]string, string, error) {
 		return nil, resp, fmt.Errorf("error while sending list command: %w", err)
 	}
 
-	lines, err := make([]string, 0), error(nil)
-
-	for child.Scanner().Scan() {
-		if child.IsClosed() {
-			break
-		}
-		line := child.Scanner().Text()
-		if err := child.Scanner().Err(); err != nil {
-			if err.Error() == "EOF" {
-				break
-			}
-			return nil, resp, fmt.Errorf("error while scanning child connection: %w", err)
-		}
+	lines := make([]string, 0)
+	sc := child.Scanner()
+	for sc.Scan() {
+		line := sc.Text()
 		if trimLine {
 			line = strings.TrimSpace(line)
 		}
@@ -77,14 +69,25 @@ func (s *FTPSession) anyList(cmd, expression string) ([]string, string, error) {
 		log.Passivef("%s", line)
 	}
 
-	err = child.Close()
-	if err != nil {
-		return nil, resp, err
+	// Classify why the scan stopped before trusting the result. A concurrent close
+	// (session Close / SIGINT handler tearing down the data connection) is an
+	// abort; a read error — a z/OS RST on a failed transfer, or a line exceeding
+	// the scanner's bound — means the listing is incomplete; a clean EOF (no error,
+	// not closed by us) is success.
+	if child.IsClosed() {
+		return nil, resp, errors.New("list aborted: data connection closed")
+	}
+	if err := sc.Err(); err != nil {
+		// A data-stream failure (a z/OS RST on a failed transfer, or a line over
+		// the scanner's bound) leaves the listing's terminal control reply
+		// unconsumed, desynchronizing the control stream. Close the session so it
+		// is not reused one reply out of phase.
+		_ = s.Close()
+		return nil, resp, fmt.Errorf("error reading list data connection: %w", err)
 	}
 
-	_, err = s.checkLast(CodeFileActionOK)
-	if err != nil {
-		return nil, resp, fmt.Errorf("error while checking last response: %w", err)
+	if _, err := s.confirmData(child); err != nil {
+		return nil, resp, fmt.Errorf("error confirming list transfer: %w", err)
 	}
 	return lines, resp, nil
 }

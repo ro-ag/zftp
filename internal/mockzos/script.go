@@ -102,6 +102,57 @@ func (s *Server) isDropAfterData(verb string) bool {
 	return s.dropAfterData[verb]
 }
 
+// TruncateData makes a download (LIST/NLST/RETR) abort its data connection with a
+// TCP RST (SO_LINGER 0) instead of a clean FIN after sending the payload, while
+// the control connection still reports 250. It models a failed/aborted z/OS
+// transfer, so the client must fail the operation on the data-stream error even
+// though the control reply looks successful. The key is a verb.
+func (s *Server) TruncateData(verb string) {
+	key := strings.ToUpper(strings.TrimSpace(verb))
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	s.truncate[key] = true
+}
+
+func (s *Server) isTruncateData(verb string) bool {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	return s.truncate[verb]
+}
+
+// HangData makes a download hold its data connection open after sending the
+// payload (blocking until the client closes it), so the client's scan stalls and
+// a concurrent Close can be exercised. The key is a verb.
+func (s *Server) HangData(verb string) {
+	key := strings.ToUpper(strings.TrimSpace(verb))
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	s.hangData[key] = true
+}
+
+func (s *Server) isHangData(verb string) bool {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	return s.hangData[verb]
+}
+
+// WithholdReplyAfterData makes a download deliver its data and cleanly close the
+// data connection, but never send the closing 250 reply, leaving the control
+// connection open so the client's post-transfer reply read blocks (and must time
+// out). The key is a verb.
+func (s *Server) WithholdReplyAfterData(verb string) {
+	key := strings.ToUpper(strings.TrimSpace(verb))
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	s.withholdReply[key] = true
+}
+
+func (s *Server) isWithholdReplyAfterData(verb string) bool {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	return s.withholdReply[verb]
+}
+
 // Commands returns a copy of every command line the server has received, in
 // order, so tests can assert on the exact control sequence (e.g. TYPE/SITE/REST).
 func (s *Server) Commands() []string {

@@ -106,20 +106,31 @@ func (s *FTPSession) transfer(t transfer.DataTransfer, remote string, offset int
 
 	sz, err := t.Transfer(child)
 	if err != nil {
+		// A data-stream failure leaves the transfer's terminal control reply
+		// unconsumed, desynchronizing the control stream; close the session so it
+		// is not reused one reply out of phase.
+		_ = s.Close()
 		return sz, msg1, err
 	}
 
-	err = child.Close()
+	msg2, err := s.confirmData(child)
 	if err != nil {
-		return sz, msg1, err
-	}
-
-	msg2, err := s.checkLast(CodeFileActionOK)
-	if err != nil {
-		return sz, "", fmt.Errorf("error while checking last response: %w", err)
+		return sz, msg1, fmt.Errorf("error while checking last response: %w", err)
 	}
 
 	return sz, fmt.Sprintf("%s\n%s", msg1, msg2), nil
+}
+
+// confirmData finalizes a data transfer. The caller must have already drained the
+// data connection to EOF — closing it with unread bytes would make the local TCP
+// stack emit an RST. It closes the data connection and reads the terminal reply on
+// the control connection; that read is timeout-bounded by checkLast because z/OS
+// sends the reply asynchronously to the data close and it can be lost.
+func (s *FTPSession) confirmData(child *childConnection) (string, error) {
+	if err := child.Close(); err != nil {
+		return "", err
+	}
+	return s.checkLast(CodeFileActionOK)
 }
 
 // StoreIO stores the contents of the reader to the remote file in the specified

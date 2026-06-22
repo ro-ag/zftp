@@ -69,36 +69,26 @@ func findPort(line string) (int, error) {
 	return port, nil
 }
 
-// connectDataConn is a wrapper over net.Dial that sets a timeout on the connection.
-// its has mutex control to allow graceful closing of the connection.
+// childConnection is a passive-mode data connection. It embeds net.Conn — so it
+// satisfies the interface the transfer helpers expect, with Read/Write/deadline/
+// address methods coming straight from the socket — and overrides Close to make
+// teardown idempotent, interrupt an in-flight read, and deregister from the
+// session's data-connection map.
+//
+// No mutex is needed: net.Conn is safe for concurrent Read/Write/Close, the closed
+// state is an atomic flag, and Close interrupts a blocked read by pushing a past
+// deadline onto the socket before closing it.
 type childConnection struct {
-	conn     net.Conn
+	net.Conn
 	parent   net.Addr
 	maps     *sync.Map
 	scan     *scanner
-	mu       sync.RWMutex
 	isClosed atomic.Bool
 }
 
-// Read is a wrapper over net.Conn.Read that sets a timeout on the connection.
-func (c *childConnection) Read(b []byte) (n int, err error) {
-	c.mu.RLock()
-	defer c.mu.RUnlock()
-	return c.conn.Read(b)
-}
-
-// Write is a wrapper over net.Conn.Write that sets a timeout on the connection.
-func (c *childConnection) Write(b []byte) (n int, err error) {
-	c.mu.RLock()
-	defer c.mu.RUnlock()
-	return c.conn.Write(b)
-}
-
-// Close closes the connection.
-// It acquires an exclusive lock to ensure exclusive access to the connection.
-// It checks the isClosed flag to avoid closing the connection multiple times.
-// It updates the isClosed flag and deletes the connection from the maps.
-// Returns an error if closing the connection fails.
+// Close tears down the data connection. It is idempotent and safe to call
+// concurrently with an in-flight Read/Write/scan, which it interrupts so the
+// reader observes the closure promptly.
 func (c *childConnection) Close() error {
 	caller := utils.Caller()
 
@@ -110,18 +100,14 @@ func (c *childConnection) Close() error {
 	}
 
 	// Interrupt any read currently blocked on this connection so it returns
-	// promptly and releases its read lock; this keeps Close from blocking behind
-	// a stalled scan and serializes close against scan on the data connection.
-	_ = c.conn.SetDeadline(time.Now())
-
-	c.mu.Lock()
-	defer c.mu.Unlock()
+	// promptly; net.Conn permits SetDeadline and Close concurrently with Read/Write.
+	_ = c.Conn.SetDeadline(time.Now())
 
 	if _, ok := c.maps.Load(c.RemoteAddr().String()); !ok {
 		log.Debugf("<%s>: child connection not present in map: %p", caller, c)
 	}
 
-	err := c.conn.Close()
+	err := c.Conn.Close()
 	if err != nil {
 		err = fmt.Errorf("<%s>: %w", caller, err)
 	}
@@ -131,45 +117,17 @@ func (c *childConnection) Close() error {
 	return err
 }
 
-// IsClosed returns true if the connection is closed, false otherwise.
-// its uses atomic operations to read the isClosed flag.
+// IsClosed reports whether the data connection has been closed.
 func (c *childConnection) IsClosed() bool {
-	c.mu.RLock()
-	defer c.mu.RUnlock()
 	return c.isClosed.Load()
 }
 
-// LocalAddr wraps net.Conn.LocalAddr
-func (c *childConnection) LocalAddr() net.Addr {
-	return c.conn.LocalAddr()
-}
-
-// RemoteAddr wraps net.Conn.RemoteAddr
-func (c *childConnection) RemoteAddr() net.Addr {
-	return c.conn.RemoteAddr()
-}
-
-// ParentAddr returns the address of the parent connection.
+// ParentAddr returns the address of the parent (control) connection.
 func (c *childConnection) ParentAddr() net.Addr {
 	return c.parent
 }
 
-// SetDeadline wraps net.Conn.SetDeadline
-func (c *childConnection) SetDeadline(t time.Time) error {
-	return c.conn.SetDeadline(t)
-}
-
-// SetReadDeadline wraps net.Conn.SetReadDeadline
-func (c *childConnection) SetReadDeadline(t time.Time) error {
-	return c.conn.SetReadDeadline(t)
-}
-
-// SetWriteDeadline wraps net.Conn.SetWriteDeadline
-func (c *childConnection) SetWriteDeadline(t time.Time) error {
-	return c.conn.SetWriteDeadline(t)
-}
-
-// Scanner returns a new scanner for the connection
+// Scanner returns the line scanner bound to this connection.
 func (c *childConnection) Scanner() *scanner {
 	return c.scan
 }
@@ -212,12 +170,12 @@ func (s *FTPSession) newChildConnection(port int) (*childConnection, error) {
 		log.Debugf("upgraded connection to TLS")
 	}
 
-	child := childConnection{conn: conn, parent: conn.RemoteAddr(), maps: &s.dataConns}
+	child := &childConnection{Conn: conn, parent: conn.RemoteAddr(), maps: &s.dataConns}
 	child.scan = newScanner(conn, child.IsClosed)
-	s.dataConns.Store(child.RemoteAddr().String(), &child)
+	s.dataConns.Store(child.RemoteAddr().String(), child)
 
 	log.Debugf("created child connection: %s", child.RemoteAddr().String())
-	return &child, nil
+	return child, nil
 }
 
 // newScanner returns a new scanner for the connection
