@@ -1,0 +1,28 @@
+version: 2
+updates:
+  # Library module (kept dependency-free; this watches for any that creep in).
+  - package-ecosystem: gomod
+    directory: "/"
+    schedule:
+      interval: weekly
+    groups:
+      gomod:
+        patterns: ["*"]
+
+  # CLI sub-module (carries its own dependencies; see cli/).
+  - package-ecosystem: gomod
+    directory: "/cli"
+    schedule:
+      interval: weekly
+    groups:
+      cli:
+        patterns: ["*"]
+
+  # GitHub Actions used by the CI workflow.
+  - package-ecosystem: github-actions
+    directory: "/"
+    schedule:
+      interval: weekly
+    groups:
+      actions:
+        patterns: ["*"]

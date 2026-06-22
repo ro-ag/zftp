@@ -1,11 +1,13 @@
+// SPDX-License-Identifier: Apache-2.0
+
 package utils
 
 import (
 	"bytes"
 	"encoding/binary"
 	"fmt"
-	"gopkg.in/ro-ag/zftp.v1/internal/log"
-	"gopkg.in/ro-ag/zftp.v1/internal/text"
+	"gopkg.in/ro-ag/zftp.v2/internal/log"
+	"gopkg.in/ro-ag/zftp.v2/internal/text"
 	"os"
 	"regexp"
 	"runtime"
@@ -158,7 +160,6 @@ func LastWordToBool(str string) (bool, error) {
 
 type SetRestorer struct {
 	orig string
-	want string
 	set  func(string) error
 	get  func() (string, error)
 }

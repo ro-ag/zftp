@@ -1,8 +1,10 @@
+// SPDX-License-Identifier: Apache-2.0
+
 package zftp_test
 
 import (
 	"fmt"
-	"gopkg.in/ro-ag/zftp.v1"
+	"gopkg.in/ro-ag/zftp.v2"
 	"reflect"
 	"testing"
 )
@@ -62,6 +64,4 @@ func TestFTPSession_StatusOf(t *testing.T) {
 		})
 
 	}
-
-	return
 }

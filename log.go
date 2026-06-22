@@ -1,6 +1,8 @@
+// SPDX-License-Identifier: Apache-2.0
+
 package zftp
 
-import "gopkg.in/ro-ag/zftp.v1/internal/log"
+import "gopkg.in/ro-ag/zftp.v2/internal/log"
 
 type LogLevel log.Level
 

@@ -1,10 +1,12 @@
+// SPDX-License-Identifier: Apache-2.0
+
 package zftp
 
 import (
 	"errors"
 	"fmt"
-	"gopkg.in/ro-ag/zftp.v1/hfs"
-	"gopkg.in/ro-ag/zftp.v1/internal/utils"
+	"gopkg.in/ro-ag/zftp.v2/hfs"
+	"gopkg.in/ro-ag/zftp.v2/internal/utils"
 	"io"
 	"os"
 	"regexp"
@@ -190,6 +192,9 @@ func (s *FTPSession) SubmitJesGetByDSN(jcl string) (*JobResult, error) {
 	}
 
 	job.ReturnCode, err = strconv.Atoi(res[2])
+	if err != nil {
+		return job, fmt.Errorf("failed to parse job return code %q: %w", res[2], err)
+	}
 	return job, nil
 }
 

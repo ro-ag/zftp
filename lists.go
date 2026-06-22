@@ -1,10 +1,12 @@
+// SPDX-License-Identifier: Apache-2.0
+
 package zftp
 
 import (
 	"fmt"
-	"gopkg.in/ro-ag/zftp.v1/hfs"
-	"gopkg.in/ro-ag/zftp.v1/internal/log"
-	"gopkg.in/ro-ag/zftp.v1/internal/utils"
+	"gopkg.in/ro-ag/zftp.v2/hfs"
+	"gopkg.in/ro-ag/zftp.v2/internal/log"
+	"gopkg.in/ro-ag/zftp.v2/internal/utils"
 	"strings"
 )
 
@@ -16,10 +18,8 @@ func (s *FTPSession) anyList(cmd, expression string) ([]string, string, error) {
 	trimLine := false
 	switch cmd {
 	case "LIST":
-		break
 	case "NLST":
 		trimLine = true
-		break
 	default:
 		log.Panicf("invalid command: %s", cmd)
 	}

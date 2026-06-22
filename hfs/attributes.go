@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: Apache-2.0
+
 // Package hfs provides tools for interacting with the Hierarchical File System (HFS) on z/OS systems.
 // It includes functionalities to manage HFS attributes, handle different types of datasets such as partitioned and sequential datasets,
 // and interact with the Job Entry Subsystem (JES) spool. The package provides structured data types to represent jobs and job details,
