@@ -39,6 +39,7 @@ type Server struct {
 	dataByLine  map[string]string   // full command line (upper) -> payload to send
 	dataByVerb  map[string]string   // verb (upper) -> payload to send
 	stored      map[string][]byte   // STOR arg (upper) -> captured payload
+	received    []string            // every command line received, in order
 }
 
 // New starts a Server on 127.0.0.1:0 and registers cleanup with the test.
@@ -114,6 +115,9 @@ func (s *Server) handle(conn net.Conn) {
 			return
 		}
 		line = strings.TrimRight(line, "\r\n")
+		s.mu.Lock()
+		s.received = append(s.received, line)
+		s.mu.Unlock()
 		verb, arg := splitCommand(line)
 		if s.dispatch(sess, line, verb, arg) {
 			return // QUIT
@@ -149,8 +153,12 @@ func (s *Server) dispatch(sess *session, line, verb, arg string) bool {
 		writeLines(sess.conn, []string{"211 mockzos status ok"})
 	case "FEAT":
 		writeLines(sess.conn, []string{"211-Extensions supported", "211 End"})
-	case "NOOP", "CWD", "REST":
-		writeLines(sess.conn, []string{"250 command okay"})
+	case "REST":
+		writeLines(sess.conn, []string{"350 restarting at the requested offset, send transfer command"})
+	case "CWD":
+		writeLines(sess.conn, []string{"250 directory changed"})
+	case "NOOP":
+		writeLines(sess.conn, []string{"200 command okay"})
 	case "PASV":
 		s.handlePasv(sess)
 	case "LIST", "NLST", "RETR":

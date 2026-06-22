@@ -40,6 +40,16 @@ func (s *Server) DataFor(verb, arg, payload string) {
 	s.dataByLine[verb+" "+strings.TrimSpace(arg)] = payload
 }
 
+// Commands returns a copy of every command line the server has received, in
+// order, so tests can assert on the exact control sequence (e.g. TYPE/SITE/REST).
+func (s *Server) Commands() []string {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	out := make([]string, len(s.received))
+	copy(out, s.received)
+	return out
+}
+
 // Stored returns the bytes captured for a prior STOR of the given remote name.
 func (s *Server) Stored(arg string) ([]byte, bool) {
 	s.mu.Lock()
