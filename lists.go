@@ -118,11 +118,17 @@ func (s *FTPSession) ListDatasets(expression string) ([]hfs.InfoDataset, error) 
 		return nil, err
 	}
 	datasets := make([]hfs.InfoDataset, 0)
+	if len(lines) == 0 {
+		return datasets, nil
+	}
+	// The first line is the column header; it selects the listing's column
+	// geometry (modern, legacy "Date", LISTLEVEL 2, or Co:Z).
+	parser := hfs.NewDatasetListParser(lines[0])
 	for i := range lines {
 		if i == 0 {
 			continue
 		}
-		dataset, errParsing := hfs.ParseInfoDataset(lines[i])
+		dataset, errParsing := parser.Parse(lines[i])
 		if errParsing != nil {
 			return nil, fmt.Errorf("error while parsing record \"%s\": %w", lines[i], errParsing)
 		}

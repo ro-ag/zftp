@@ -8,6 +8,35 @@ import (
 	"testing"
 )
 
+// TestListDatasets_AlternateFormat drives ListDatasets over a Co:Z listing (a
+// non-modern column geometry) to prove the header-driven parser is wired through
+// the full pipeline: the Tracks column and '?'-unknown Used must come through.
+func TestListDatasets_AlternateFormat(t *testing.T) {
+	body, err := os.ReadFile("tests/dataset_listings/06_coz_tracks.txt")
+	if err != nil {
+		t.Fatalf("read corpus: %v", err)
+	}
+	s, srv := dialMock(t)
+	srv.DataFor("LIST", "", strings.ReplaceAll(string(body), "\n", "\r\n"))
+
+	ds, err := s.ListDatasets("HLQ.PROJ.*")
+	if err != nil {
+		t.Fatalf("ListDatasets (Co:Z format): %v", err)
+	}
+	if len(ds) != 4 {
+		t.Fatalf("parsed %d datasets, want 4", len(ds))
+	}
+	var sawTracks bool
+	for i := range ds {
+		if ds[i].Tracks.Value() > 0 {
+			sawTracks = true
+		}
+	}
+	if !sawTracks {
+		t.Errorf("Co:Z Tracks column was not parsed through ListDatasets")
+	}
+}
+
 // TestListDatasets_RealWorldCorpus drives the full ListDatasets path (LIST over
 // the mock data connection, header skip, per-row parse) over the sanitized
 // real-world corpus under ./tests. A single unparseable row would abort the whole

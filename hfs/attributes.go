@@ -71,7 +71,9 @@ func (f *FieldInt) parse(data string) error {
 	data = strings.TrimSpace(data)
 	f.data = 0
 	f.overflow = false
-	if len(data) == 0 {
+	// An empty column, or "?" which some servers (e.g. Co:Z for a load library's
+	// Used column) print when the value is unknown, parses to a zero value.
+	if len(data) == 0 || data == "?" {
 		return nil
 	}
 	// z/OS fills a numeric column with '+' when the value exceeds the column's
@@ -209,18 +211,22 @@ type FieldDate struct {
 }
 
 func (f *FieldDate) parse(data string) error {
-	const layout = "2006/01/02" // Customize the layout based on your input format
 	data = strings.TrimSpace(data)
-	if len(data) == 0 || data == "**NONE**" {
+	// z/OS emits "**NONE**" (and some servers "***NONE***") for an unset
+	// referred/created date.
+	if len(data) == 0 || strings.Trim(data, "*") == "NONE" {
 		f.data = time.Time{}
 		return nil
 	}
-	t, err := time.Parse(layout, data)
-	if err != nil {
-		return fmt.Errorf("failed to parse date field: %w", err)
+	// The modern listing uses yyyy/mm/dd; the legacy ("Date" header) listing uses
+	// a 2-digit-year mm/dd/yy. Try both so either geometry parses.
+	for _, layout := range []string{"2006/01/02", "01/02/06"} {
+		if t, err := time.Parse(layout, data); err == nil {
+			f.data = t
+			return nil
+		}
 	}
-	f.data = t
-	return nil
+	return fmt.Errorf("failed to parse date field: %q", data)
 }
 
 func (f *FieldDate) String() string {
