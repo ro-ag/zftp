@@ -10,6 +10,7 @@ import (
 	"gopkg.in/ro-ag/zftp.v2/eol"
 	"gopkg.in/ro-ag/zftp.v2/internal/log"
 	"gopkg.in/ro-ag/zftp.v2/internal/utils"
+	"log/slog"
 	"net"
 	"os"
 	"os/signal"
@@ -35,6 +36,7 @@ type FTPSession struct {
 	dataConns   sync.Map
 	tlsConfig   *tls.Config
 	dialCfg     dialOptions
+	log         *log.Logger
 	mu          sync.Mutex
 }
 
@@ -52,12 +54,12 @@ func Open(server string, opts ...Option) (*FTPSession, error) {
 
 	session := newSession(conn, cfg)
 
-	msg, err := CodeSvcReadySoon.check(session.reader)
+	msg, err := CodeSvcReadySoon.check(session.reader, session.log)
 	if err != nil {
 		_ = conn.Close()
 		return nil, err
 	}
-	log.Debug(utils.WrapText(msg))
+	session.log.Debug(utils.WrapText(msg))
 
 	if cfg.signalHandler {
 		session.installSignalHandler()
@@ -100,6 +102,7 @@ func newSession(conn net.Conn, cfg dialOptions) *FTPSession {
 		reader:    bufio.NewReader(conn),
 		dialCfg:   cfg,
 		jobPrefix: regexp.MustCompile(`(JOB\d{5})`),
+		log:       log.New(cfg.logger, log.None),
 	}
 }
 
@@ -111,18 +114,26 @@ func (s *FTPSession) installSignalHandler() {
 	go func() {
 		<-c
 		if err := s.Close(); err != nil {
-			log.Errorf("error closing FTP session: %s", err)
+			s.log.Errorf("error closing FTP session: %s", err)
 			os.Exit(1)
 		}
 		os.Exit(0)
 	}()
 }
 
-// SetVerbose sets the verbose flag
+// SetVerbose selects which trace categories this session emits. The level is a
+// bitmask of the Log* constants (or NoLog/LogAll) and is independent of any
+// injected logger's own level filter.
 func (s *FTPSession) SetVerbose(level LogLevel) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
-	log.SetLevel(log.Level(level))
+	s.log.SetLevel(log.Level(level))
+}
+
+// SetLogger swaps the destination logger for this session's logs at runtime.
+// A nil l reverts to slog.Default(). See WithLogger to set it at Open time.
+func (s *FTPSession) SetLogger(l *slog.Logger) {
+	s.log.SetSlog(l)
 }
 
 // Conn exposes the underlying network connection used by the session.
@@ -192,16 +203,16 @@ func (s *FTPSession) closeLocked() error {
 	// Close all data connections.
 	s.dataConns.Range(func(name, conn any) bool {
 		child := conn.(*childConnection)
-		log.Debugf("closing child net connection %s", child.RemoteAddr())
+		s.log.Debugf("closing child net connection %s", child.RemoteAddr())
 		if err := child.Close(); err != nil {
-			log.Warningf("Error closing child net connection %s: %s", child.RemoteAddr(), err)
+			s.log.Warningf("Error closing child net connection %s: %s", child.RemoteAddr(), err)
 		}
 		return true
 	})
 
-	log.Debugf("closing session connection %s", s.conn.RemoteAddr())
+	s.log.Debugf("closing session connection %s", s.conn.RemoteAddr())
 	if err := s.conn.Close(); err != nil {
-		log.Warningf("Error closing session connection: %s", err)
+		s.log.Warningf("Error closing session connection: %s", err)
 		return err
 	}
 	return nil

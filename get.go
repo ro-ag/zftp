@@ -5,7 +5,6 @@ package zftp
 import (
 	"compress/gzip"
 	"fmt"
-	"gopkg.in/ro-ag/zftp.v2/internal/log"
 	"gopkg.in/ro-ag/zftp.v2/internal/utils"
 	"io"
 	"os"
@@ -16,7 +15,7 @@ import (
 // If the local file already exists, it is overwritten.
 // mode is the transfer mode, either ASCII or binary.
 func (s *FTPSession) Get(remote string, localFile string, mode TransferType) error {
-	log.Debug("creating local file: ", localFile)
+	s.log.Debug("creating local file: ", localFile)
 	file, err := os.Create(localFile)
 	if err != nil {
 		return fmt.Errorf("failed to create local file: %w", err)
@@ -33,13 +32,13 @@ func (s *FTPSession) Get(remote string, localFile string, mode TransferType) err
 		}
 	}()
 
-	log.Debug("starting transfer from: ", remote)
+	s.log.Debug("starting transfer from: ", remote)
 	bytesTransferred, _, err := s.RetrieveIO(remote, file, mode)
 	if err != nil {
 		return fmt.Errorf("failed to retrieve file: %w", err)
 	}
 
-	log.Debugf("Successfully transferred %d bytes from %s", bytesTransferred, remote)
+	s.log.Debugf("Successfully transferred %d bytes from %s", bytesTransferred, remote)
 	return nil
 }
 
@@ -55,7 +54,7 @@ func (s *FTPSession) GetAt(remote string, localFile string, mode TransferType, o
 		return err
 	}
 
-	log.Debug("opening local file: ", localFile)
+	s.log.Debug("opening local file: ", localFile)
 
 	file, err := os.OpenFile(localFile, os.O_CREATE|os.O_WRONLY, 0644)
 	if err != nil {
@@ -85,13 +84,13 @@ func (s *FTPSession) GetAt(remote string, localFile string, mode TransferType, o
 		}
 	}()
 
-	log.Debugf("starting transfer from %s at offset %d", remote, offset)
+	s.log.Debugf("starting transfer from %s at offset %d", remote, offset)
 	bytesTransferred, _, err := s.RetrieveIOAt(remote, file, mode, offset)
 	if err != nil {
 		return fmt.Errorf("failed to retrieve file: %w", err)
 	}
 
-	log.Debugf("successfully transferred %d bytes from %s", bytesTransferred, remote)
+	s.log.Debugf("successfully transferred %d bytes from %s", bytesTransferred, remote)
 	return nil
 }
 
@@ -105,7 +104,7 @@ func (s *FTPSession) GetAndGzip(remote string, localFile string, mode TransferTy
 		localFile += ".gz"
 	}
 
-	log.Debug("creating local file: ", localFile)
+	s.log.Debug("creating local file: ", localFile)
 	file, err := os.Create(localFile)
 	if err != nil {
 		return fmt.Errorf("failed to create local file: %w", err)
@@ -117,7 +116,7 @@ func (s *FTPSession) GetAndGzip(remote string, localFile string, mode TransferTy
 		err = closeGzHandler(err, gzWriter, file)
 	}()
 
-	log.Debug("starting transfer from: ", remote)
+	s.log.Debug("starting transfer from: ", remote)
 	bytesTransferred, _, err := s.RetrieveIO(remote, gzWriter, mode)
 	if err != nil {
 		return fmt.Errorf("failed to retrieve and compress file: %w", err)
@@ -133,9 +132,9 @@ func (s *FTPSession) GetAndGzip(remote string, localFile string, mode TransferTy
 		return fmt.Errorf("failed to close gzip writer: %w", err)
 	}
 
-	log.Debugf("successfully transferred and compressed %d bytes from %s", bytesTransferred, remote)
+	s.log.Debugf("successfully transferred and compressed %d bytes from %s", bytesTransferred, remote)
 
-	err = utils.VerifyGzSize(file, bytesTransferred)
+	err = utils.VerifyGzSize(s.log, file, bytesTransferred)
 	if err != nil {
 		return err
 	}

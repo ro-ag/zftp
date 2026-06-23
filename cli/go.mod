@@ -1,6 +1,6 @@
 module github.com/ro-ag/zftp/cli
 
-go 1.20
+go 1.26
 
 require gopkg.in/ro-ag/zftp.v2 v2.0.0
 

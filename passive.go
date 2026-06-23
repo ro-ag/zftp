@@ -84,6 +84,7 @@ type childConnection struct {
 	maps     *sync.Map
 	scan     *scanner
 	isClosed atomic.Bool
+	lg       *log.Logger
 }
 
 // Close tears down the data connection. It is idempotent and safe to call
@@ -95,7 +96,7 @@ func (c *childConnection) Close() error {
 	// Flip the closed flag first (atomically) so concurrent closes are mutually
 	// exclusive and any in-flight scan/read sees the closure immediately.
 	if c.isClosed.Swap(true) {
-		log.Debugf("<%s> child connection already closed: %s = %p", caller, c.RemoteAddr().String(), c)
+		c.lg.Debugf("<%s> child connection already closed: %s = %p", caller, c.RemoteAddr().String(), c)
 		return nil
 	}
 
@@ -104,7 +105,7 @@ func (c *childConnection) Close() error {
 	_ = c.Conn.SetDeadline(time.Now())
 
 	if _, ok := c.maps.Load(c.RemoteAddr().String()); !ok {
-		log.Debugf("<%s>: child connection not present in map: %p", caller, c)
+		c.lg.Debugf("<%s>: child connection not present in map: %p", caller, c)
 	}
 
 	err := c.Conn.Close()
@@ -113,7 +114,7 @@ func (c *childConnection) Close() error {
 	}
 	c.maps.Delete(c.RemoteAddr().String())
 
-	log.Debugf("closed child connection: %s = %p", c.RemoteAddr().String(), c)
+	c.lg.Debugf("closed child connection: %s = %p", c.RemoteAddr().String(), c)
 	return err
 }
 
@@ -139,7 +140,7 @@ func (s *FTPSession) newChildConnection(port int) (*childConnection, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
-	log.Debugf("attempting to create a new connection with port %d", port)
+	s.log.Debugf("attempting to create a new connection with port %d", port)
 
 	address := s.conn.RemoteAddr().String()
 	// Split the address into IP/hostname and port
@@ -167,14 +168,14 @@ func (s *FTPSession) newChildConnection(port int) (*childConnection, error) {
 
 	if s.tlsConfig != nil {
 		conn = tls.Client(conn, s.tlsConfig)
-		log.Debugf("upgraded connection to TLS")
+		s.log.Debugf("upgraded connection to TLS")
 	}
 
-	child := &childConnection{Conn: conn, parent: conn.RemoteAddr(), maps: &s.dataConns}
+	child := &childConnection{Conn: conn, parent: conn.RemoteAddr(), maps: &s.dataConns, lg: s.log}
 	child.scan = newScanner(conn, child.IsClosed)
 	s.dataConns.Store(child.RemoteAddr().String(), child)
 
-	log.Debugf("created child connection: %s", child.RemoteAddr().String())
+	s.log.Debugf("created child connection: %s", child.RemoteAddr().String())
 	return child, nil
 }
 

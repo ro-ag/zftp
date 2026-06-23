@@ -3,37 +3,22 @@
 package log
 
 import (
-	"io"
-	"log"
-	"os"
-	"sync"
+	"context"
+	"fmt"
+	"log/slog"
+	"runtime"
 	"sync/atomic"
+	"time"
 )
 
-type Logger interface {
-	SetOutput(w io.Writer)
-	Printf(format string, v ...any)
-	Print(v ...any)
-	Println(v ...any)
-	Fatal(v ...any)
-	Fatalf(format string, v ...any)
-	Fatalln(v ...any)
-	Panic(v ...any)
-	Panicf(format string, v ...any)
-	Panicln(v ...any)
-	Prefix() string
-	SetPrefix(prefix string)
-	Writer() io.Writer
-}
-
+// Level is a bitmask of independent logging categories; combine with OR and test
+// membership with the category emitters. Each flag is a distinct bit, so enabling
+// one category never implies another.
 type Level uint32
 
 // None disables every logging category.
 const None Level = 0
 
-// The four logging categories are independent, single-bit flags: combine them
-// with OR and test membership with IsEnabled. Each occupies a distinct bit, so
-// enabling one category never implies another.
 const (
 	ServerLevel  Level = 1 << iota // 1 — server replies
 	PassiveLevel                   // 2 — passive-mode negotiation
@@ -44,128 +29,126 @@ const (
 // All enables every logging category.
 const All = ServerLevel | PassiveLevel | CommandLevel | DebugLevel
 
-type logger struct {
-	level atomic.Uint32
-	mu    sync.Mutex
-	Logger
+// component tags every zftp record so it is greppable in a shared log stream.
+const component = "zftp"
+
+var (
+	catCommand = slog.String("category", "command")
+	catServer  = slog.String("category", "server")
+	catPassive = slog.String("category", "passive")
+	catDebug   = slog.String("category", "debug")
+)
+
+// Logger applies the category bitmask prefilter and emits structured slog records.
+// The zero value is not usable; construct with New. Safe for concurrent use.
+type Logger struct {
+	base  atomic.Pointer[slog.Logger] // nil ⇒ resolve slog.Default() lazily at emit
+	level atomic.Uint32               // category bitmask
 }
 
-var std = newLogger(log.New(os.Stderr, "", log.LstdFlags), None)
+// New returns a Logger emitting to l at the given category level. A nil l selects
+// slog.Default() at emit time (honoring a later slog.SetDefault).
+func New(l *slog.Logger, lvl Level) *Logger {
+	lg := &Logger{}
+	lg.SetSlog(l)
+	lg.SetLevel(lvl)
+	return lg
+}
 
-func newLogger(l Logger, level Level) *logger {
-	lgr := &logger{
-		Logger: l,
+// SetSlog swaps the destination logger. A nil s reverts to the lazy slog.Default().
+func (l *Logger) SetSlog(s *slog.Logger) {
+	if s == nil {
+		l.base.Store(nil)
+		return
 	}
-	lgr.SetLevel(level)
-	return lgr
+	l.base.Store(tagged(s))
 }
 
-func SetLogger(l Logger) {
-	std.mu.Lock()
-	defer std.mu.Unlock()
-	std.Logger = l
+// SetLevel replaces the category bitmask.
+func (l *Logger) SetLevel(lvl Level) { l.level.Store(uint32(lvl)) }
+
+// Level returns the current category bitmask.
+func (l *Logger) Level() Level { return Level(l.level.Load()) }
+
+func (l *Logger) enabled(cat Level) bool { return l.level.Load()&uint32(cat) != 0 }
+
+// tagged derives a logger carrying the stable component attribute (applied once).
+func tagged(s *slog.Logger) *slog.Logger {
+	return s.With(slog.String("component", component))
 }
 
-func SetOutput(w io.Writer) {
-	std.SetOutput(w)
-}
-
-func SetLevel(level Level) {
-	std.SetLevel(level)
-}
-
-func IsEnabled(level Level) bool {
-	return std.level.Load()&uint32(level) != 0
-}
-
-func (l *logger) SetLevel(level Level) {
-	l.level.Store(uint32(level))
-}
-
-func (l *logger) print(prefix string, v ...any) {
-	l.Print(append([]any{prefix}, v...)...)
-}
-
-func (l *logger) printf(prefix string, format string, v ...interface{}) {
-	l.Printf(prefix+format, v...)
-}
-
-func Debug(v ...any) {
-	if IsEnabled(DebugLevel) {
-		std.print("[***] ", v...)
+// resolve returns the destination logger, tagging the lazy default when no logger
+// was injected.
+func (l *Logger) resolve() *slog.Logger {
+	if b := l.base.Load(); b != nil {
+		return b
 	}
+	return tagged(slog.Default())
 }
 
-func Debugf(format string, v ...any) {
-	if IsEnabled(DebugLevel) {
-		std.printf("[***] ", format, v...)
+// emit builds a record with the caller's source location and dispatches it.
+func (l *Logger) emit(level slog.Level, msg string, attrs ...slog.Attr) {
+	base := l.resolve()
+	ctx := context.Background()
+	if !base.Enabled(ctx, level) {
+		return
 	}
+	var pcs [1]uintptr
+	runtime.Callers(3, pcs[:]) // skip [Callers, emit, category method] → real call site
+	r := slog.NewRecord(time.Now(), level, msg, pcs[0])
+	r.AddAttrs(attrs...)
+	_ = base.Handler().Handle(ctx, r)
 }
 
-func Command(v ...any) {
-	if IsEnabled(CommandLevel) {
-		std.print("[cmd] ", v...)
-	}
-}
-
-func Commandf(format string, v ...any) {
-	if IsEnabled(CommandLevel) {
-		std.printf("[cmd] ", format, v...)
-	}
-}
-
-func Passive(v ...any) {
-	if IsEnabled(PassiveLevel) {
-		std.print("[psv] ", v...)
-	}
-}
-
-func Passivef(format string, v ...any) {
-	if IsEnabled(PassiveLevel) {
-		std.printf("[psv] ", format, v...)
+func (l *Logger) Command(v ...any) {
+	if l.enabled(CommandLevel) {
+		l.emit(slog.LevelDebug, fmt.Sprint(v...), catCommand)
 	}
 }
 
-func Server(v ...any) {
-	if IsEnabled(ServerLevel) {
-		std.print("[res] ", v...)
+func (l *Logger) Commandf(format string, v ...any) {
+	if l.enabled(CommandLevel) {
+		l.emit(slog.LevelDebug, fmt.Sprintf(format, v...), catCommand)
 	}
 }
 
-func Serverf(format string, v ...any) {
-	if IsEnabled(ServerLevel) {
-		std.printf("[res] ", format, v...)
+func (l *Logger) Server(v ...any) {
+	if l.enabled(ServerLevel) {
+		l.emit(slog.LevelDebug, fmt.Sprint(v...), catServer)
 	}
 }
 
-func Error(v ...any) {
-	std.print("[ERRO] ", v...)
+func (l *Logger) Serverf(format string, v ...any) {
+	if l.enabled(ServerLevel) {
+		l.emit(slog.LevelDebug, fmt.Sprintf(format, v...), catServer)
+	}
 }
 
-func Errorf(format string, v ...any) {
-	std.printf("[ERRO]", format, v...)
+func (l *Logger) Passive(v ...any) {
+	if l.enabled(PassiveLevel) {
+		l.emit(slog.LevelDebug, fmt.Sprint(v...), catPassive)
+	}
 }
 
-func Warning(v ...any) {
-	std.print("[WARN] ", v...)
+func (l *Logger) Passivef(format string, v ...any) {
+	if l.enabled(PassiveLevel) {
+		l.emit(slog.LevelDebug, fmt.Sprintf(format, v...), catPassive)
+	}
 }
 
-func Warningf(format string, v ...any) {
-	std.printf("[WARN]", format, v...)
+func (l *Logger) Debug(v ...any) {
+	if l.enabled(DebugLevel) {
+		l.emit(slog.LevelDebug, fmt.Sprint(v...), catDebug)
+	}
 }
 
-func Fatal(v ...any) {
-	std.Fatal(v...)
+func (l *Logger) Debugf(format string, v ...any) {
+	if l.enabled(DebugLevel) {
+		l.emit(slog.LevelDebug, fmt.Sprintf(format, v...), catDebug)
+	}
 }
 
-func Fatalf(format string, v ...any) {
-	std.Fatalf(format, v...)
-}
-
-func Panic(v ...any) {
-	std.Panic(v...)
-}
-
-func Panicf(format string, v ...any) {
-	std.Panicf(format, v...)
-}
+func (l *Logger) Warning(v ...any)            { l.emit(slog.LevelWarn, fmt.Sprint(v...)) }
+func (l *Logger) Warningf(f string, v ...any) { l.emit(slog.LevelWarn, fmt.Sprintf(f, v...)) }
+func (l *Logger) Error(v ...any)              { l.emit(slog.LevelError, fmt.Sprint(v...)) }
+func (l *Logger) Errorf(f string, v ...any)   { l.emit(slog.LevelError, fmt.Sprintf(f, v...)) }

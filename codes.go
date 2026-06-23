@@ -86,7 +86,7 @@ func (e *ReturnError) Error() string {
 // opening code keeps such replies whole and the control stream in sync for the
 // next command. Every line is appended (including lines shorter than 4 bytes) so
 // no reply text is lost.
-func (code ReturnCode) check(reader *bufio.Reader) (msg string, err error) {
+func (code ReturnCode) check(reader *bufio.Reader, lg *log.Logger) (msg string, err error) {
 
 	var (
 		response    strings.Builder
@@ -112,7 +112,7 @@ func (code ReturnCode) check(reader *bufio.Reader) (msg string, err error) {
 			return "", err
 		}
 
-		log.Serverf("%s", line)
+		lg.Serverf("%s", line)
 
 		// Parse the leading 3-digit code when the line is long enough to carry
 		// one. The first line that parses fixes the reply's opening code.
@@ -120,7 +120,7 @@ func (code ReturnCode) check(reader *bufio.Reader) (msg string, err error) {
 		haveLineCode := false
 		if len(line) >= 4 {
 			if c, atoiErr := strconv.Atoi(string(line[:3])); atoiErr != nil {
-				log.Errorf("converting response code to integer: %s", atoiErr)
+				lg.Errorf("converting response code to integer: %s", atoiErr)
 			} else {
 				lineCode = c
 				haveLineCode = true

@@ -3,7 +3,12 @@
 package log
 
 import (
+	"context"
+	"log/slog"
 	"math/bits"
+	"runtime"
+	"strings"
+	"sync"
 	"testing"
 )
 
@@ -11,20 +16,59 @@ import (
 // from these, so the tests assert their relationship rather than listing them.
 var flags = []Level{ServerLevel, PassiveLevel, CommandLevel, DebugLevel}
 
-// restoreLevel snapshots the package singleton's level and restores it when the
-// test finishes. The logger is a process-wide singleton, so without this the
-// cases below would leak state into one another (and into the rest of the
-// package's tests).
-func restoreLevel(t *testing.T) {
-	t.Helper()
-	saved := Level(std.level.Load())
-	t.Cleanup(func() { std.level.Store(uint32(saved)) })
+// capCore is the shared record store behind a capture handler and any
+// WithAttrs-derived children.
+type capCore struct {
+	mu      sync.Mutex
+	records []slog.Record
 }
 
-// TestLevelsAreDistinctSingleBits is the core ZH06 guard: each category must own
-// a single, distinct bit. The original `iota << 1` block produced 2/4/6/8, so
-// CommandLevel(6) == ServerLevel(2)|PassiveLevel(4) and the bitmask checks in
-// IsEnabled bled across categories.
+// capture is a slog.Handler that records every record it handles, honoring
+// attributes accumulated through WithAttrs (e.g. the component tag added by
+// Logger via slog.Logger.With). A faithful handler is required to observe those.
+type capture struct {
+	core  *capCore
+	attrs []slog.Attr
+}
+
+func newCapture() *capture { return &capture{core: &capCore{}} }
+
+func (c *capture) Enabled(context.Context, slog.Level) bool { return true }
+
+func (c *capture) Handle(_ context.Context, r slog.Record) error {
+	rec := r.Clone()
+	rec.AddAttrs(c.attrs...)
+	c.core.mu.Lock()
+	defer c.core.mu.Unlock()
+	c.core.records = append(c.core.records, rec)
+	return nil
+}
+
+func (c *capture) WithAttrs(as []slog.Attr) slog.Handler {
+	merged := append(append([]slog.Attr(nil), c.attrs...), as...)
+	return &capture{core: c.core, attrs: merged}
+}
+
+func (c *capture) WithGroup(string) slog.Handler { return c }
+
+func (c *capture) snapshot() []slog.Record {
+	c.core.mu.Lock()
+	defer c.core.mu.Unlock()
+	return append([]slog.Record(nil), c.core.records...)
+}
+
+// attrMap flattens a record's attributes into a map for assertions.
+func attrMap(r slog.Record) map[string]string {
+	m := map[string]string{}
+	r.Attrs(func(a slog.Attr) bool {
+		m[a.Key] = a.Value.String()
+		return true
+	})
+	return m
+}
+
+// --- ZH06 invariants: the four categories are distinct single bits ---
+
 func TestLevelsAreDistinctSingleBits(t *testing.T) {
 	for _, l := range flags {
 		if got := bits.OnesCount32(uint32(l)); got != 1 {
@@ -59,54 +103,143 @@ func TestAllIsUnionOfTheFourLevels(t *testing.T) {
 	}
 }
 
-// TestSetCommandEnablesOnlyCommand pins the user-visible symptom: selecting one
-// category must not silently switch on its neighbours.
-func TestSetCommandEnablesOnlyCommand(t *testing.T) {
-	restoreLevel(t)
-	SetLevel(CommandLevel)
+// --- ZH06 behavioral invariants, expressed against the Logger bitmask ---
 
-	if !IsEnabled(CommandLevel) {
-		t.Error("CommandLevel must be enabled after SetLevel(CommandLevel)")
+func TestEnabledCommandDoesNotEnableOthers(t *testing.T) {
+	lg := New(nil, CommandLevel)
+	if !lg.enabled(CommandLevel) {
+		t.Error("CommandLevel must be enabled")
 	}
 	for _, l := range []Level{ServerLevel, PassiveLevel, DebugLevel} {
-		if IsEnabled(l) {
-			t.Errorf("level %d must NOT be enabled by SetLevel(CommandLevel)", l)
+		if lg.enabled(l) {
+			t.Errorf("level %d must NOT be enabled by CommandLevel", l)
 		}
 	}
 }
 
-func TestSetDebugEnablesOnlyDebug(t *testing.T) {
-	restoreLevel(t)
-	SetLevel(DebugLevel)
-
-	if !IsEnabled(DebugLevel) {
-		t.Error("DebugLevel must be enabled after SetLevel(DebugLevel)")
+func TestEnabledDebugDoesNotEnableOthers(t *testing.T) {
+	lg := New(nil, DebugLevel)
+	if !lg.enabled(DebugLevel) {
+		t.Error("DebugLevel must be enabled")
 	}
 	for _, l := range []Level{ServerLevel, PassiveLevel, CommandLevel} {
-		if IsEnabled(l) {
-			t.Errorf("level %d must NOT be enabled by SetLevel(DebugLevel)", l)
+		if lg.enabled(l) {
+			t.Errorf("level %d must NOT be enabled by DebugLevel", l)
 		}
 	}
 }
 
-func TestSetAllEnablesEveryLevel(t *testing.T) {
-	restoreLevel(t)
-	SetLevel(All)
-
+func TestEnabledAllEnablesEveryLevel(t *testing.T) {
+	lg := New(nil, All)
 	for _, l := range flags {
-		if !IsEnabled(l) {
-			t.Errorf("level %d must be enabled after SetLevel(All)", l)
+		if !lg.enabled(l) {
+			t.Errorf("level %d must be enabled by All", l)
 		}
 	}
 }
 
-func TestSetNoneDisablesEveryLevel(t *testing.T) {
-	restoreLevel(t)
-	SetLevel(None)
-
+func TestEnabledNoneDisablesEveryLevel(t *testing.T) {
+	lg := New(nil, None)
 	for _, l := range flags {
-		if IsEnabled(l) {
-			t.Errorf("level %d must be disabled after SetLevel(None)", l)
+		if lg.enabled(l) {
+			t.Errorf("level %d must be disabled by None", l)
 		}
 	}
+}
+
+// --- slog emission behavior ---
+
+func TestLogger_PrefilterEmitsOnlyEnabledCategory(t *testing.T) {
+	cap := newCapture()
+	lg := New(slog.New(cap), CommandLevel)
+
+	lg.Commandf("PASS %s", "secret")
+	lg.Serverf("220 ready") // ServerLevel not enabled
+	lg.Passivef("227 ...")  // PassiveLevel not enabled
+	lg.Debugf("trace")      // DebugLevel not enabled
+
+	recs := cap.snapshot()
+	if len(recs) != 1 {
+		t.Fatalf("want exactly 1 record (command only), got %d", len(recs))
+	}
+	if recs[0].Level != slog.LevelDebug {
+		t.Errorf("command should map to LevelDebug, got %v", recs[0].Level)
+	}
+	m := attrMap(recs[0])
+	if m["category"] != "command" {
+		t.Errorf(`want category="command", got %q`, m["category"])
+	}
+	if m["component"] != "zftp" {
+		t.Errorf(`want component="zftp", got %q`, m["component"])
+	}
+	if recs[0].Message != "PASS secret" {
+		t.Errorf("unexpected message %q", recs[0].Message)
+	}
+}
+
+func TestLogger_WarningAndErrorAlwaysEmit(t *testing.T) {
+	cap := newCapture()
+	lg := New(slog.New(cap), None) // nothing in the trace bitmask
+
+	lg.Warningf("w")
+	lg.Errorf("e")
+
+	recs := cap.snapshot()
+	if len(recs) != 2 {
+		t.Fatalf("warning+error must emit regardless of level, got %d", len(recs))
+	}
+	if recs[0].Level != slog.LevelWarn || recs[1].Level != slog.LevelError {
+		t.Errorf("levels: got %v, %v want Warn, Error", recs[0].Level, recs[1].Level)
+	}
+	if attrMap(recs[0])["component"] != "zftp" {
+		t.Error("warning record missing component=zftp")
+	}
+}
+
+func TestLogger_SourcePointsAtCallSite(t *testing.T) {
+	cap := newCapture()
+	lg := New(slog.New(cap), DebugLevel)
+
+	lg.Debugf("x")
+
+	recs := cap.snapshot()
+	if len(recs) != 1 {
+		t.Fatalf("want 1 record, got %d", len(recs))
+	}
+	fs := runtime.CallersFrames([]uintptr{recs[0].PC})
+	f, _ := fs.Next()
+	if !strings.HasSuffix(f.File, "logger_test.go") {
+		t.Errorf("source should be the call site (logger_test.go), got %s:%d", f.File, f.Line)
+	}
+}
+
+func TestLogger_NilSlogUsesDefault(t *testing.T) {
+	cap := newCapture()
+	prev := slog.Default()
+	slog.SetDefault(slog.New(cap))
+	t.Cleanup(func() { slog.SetDefault(prev) })
+
+	lg := New(nil, DebugLevel) // nil ⇒ lazy slog.Default()
+	lg.Debugf("via default")
+
+	if len(cap.snapshot()) != 1 {
+		t.Fatal("nil logger should route to slog.Default()")
+	}
+}
+
+func TestLogger_ConcurrentSwapRace(t *testing.T) {
+	lg := New(slog.New(newCapture()), All)
+	var wg sync.WaitGroup
+	for i := 0; i < 8; i++ {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			for j := 0; j < 200; j++ {
+				lg.Commandf("c%d", j)
+				lg.SetLevel(All)
+				lg.SetSlog(slog.New(newCapture()))
+			}
+		}()
+	}
+	wg.Wait()
 }
