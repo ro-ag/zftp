@@ -22,19 +22,32 @@ const (
 	jesInterfaceLevel2
 )
 
+// Sentinels reported by InfoJobDetail.ReturnCode (and ParseInfoJobDetail) for a
+// job that has not completed normally. They are returned directly, so callers
+// match them with errors.Is, e.g. errors.Is(err, hfs.ErrAbendedJob).
 var (
-	ErrActiveJob  = errors.New("job is active")
+	// ErrActiveJob indicates the job is still running, so no return code is
+	// available yet.
+	ErrActiveJob = errors.New("job is active")
+	// ErrAbendedJob indicates the job abended (its class reports an ABEND).
 	ErrAbendedJob = errors.New("job abended")
-	ErrJCLError   = errors.New("job has JCL error")
+	// ErrJCLError indicates the job failed with a JCL error.
+	ErrJCLError = errors.New("job has JCL error")
 )
 
 // InfoJob represents a job record from the JES spool.
+//
+// SpoolFiles holds the spool-file count reported by a JesInterfaceLevel=1 listing,
+// whose trailing column is "N spool files" rather than a job class. For such
+// records Class is empty and SpoolFiles is N; for JesInterfaceLevel=2 records,
+// which carry a real class, SpoolFiles is 0.
 type InfoJob struct {
-	Name   FieldString `json:"Name"`
-	JobId  FieldString `json:"JobId"`
-	Owner  FieldString `json:"Owner"`
-	Status FieldString `json:"Status"`
-	Class  FieldString `json:"Class"`
+	Name       FieldString `json:"Name"`
+	JobId      FieldString `json:"JobId"`
+	Owner      FieldString `json:"Owner"`
+	Status     FieldString `json:"Status"`
+	Class      FieldString `json:"Class"`
+	SpoolFiles int         `json:"SpoolFiles,omitempty"`
 }
 
 // String returns a row of text representing the job.
@@ -45,6 +58,9 @@ func (j *InfoJob) String() string {
 	str.WriteString(fmt.Sprintf("Owner: %s, ", j.Owner.String()))
 	str.WriteString(fmt.Sprintf("Status: %s, ", j.Status.String()))
 	str.WriteString(fmt.Sprintf("Class: %s", j.Class.String()))
+	if j.SpoolFiles > 0 {
+		str.WriteString(fmt.Sprintf(", SpoolFiles: %d", j.SpoolFiles))
+	}
 	return str.String()
 }
 
@@ -52,26 +68,33 @@ func (j *InfoJob) String() string {
 // Blank lines (common when the raw server response is split on newlines, e.g. a
 // trailing newline) are ignored so callers need not pre-trim the input.
 func ParseInfoJob(records []string) ([]InfoJob, error) {
-	cleaned := make([]string, 0, len(records))
-	for _, r := range records {
+	// Keep each retained line paired with its 1-based position in the ORIGINAL
+	// input, so a parse error reports the real line number rather than the index
+	// after blank lines were filtered out.
+	type lineAt struct {
+		text string
+		orig int
+	}
+	cleaned := make([]lineAt, 0, len(records))
+	for i, r := range records {
 		if strings.TrimSpace(r) != "" {
-			cleaned = append(cleaned, r)
+			cleaned = append(cleaned, lineAt{text: r, orig: i + 1})
 		}
 	}
 	if len(cleaned) == 0 {
 		return nil, fmt.Errorf("no records provided")
 	}
 
-	kind := getInterfaceLevel(cleaned[0])
+	kind := getInterfaceLevel(cleaned[0].text)
 	jobs := make([]InfoJob, 0, len(cleaned))
 
 	for i, record := range cleaned {
 		if i == 0 && kind == jesInterfaceLevel2 {
 			continue
 		}
-		job, err := parseLineJob(record, kind)
+		job, err := parseLineJob(record.text, kind)
 		if err != nil {
-			return nil, fmt.Errorf("failed to parse %s record at line %d: %w", jesLevel(kind), i+1, err)
+			return nil, fmt.Errorf("failed to parse %s record at line %d: %w", jesLevel(kind), record.orig, err)
 		}
 		jobs = append(jobs, job)
 	}
@@ -102,9 +125,16 @@ func parseLineJob(line string, level int) (j InfoJob, err error) {
 			return j, fmt.Errorf("failed to parse JobStatus field: %w", err)
 		}
 
-		err = j.Class.parse(fields[3])
+		// A JesInterfaceLevel=1 record has no Class column; its trailing column is
+		// the spool-file count ("N spool files"). Parse the count into SpoolFiles
+		// and leave Class empty.
+		m := numberPrefixRegex.FindStringSubmatch(strings.TrimSpace(fields[3]))
+		if m == nil {
+			return j, fmt.Errorf("failed to parse spool-file count: %q", fields[3])
+		}
+		j.SpoolFiles, err = strconv.Atoi(m[1])
 		if err != nil {
-			return j, fmt.Errorf("failed to parse JobClass field: %w", err)
+			return j, fmt.Errorf("failed to parse spool-file count %q: %w", m[1], err)
 		}
 
 	} else {
@@ -164,6 +194,11 @@ func (j InfoJobDetail) ReturnCode() (rc int, err error) {
 
 	result := regex.FindStringSubmatch(j.job.Class.String())
 	if len(result) != 2 {
+		// An ABEND with no parseable numeric code (e.g. "ABEND S0C4") must still
+		// report ErrAbendedJob rather than a generic "no return code found".
+		if err != nil {
+			return -1, err
+		}
 		return 0, fmt.Errorf("no return code found")
 	}
 
@@ -211,10 +246,26 @@ func ParseInfoJobDetail(records []string) (*InfoJobDetail, error) {
 		return &InfoJobDetail{job: job}, nil
 	}
 
-	job, err := parseLineJob(records[1], kind)
+	// Level 2: records[0] is the column header. Walk the remaining records by
+	// content — skipping blank lines — rather than by fixed offsets, so a stray
+	// blank line does not break parsing. i tracks the position in records, so
+	// detail parse errors still report a 1-based line number (i+1).
+	i := 1
+	skipBlank := func() {
+		for i < len(records) && strings.TrimSpace(records[i]) == "" {
+			i++
+		}
+	}
+
+	skipBlank()
+	if i >= len(records) {
+		return nil, fmt.Errorf("no %s job record found", jesLevel(kind))
+	}
+	job, err := parseLineJob(records[i], kind)
 	if err != nil {
 		return nil, fmt.Errorf("failed to parse %s record: %w", jesLevel(kind), err)
 	}
+	i++
 
 	jd := &InfoJobDetail{job: job}
 
@@ -222,41 +273,37 @@ func ParseInfoJobDetail(records []string) (*InfoJobDetail, error) {
 		return jd, ErrActiveJob
 	}
 
-	if len(records) < 3 {
+	// A "--------" separator introduces the detail section; its absence simply
+	// means there is no detail to parse.
+	skipBlank()
+	if i >= len(records) {
 		return jd, nil
 	}
-
-	if !strings.HasPrefix(records[2], "--------") {
-		return jd, fmt.Errorf("cannot get spool detail: '%s'", records[2])
+	if !strings.HasPrefix(records[i], "--------") {
+		return jd, fmt.Errorf("cannot get spool detail: '%s'", records[i])
 	}
+	i++
 
-	if len(records) < 4 {
+	// The detail column header follows the separator.
+	skipBlank()
+	if i >= len(records) {
 		return jd, nil
 	}
-
-	if !strings.Contains(records[3], " ID  STEPNAME PROCSTEP") {
-		return jd, fmt.Errorf("cannot get spool detail: '%s'", records[3])
+	if !strings.Contains(records[i], " ID  STEPNAME PROCSTEP") {
+		return jd, fmt.Errorf("cannot get spool detail: '%s'", records[i])
 	}
-
-	if len(records) < 5 {
-		return jd, nil
-	}
+	i++
 
 	dt := make([]jobDetail, 0)
-
-	for i := 4; i < len(records); i++ {
-		if records[i] == "" {
+	for ; i < len(records); i++ {
+		if strings.TrimSpace(records[i]) == "" {
 			continue
 		}
 
-		if numberPrefixRegex.MatchString(records[i]) {
-			spoolFiles := numberPrefixRegex.FindStringSubmatch(records[i])
-			if len(spoolFiles) != 2 {
-				return jd, fmt.Errorf("failed to parse spool-file count at line %d: %q", i+1, records[i])
-			}
-			n, _ := strconv.Atoi(spoolFiles[1])
+		if m := numberPrefixRegex.FindStringSubmatch(strings.TrimSpace(records[i])); m != nil {
+			n, _ := strconv.Atoi(m[1])
 			if len(dt) != n {
-				return jd, fmt.Errorf("the number of spool files is not equal to the number of records")
+				return jd, fmt.Errorf("spool-file count (%d) does not match the number of detail records (%d)", n, len(dt))
 			}
 			break
 		}

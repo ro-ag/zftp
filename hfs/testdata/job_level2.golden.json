@@ -4,1399 +4,1599 @@
     "JobId": "TSU06321",
     "Owner": "Z33552",
     "Status": "OUTPUT",
-    "Class": "TSU      ABEND=222 3 spool files"
+    "Class": "TSU      ABEND=222 3 spool files",
+    "SpoolFiles": 0
   },
   {
     "Name": "SMFDUMPS",
     "JobId": "STC06320",
     "Owner": "STCOPER",
     "Status": "OUTPUT",
-    "Class": "STC      RC=0000 3 spool files"
+    "Class": "STC      RC=0000 3 spool files",
+    "SpoolFiles": 0
   },
   {
     "Name": "@@USS2",
     "JobId": "JOB06319",
     "Owner": "Z33792",
     "Status": "OUTPUT",
-    "Class": "A        RC=0127 4 spool files"
+    "Class": "A        RC=0127 4 spool files",
+    "SpoolFiles": 0
   },
   {
     "Name": "JCL2",
     "JobId": "JOB06318",
     "Owner": "Z33935",
     "Status": "OUTPUT",
-    "Class": "A        ABEND=000 7 spool files"
+    "Class": "A        ABEND=000 7 spool files",
+    "SpoolFiles": 0
   },
   {
     "Name": "REPRO2",
     "JobId": "JOB06316",
     "Owner": "Z33649",
     "Status": "OUTPUT",
-    "Class": "A        RC=0000 4 spool files"
+    "Class": "A        RC=0000 4 spool files",
+    "SpoolFiles": 0
   },
   {
     "Name": "@@USS2",
     "JobId": "JOB06315",
     "Owner": "Z33792",
     "Status": "OUTPUT",
-    "Class": "A        RC=0127 4 spool files"
+    "Class": "A        RC=0127 4 spool files",
+    "SpoolFiles": 0
   },
   {
     "Name": "CBLJSONJ",
     "JobId": "JOB06314",
     "Owner": "Z32883",
     "Status": "OUTPUT",
-    "Class": "A        RC=0000 5 spool files"
+    "Class": "A        RC=0000 5 spool files",
+    "SpoolFiles": 0
   },
   {
     "Name": "REPRO2",
     "JobId": "JOB06312",
     "Owner": "Z33649",
     "Status": "OUTPUT",
-    "Class": "A        RC=0012 4 spool files"
+    "Class": "A        RC=0012 4 spool files",
+    "SpoolFiles": 0
   },
   {
     "Name": "@@USS2",
     "JobId": "JOB06310",
     "Owner": "Z33792",
     "Status": "OUTPUT",
-    "Class": "A        RC=0127 4 spool files"
+    "Class": "A        RC=0127 4 spool files",
+    "SpoolFiles": 0
   },
   {
     "Name": "@@USS2",
     "JobId": "JOB06309",
     "Owner": "Z33792",
     "Status": "OUTPUT",
-    "Class": "A        RC=0127 4 spool files"
+    "Class": "A        RC=0127 4 spool files",
+    "SpoolFiles": 0
   },
   {
     "Name": "NSPECT5",
     "JobId": "JOB06308",
     "Owner": "Z08115",
     "Status": "OUTPUT",
-    "Class": "A        RC=0000 5 spool files"
+    "Class": "A        RC=0000 5 spool files",
+    "SpoolFiles": 0
   },
   {
     "Name": "@@RACF1",
     "JobId": "JOB06306",
     "Owner": "Z32319",
     "Status": "OUTPUT",
-    "Class": "A        RC=0000 4 spool files"
+    "Class": "A        RC=0000 4 spool files",
+    "SpoolFiles": 0
   },
   {
     "Name": "JES2JOB1",
     "JobId": "JOB06304",
     "Owner": "Z33859",
     "Status": "OUTPUT",
-    "Class": "A        RC=0000 3 spool files"
+    "Class": "A        RC=0000 3 spool files",
+    "SpoolFiles": 0
   },
   {
     "Name": "JES2JOB1",
     "JobId": "JOB06303",
     "Owner": "Z33859",
     "Status": "OUTPUT",
-    "Class": "A        RC=0020 3 spool files"
+    "Class": "A        RC=0020 3 spool files",
+    "SpoolFiles": 0
   },
   {
     "Name": "JCLSETUP",
     "JobId": "JOB06300",
     "Owner": "Z33935",
     "Status": "OUTPUT",
-    "Class": "A        RC=0000 3 spool files"
+    "Class": "A        RC=0000 3 spool files",
+    "SpoolFiles": 0
   },
   {
     "Name": "JES2JOB1",
     "JobId": "JOB06299",
     "Owner": "Z33859",
     "Status": "OUTPUT",
-    "Class": "A        RC=0020 3 spool files"
+    "Class": "A        RC=0020 3 spool files",
+    "SpoolFiles": 0
   },
   {
     "Name": "@@USS2",
     "JobId": "JOB06298",
     "Owner": "Z33792",
     "Status": "OUTPUT",
-    "Class": "A        RC=0127 4 spool files"
+    "Class": "A        RC=0127 4 spool files",
+    "SpoolFiles": 0
   },
   {
     "Name": "CBLJSONJ",
     "JobId": "JOB06296",
     "Owner": "Z32883",
     "Status": "OUTPUT",
-    "Class": "A        RC=0000 5 spool files"
+    "Class": "A        RC=0000 5 spool files",
+    "SpoolFiles": 0
   },
   {
     "Name": "@@USS",
     "JobId": "JOB06295",
     "Owner": "Z33792",
     "Status": "OUTPUT",
-    "Class": "A        RC=0000 4 spool files"
+    "Class": "A        RC=0000 4 spool files",
+    "SpoolFiles": 0
   },
   {
     "Name": "E378859C",
     "JobId": "JOB06284",
     "Owner": "Z08115",
     "Status": "OUTPUT",
-    "Class": "A        RC=0000 4 spool files"
+    "Class": "A        RC=0000 4 spool files",
+    "SpoolFiles": 0
   },
   {
     "Name": "@@USS",
     "JobId": "JOB06278",
     "Owner": "Z33792",
     "Status": "OUTPUT",
-    "Class": "A        RC=0000 4 spool files"
+    "Class": "A        RC=0000 4 spool files",
+    "SpoolFiles": 0
   },
   {
     "Name": "@@USS2",
     "JobId": "JOB06277",
     "Owner": "Z33792",
     "Status": "OUTPUT",
-    "Class": "A        RC=0127 4 spool files"
+    "Class": "A        RC=0127 4 spool files",
+    "SpoolFiles": 0
   },
   {
     "Name": "@@JCL1",
     "JobId": "JOB06274",
     "Owner": "Z33935",
     "Status": "OUTPUT",
-    "Class": "A        RC=0127 4 spool files"
+    "Class": "A        RC=0127 4 spool files",
+    "SpoolFiles": 0
   },
   {
     "Name": "@@USS2",
     "JobId": "JOB06272",
     "Owner": "Z33792",
     "Status": "OUTPUT",
-    "Class": "A        RC=0127 4 spool files"
+    "Class": "A        RC=0127 4 spool files",
+    "SpoolFiles": 0
   },
   {
     "Name": "E378859C",
     "JobId": "JOB06271",
     "Owner": "Z08115",
     "Status": "OUTPUT",
-    "Class": "A        RC=0000 4 spool files"
+    "Class": "A        RC=0000 4 spool files",
+    "SpoolFiles": 0
   },
   {
     "Name": "JCL2",
     "JobId": "JOB06270",
     "Owner": "Z33935",
     "Status": "OUTPUT",
-    "Class": "A        ABEND=000 7 spool files"
+    "Class": "A        ABEND=000 7 spool files",
+    "SpoolFiles": 0
   },
   {
     "Name": "JCLSETUP",
     "JobId": "JOB06269",
     "Owner": "Z33935",
     "Status": "OUTPUT",
-    "Class": "A        RC=0000 3 spool files"
+    "Class": "A        RC=0000 3 spool files",
+    "SpoolFiles": 0
   },
   {
     "Name": "JCLSETUP",
     "JobId": "JOB06267",
     "Owner": "Z33935",
     "Status": "OUTPUT",
-    "Class": "A        (JCL error) 3 spool files"
+    "Class": "A        (JCL error) 3 spool files",
+    "SpoolFiles": 0
   },
   {
     "Name": "JCL2",
     "JobId": "JOB06265",
     "Owner": "Z33935",
     "Status": "OUTPUT",
-    "Class": "A        (JCL error) 6 spool files"
+    "Class": "A        (JCL error) 6 spool files",
+    "SpoolFiles": 0
   },
   {
     "Name": "CBLJSONJ",
     "JobId": "JOB06262",
     "Owner": "Z32883",
     "Status": "OUTPUT",
-    "Class": "A        RC=0000 5 spool files"
+    "Class": "A        RC=0000 5 spool files",
+    "SpoolFiles": 0
   },
   {
     "Name": "JCL2",
     "JobId": "JOB06261",
     "Owner": "Z33935",
     "Status": "OUTPUT",
-    "Class": "A        ABEND=000 7 spool files"
+    "Class": "A        ABEND=000 7 spool files",
+    "SpoolFiles": 0
   },
   {
     "Name": "REPRO2",
     "JobId": "JOB06260",
     "Owner": "Z33649",
     "Status": "OUTPUT",
-    "Class": "A        RC=0012 4 spool files"
+    "Class": "A        RC=0012 4 spool files",
+    "SpoolFiles": 0
   },
   {
     "Name": "JES2JOB1",
     "JobId": "JOB06259",
     "Owner": "Z33859",
     "Status": "OUTPUT",
-    "Class": "A        RC=0008 3 spool files"
+    "Class": "A        RC=0008 3 spool files",
+    "SpoolFiles": 0
   },
   {
     "Name": "JCL2",
     "JobId": "JOB06258",
     "Owner": "Z33935",
     "Status": "OUTPUT",
-    "Class": "A        ABEND=000 7 spool files"
+    "Class": "A        ABEND=000 7 spool files",
+    "SpoolFiles": 0
   },
   {
     "Name": "REPRO2",
     "JobId": "JOB06257",
     "Owner": "Z33649",
     "Status": "OUTPUT",
-    "Class": "A        RC=0000 4 spool files"
+    "Class": "A        RC=0000 4 spool files",
+    "SpoolFiles": 0
   },
   {
     "Name": "REPRO2",
     "JobId": "JOB06256",
     "Owner": "Z33649",
     "Status": "OUTPUT",
-    "Class": "A        RC=0012 4 spool files"
+    "Class": "A        RC=0012 4 spool files",
+    "SpoolFiles": 0
   },
   {
     "Name": "CBLJSONJ",
     "JobId": "JOB06255",
     "Owner": "Z32883",
     "Status": "OUTPUT",
-    "Class": "A        (JCL error) 3 spool files"
+    "Class": "A        (JCL error) 3 spool files",
+    "SpoolFiles": 0
   },
   {
     "Name": "CBLJSONJ",
     "JobId": "JOB06254",
     "Owner": "Z32883",
     "Status": "OUTPUT",
-    "Class": "A        RC=0000 5 spool files"
+    "Class": "A        RC=0000 5 spool files",
+    "SpoolFiles": 0
   },
   {
     "Name": "REPRO2",
     "JobId": "JOB06252",
     "Owner": "Z33649",
     "Status": "OUTPUT",
-    "Class": "A        RC=0000 4 spool files"
+    "Class": "A        RC=0000 4 spool files",
+    "SpoolFiles": 0
   },
   {
     "Name": "@@ACLI",
     "JobId": "JOB06251",
     "Owner": "Z33859",
     "Status": "OUTPUT",
-    "Class": "A        RC=0000 4 spool files"
+    "Class": "A        RC=0000 4 spool files",
+    "SpoolFiles": 0
   },
   {
     "Name": "REPRO2",
     "JobId": "JOB06250",
     "Owner": "Z33649",
     "Status": "OUTPUT",
-    "Class": "A        RC=0000 4 spool files"
+    "Class": "A        RC=0000 4 spool files",
+    "SpoolFiles": 0
   },
   {
     "Name": "REPRO2",
     "JobId": "JOB06249",
     "Owner": "Z33649",
     "Status": "OUTPUT",
-    "Class": "A        RC=0000 4 spool files"
+    "Class": "A        RC=0000 4 spool files",
+    "SpoolFiles": 0
   },
   {
     "Name": "JCL3",
     "JobId": "JOB06248",
     "Owner": "Z33935",
     "Status": "OUTPUT",
-    "Class": "A        RC=0000 3 spool files"
+    "Class": "A        RC=0000 3 spool files",
+    "SpoolFiles": 0
   },
   {
     "Name": "JCL3",
     "JobId": "JOB06247",
     "Owner": "Z33935",
     "Status": "OUTPUT",
-    "Class": "A        (JCL error) 3 spool files"
+    "Class": "A        (JCL error) 3 spool files",
+    "SpoolFiles": 0
   },
   {
     "Name": "REPRO2",
     "JobId": "JOB06246",
     "Owner": "Z33649",
     "Status": "OUTPUT",
-    "Class": "A        RC=0012 4 spool files"
+    "Class": "A        RC=0012 4 spool files",
+    "SpoolFiles": 0
   },
   {
     "Name": "JCL3",
     "JobId": "JOB06244",
     "Owner": "Z33935",
     "Status": "OUTPUT",
-    "Class": "A        RC=0000 3 spool files"
+    "Class": "A        RC=0000 3 spool files",
+    "SpoolFiles": 0
   },
   {
     "Name": "JCL3",
     "JobId": "JOB06243",
     "Owner": "Z33935",
     "Status": "OUTPUT",
-    "Class": "A        (JCL error) 3 spool files"
+    "Class": "A        (JCL error) 3 spool files",
+    "SpoolFiles": 0
   },
   {
     "Name": "@@ACLI",
     "JobId": "JOB06242",
     "Owner": "Z33859",
     "Status": "OUTPUT",
-    "Class": "A        RC=0127 4 spool files"
+    "Class": "A        RC=0127 4 spool files",
+    "SpoolFiles": 0
   },
   {
     "Name": "JCL3",
     "JobId": "JOB06241",
     "Owner": "Z33935",
     "Status": "OUTPUT",
-    "Class": "A        RC=0000 3 spool files"
+    "Class": "A        RC=0000 3 spool files",
+    "SpoolFiles": 0
   },
   {
     "Name": "@@JCL1",
     "JobId": "JOB06238",
     "Owner": "Z34020",
     "Status": "OUTPUT",
-    "Class": "A        RC=0000 4 spool files"
+    "Class": "A        RC=0000 4 spool files",
+    "SpoolFiles": 0
   },
   {
     "Name": "JCL2",
     "JobId": "JOB06236",
     "Owner": "Z34020",
     "Status": "OUTPUT",
-    "Class": "A        RC=0000 7 spool files"
+    "Class": "A        RC=0000 7 spool files",
+    "SpoolFiles": 0
   },
   {
     "Name": "JCL2",
     "JobId": "JOB06235",
     "Owner": "Z33935",
     "Status": "OUTPUT",
-    "Class": "A        ABEND=000 7 spool files"
+    "Class": "A        ABEND=000 7 spool files",
+    "SpoolFiles": 0
   },
   {
     "Name": "JCL2",
     "JobId": "JOB06233",
     "Owner": "Z34020",
     "Status": "OUTPUT",
-    "Class": "A        RC=0000 7 spool files"
+    "Class": "A        RC=0000 7 spool files",
+    "SpoolFiles": 0
   },
   {
     "Name": "@@JCL1",
     "JobId": "JOB06230",
     "Owner": "Z34020",
     "Status": "OUTPUT",
-    "Class": "A        RC=0127 4 spool files"
+    "Class": "A        RC=0127 4 spool files",
+    "SpoolFiles": 0
   },
   {
     "Name": "JCL3",
     "JobId": "JOB06229",
     "Owner": "Z34020",
     "Status": "OUTPUT",
-    "Class": "A        RC=0000 3 spool files"
+    "Class": "A        RC=0000 3 spool files",
+    "SpoolFiles": 0
   },
   {
     "Name": "REPRO2",
     "JobId": "JOB06226",
     "Owner": "Z33859",
     "Status": "OUTPUT",
-    "Class": "A        RC=0000 4 spool files"
+    "Class": "A        RC=0000 4 spool files",
+    "SpoolFiles": 0
   },
   {
     "Name": "JCL3",
     "JobId": "JOB06225",
     "Owner": "Z34020",
     "Status": "OUTPUT",
-    "Class": "A        RC=0000 3 spool files"
+    "Class": "A        RC=0000 3 spool files",
+    "SpoolFiles": 0
   },
   {
     "Name": "JCL2",
     "JobId": "JOB06224",
     "Owner": "Z33935",
     "Status": "OUTPUT",
-    "Class": "A        ABEND=000 7 spool files"
+    "Class": "A        ABEND=000 7 spool files",
+    "SpoolFiles": 0
   },
   {
     "Name": "JCL3",
     "JobId": "JOB06223",
     "Owner": "Z34020",
     "Status": "OUTPUT",
-    "Class": "A        (JCL error) 3 spool files"
+    "Class": "A        (JCL error) 3 spool files",
+    "SpoolFiles": 0
   },
   {
     "Name": "REPRO2",
     "JobId": "JOB06221",
     "Owner": "Z33649",
     "Status": "OUTPUT",
-    "Class": "A        RC=0000 4 spool files"
+    "Class": "A        RC=0000 4 spool files",
+    "SpoolFiles": 0
   },
   {
     "Name": "JCL3",
     "JobId": "JOB06220",
     "Owner": "Z34020",
     "Status": "OUTPUT",
-    "Class": "A        (JCL error) 3 spool files"
+    "Class": "A        (JCL error) 3 spool files",
+    "SpoolFiles": 0
   },
   {
     "Name": "REPRO2",
     "JobId": "JOB06219",
     "Owner": "Z33859",
     "Status": "OUTPUT",
-    "Class": "A        RC=0012 4 spool files"
+    "Class": "A        RC=0012 4 spool files",
+    "SpoolFiles": 0
   },
   {
     "Name": "JCL2",
     "JobId": "JOB06217",
     "Owner": "Z33935",
     "Status": "OUTPUT",
-    "Class": "A        ABEND=000 7 spool files"
+    "Class": "A        ABEND=000 7 spool files",
+    "SpoolFiles": 0
   },
   {
     "Name": "JCL3",
     "JobId": "JOB06216",
     "Owner": "Z34020",
     "Status": "OUTPUT",
-    "Class": "A        RC=0000 3 spool files"
+    "Class": "A        RC=0000 3 spool files",
+    "SpoolFiles": 0
   },
   {
     "Name": "JCL2",
     "JobId": "JOB06215",
     "Owner": "Z34020",
     "Status": "OUTPUT",
-    "Class": "A        RC=0000 7 spool files"
+    "Class": "A        RC=0000 7 spool files",
+    "SpoolFiles": 0
   },
   {
     "Name": "JCL2",
     "JobId": "JOB06214",
     "Owner": "Z34020",
     "Status": "OUTPUT",
-    "Class": "A        RC=0004 7 spool files"
+    "Class": "A        RC=0004 7 spool files",
+    "SpoolFiles": 0
   },
   {
     "Name": "JCL2",
     "JobId": "JOB06213",
     "Owner": "Z34020",
     "Status": "OUTPUT",
-    "Class": "A        ABEND=000 7 spool files"
+    "Class": "A        ABEND=000 7 spool files",
+    "SpoolFiles": 0
   },
   {
     "Name": "JCL2",
     "JobId": "JOB06212",
     "Owner": "Z34020",
     "Status": "OUTPUT",
-    "Class": "A        ABEND=000 7 spool files"
+    "Class": "A        ABEND=000 7 spool files",
+    "SpoolFiles": 0
   },
   {
     "Name": "JCL2",
     "JobId": "JOB06211",
     "Owner": "Z34020",
     "Status": "OUTPUT",
-    "Class": "A        ABEND=000 7 spool files"
+    "Class": "A        ABEND=000 7 spool files",
+    "SpoolFiles": 0
   },
   {
     "Name": "REPRO2",
     "JobId": "JOB06210",
     "Owner": "Z33859",
     "Status": "OUTPUT",
-    "Class": "A        RC=0012 4 spool files"
+    "Class": "A        RC=0012 4 spool files",
+    "SpoolFiles": 0
   },
   {
     "Name": "PRINT3",
     "JobId": "JOB06209",
     "Owner": "Z33859",
     "Status": "OUTPUT",
-    "Class": "A        (JCL error) 3 spool files"
+    "Class": "A        (JCL error) 3 spool files",
+    "SpoolFiles": 0
   },
   {
     "Name": "PRINT3",
     "JobId": "JOB06208",
     "Owner": "Z33859",
     "Status": "OUTPUT",
-    "Class": "A        (JCL error) 3 spool files"
+    "Class": "A        (JCL error) 3 spool files",
+    "SpoolFiles": 0
   },
   {
     "Name": "JCL2",
     "JobId": "JOB06207",
     "Owner": "Z34020",
     "Status": "OUTPUT",
-    "Class": "A        ABEND=000 7 spool files"
+    "Class": "A        ABEND=000 7 spool files",
+    "SpoolFiles": 0
   },
   {
     "Name": "JCL2",
     "JobId": "JOB06206",
     "Owner": "Z33935",
     "Status": "OUTPUT",
-    "Class": "A        ABEND=000 7 spool files"
+    "Class": "A        ABEND=000 7 spool files",
+    "SpoolFiles": 0
   },
   {
     "Name": "JCL2",
     "JobId": "JOB06205",
     "Owner": "Z33935",
     "Status": "OUTPUT",
-    "Class": "A        ABEND=000 7 spool files"
+    "Class": "A        ABEND=000 7 spool files",
+    "SpoolFiles": 0
   },
   {
     "Name": "JCLSETUP",
     "JobId": "JOB06204",
     "Owner": "Z34020",
     "Status": "OUTPUT",
-    "Class": "A        RC=0000 3 spool files"
+    "Class": "A        RC=0000 3 spool files",
+    "SpoolFiles": 0
   },
   {
     "Name": "PRINT3",
     "JobId": "JOB06202",
     "Owner": "Z33859",
     "Status": "OUTPUT",
-    "Class": "A        (JCL error) 3 spool files"
+    "Class": "A        (JCL error) 3 spool files",
+    "SpoolFiles": 0
   },
   {
     "Name": "JCLSETUP",
     "JobId": "JOB06201",
     "Owner": "Z33935",
     "Status": "OUTPUT",
-    "Class": "A        RC=0000 3 spool files"
+    "Class": "A        RC=0000 3 spool files",
+    "SpoolFiles": 0
   },
   {
     "Name": "@@FILES1",
     "JobId": "JOB06199",
     "Owner": "Z34020",
     "Status": "OUTPUT",
-    "Class": "A        RC=0000 4 spool files"
+    "Class": "A        RC=0000 4 spool files",
+    "SpoolFiles": 0
   },
   {
     "Name": "@@AANS2",
     "JobId": "JOB06198",
     "Owner": "Z32656",
     "Status": "OUTPUT",
-    "Class": "A        RC=0000 4 spool files"
+    "Class": "A        RC=0000 4 spool files",
+    "SpoolFiles": 0
   },
   {
     "Name": "CBLJSONJ",
     "JobId": "JOB06197",
     "Owner": "Z05127",
     "Status": "OUTPUT",
-    "Class": "A        RC=0000 5 spool files"
+    "Class": "A        RC=0000 5 spool files",
+    "SpoolFiles": 0
   },
   {
     "Name": "CBLJSONJ",
     "JobId": "JOB06193",
     "Owner": "Z05127",
     "Status": "OUTPUT",
-    "Class": "A        RC=0000 5 spool files"
+    "Class": "A        RC=0000 5 spool files",
+    "SpoolFiles": 0
   },
   {
     "Name": "PDSBUILD",
     "JobId": "JOB06190",
     "Owner": "Z34020",
     "Status": "OUTPUT",
-    "Class": "A        RC=0008 5 spool files"
+    "Class": "A        RC=0008 5 spool files",
+    "SpoolFiles": 0
   },
   {
     "Name": "JCL2",
     "JobId": "JOB06189",
     "Owner": "Z33450",
     "Status": "OUTPUT",
-    "Class": "A        ABEND=000 7 spool files"
+    "Class": "A        ABEND=000 7 spool files",
+    "SpoolFiles": 0
   },
   {
     "Name": "@@AANS2",
     "JobId": "JOB06188",
     "Owner": "Z32656",
     "Status": "OUTPUT",
-    "Class": "A        RC=0000 4 spool files"
+    "Class": "A        RC=0000 4 spool files",
+    "SpoolFiles": 0
   },
   {
     "Name": "JCL2",
     "JobId": "JOB06187",
     "Owner": "Z33450",
     "Status": "OUTPUT",
-    "Class": "A        ABEND=000 7 spool files"
+    "Class": "A        ABEND=000 7 spool files",
+    "SpoolFiles": 0
   },
   {
     "Name": "@@VSC1",
     "JobId": "JOB06185",
     "Owner": "Z34020",
     "Status": "OUTPUT",
-    "Class": "A        RC=0000 4 spool files"
+    "Class": "A        RC=0000 4 spool files",
+    "SpoolFiles": 0
   },
   {
     "Name": "ANOTHER",
     "JobId": "JOB06184",
     "Owner": "Z33500",
     "Status": "OUTPUT",
-    "Class": "A        RC=0000 4 spool files"
+    "Class": "A        RC=0000 4 spool files",
+    "SpoolFiles": 0
   },
   {
     "Name": "HELLO",
     "JobId": "JOB06183",
     "Owner": "Z33500",
     "Status": "OUTPUT",
-    "Class": "A        RC=0000 4 spool files"
+    "Class": "A        RC=0000 4 spool files",
+    "SpoolFiles": 0
   },
   {
     "Name": "HELLO",
     "JobId": "JOB06181",
     "Owner": "Z33500",
     "Status": "OUTPUT",
-    "Class": "A        RC=0000 4 spool files"
+    "Class": "A        RC=0000 4 spool files",
+    "SpoolFiles": 0
   },
   {
     "Name": "HELLO",
     "JobId": "JOB06180",
     "Owner": "Z33500",
     "Status": "OUTPUT",
-    "Class": "A        RC=0000 4 spool files"
+    "Class": "A        RC=0000 4 spool files",
+    "SpoolFiles": 0
   },
   {
     "Name": "@@JCL1",
     "JobId": "JOB06176",
     "Owner": "Z33450",
     "Status": "OUTPUT",
-    "Class": "A        RC=0127 4 spool files"
+    "Class": "A        RC=0127 4 spool files",
+    "SpoolFiles": 0
   },
   {
     "Name": "HELLO",
     "JobId": "JOB06175",
     "Owner": "Z33500",
     "Status": "OUTPUT",
-    "Class": "A        RC=0000 4 spool files"
+    "Class": "A        RC=0000 4 spool files",
+    "SpoolFiles": 0
   },
   {
     "Name": "@@JCL1",
     "JobId": "JOB06173",
     "Owner": "Z33450",
     "Status": "OUTPUT",
-    "Class": "A        RC=0127 4 spool files"
+    "Class": "A        RC=0127 4 spool files",
+    "SpoolFiles": 0
   },
   {
     "Name": "@@AUTO",
     "JobId": "JOB06161",
     "Owner": "Z33873",
     "Status": "OUTPUT",
-    "Class": "A        RC=0000 4 spool files"
+    "Class": "A        RC=0000 4 spool files",
+    "SpoolFiles": 0
   },
   {
     "Name": "CBLJSONJ",
     "JobId": "JOB06160",
     "Owner": "Z05127",
     "Status": "OUTPUT",
-    "Class": "A        RC=0000 5 spool files"
+    "Class": "A        RC=0000 5 spool files",
+    "SpoolFiles": 0
   },
   {
     "Name": "CBLJSONJ",
     "JobId": "JOB06159",
     "Owner": "Z05127",
     "Status": "OUTPUT",
-    "Class": "A        RC=0000 5 spool files"
+    "Class": "A        RC=0000 5 spool files",
+    "SpoolFiles": 0
   },
   {
     "Name": "CBLJSONJ",
     "JobId": "JOB06156",
     "Owner": "Z05127",
     "Status": "OUTPUT",
-    "Class": "A        RC=0000 5 spool files"
+    "Class": "A        RC=0000 5 spool files",
+    "SpoolFiles": 0
   },
   {
     "Name": "CBLJSONJ",
     "JobId": "JOB06152",
     "Owner": "Z05127",
     "Status": "OUTPUT",
-    "Class": "A        RC=0008 4 spool files"
+    "Class": "A        RC=0008 4 spool files",
+    "SpoolFiles": 0
   },
   {
     "Name": "@@SQL1",
     "JobId": "JOB06143",
     "Owner": "Z31525",
     "Status": "OUTPUT",
-    "Class": "A        RC=0000 4 spool files"
+    "Class": "A        RC=0000 4 spool files",
+    "SpoolFiles": 0
   },
   {
     "Name": "CBLJSONJ",
     "JobId": "JOB06140",
     "Owner": "Z05127",
     "Status": "OUTPUT",
-    "Class": "A        RC=0008 4 spool files"
+    "Class": "A        RC=0008 4 spool files",
+    "SpoolFiles": 0
   },
   {
     "Name": "@@SQL1",
     "JobId": "JOB06138",
     "Owner": "Z31525",
     "Status": "OUTPUT",
-    "Class": "A        RC=0127 4 spool files"
+    "Class": "A        RC=0127 4 spool files",
+    "SpoolFiles": 0
   },
   {
     "Name": "@@REXX1",
     "JobId": "JOB06134",
     "Owner": "Z33997",
     "Status": "OUTPUT",
-    "Class": "A        RC=0000 4 spool files"
+    "Class": "A        RC=0000 4 spool files",
+    "SpoolFiles": 0
   },
   {
     "Name": "@@USS",
     "JobId": "JOB06132",
     "Owner": "Z34008",
     "Status": "OUTPUT",
-    "Class": "A        RC=0000 4 spool files"
+    "Class": "A        RC=0000 4 spool files",
+    "SpoolFiles": 0
   },
   {
     "Name": "@@RACF1",
     "JobId": "JOB06129",
     "Owner": "Z32921",
     "Status": "OUTPUT",
-    "Class": "A        RC=0000 4 spool files"
+    "Class": "A        RC=0000 4 spool files",
+    "SpoolFiles": 0
   },
   {
     "Name": "@@USS2",
     "JobId": "JOB06119",
     "Owner": "Z31525",
     "Status": "OUTPUT",
-    "Class": "A        RC=0000 4 spool files"
+    "Class": "A        RC=0000 4 spool files",
+    "SpoolFiles": 0
   },
   {
     "Name": "@@APDS2",
     "JobId": "JOB06118",
     "Owner": "Z33608",
     "Status": "OUTPUT",
-    "Class": "A        RC=0000 4 spool files"
+    "Class": "A        RC=0000 4 spool files",
+    "SpoolFiles": 0
   },
   {
     "Name": "MERGSORT",
     "JobId": "JOB06117",
     "Owner": "Z33608",
     "Status": "OUTPUT",
-    "Class": "A        RC=0000 4 spool files"
+    "Class": "A        RC=0000 4 spool files",
+    "SpoolFiles": 0
   },
   {
     "Name": "@@USS2",
     "JobId": "JOB06116",
     "Owner": "Z31525",
     "Status": "OUTPUT",
-    "Class": "A        RC=0127 4 spool files"
+    "Class": "A        RC=0127 4 spool files",
+    "SpoolFiles": 0
   },
   {
     "Name": "@@APDS1",
     "JobId": "JOB06104",
     "Owner": "Z33608",
     "Status": "OUTPUT",
-    "Class": "A        RC=0000 4 spool files"
+    "Class": "A        RC=0000 4 spool files",
+    "SpoolFiles": 0
   },
   {
     "Name": "PDS1CCAT",
     "JobId": "JOB06102",
     "Owner": "Z33608",
     "Status": "OUTPUT",
-    "Class": "A        RC=0000 4 spool files"
+    "Class": "A        RC=0000 4 spool files",
+    "SpoolFiles": 0
   },
   {
     "Name": "CBLJSONJ",
     "JobId": "JOB06099",
     "Owner": "Z05127",
     "Status": "OUTPUT",
-    "Class": "A        RC=0000 5 spool files"
+    "Class": "A        RC=0000 5 spool files",
+    "SpoolFiles": 0
   },
   {
     "Name": "JCLSETUP",
     "JobId": "JOB06080",
     "Owner": "Z33883",
     "Status": "OUTPUT",
-    "Class": "A        RC=0000 3 spool files"
+    "Class": "A        RC=0000 3 spool files",
+    "SpoolFiles": 0
   },
   {
     "Name": "JCLRESET",
     "JobId": "JOB06079",
     "Owner": "Z33883",
     "Status": "OUTPUT",
-    "Class": "A        RC=0000 4 spool files"
+    "Class": "A        RC=0000 4 spool files",
+    "SpoolFiles": 0
   },
   {
     "Name": "JCL3",
     "JobId": "JOB06073",
     "Owner": "Z33450",
     "Status": "OUTPUT",
-    "Class": "A        RC=0000 3 spool files"
+    "Class": "A        RC=0000 3 spool files",
+    "SpoolFiles": 0
   },
   {
     "Name": "@@ASM1",
     "JobId": "JOB06065",
     "Owner": "Z14836",
     "Status": "OUTPUT",
-    "Class": "A        RC=0000 4 spool files"
+    "Class": "A        RC=0000 4 spool files",
+    "SpoolFiles": 0
   },
   {
     "Name": "@@JCL1",
     "JobId": "JOB06061",
     "Owner": "Z33995",
     "Status": "OUTPUT",
-    "Class": "A        RC=0000 4 spool files"
+    "Class": "A        RC=0000 4 spool files",
+    "SpoolFiles": 0
   },
   {
     "Name": "@@CODE",
     "JobId": "JOB06057",
     "Owner": "Z33997",
     "Status": "OUTPUT",
-    "Class": "A        RC=0000 4 spool files"
+    "Class": "A        RC=0000 4 spool files",
+    "SpoolFiles": 0
   },
   {
     "Name": "JCL3",
     "JobId": "JOB06053",
     "Owner": "Z33995",
     "Status": "OUTPUT",
-    "Class": "A        RC=0000 3 spool files"
+    "Class": "A        RC=0000 3 spool files",
+    "SpoolFiles": 0
   },
   {
     "Name": "@@JCL1",
     "JobId": "JOB06051",
     "Owner": "Z34008",
     "Status": "OUTPUT",
-    "Class": "A        RC=0000 4 spool files"
+    "Class": "A        RC=0000 4 spool files",
+    "SpoolFiles": 0
   },
   {
     "Name": "PLICNT",
     "JobId": "JOB06047",
     "Owner": "Z32319",
     "Status": "OUTPUT",
-    "Class": "A        RC=0000 6 spool files"
+    "Class": "A        RC=0000 6 spool files",
+    "SpoolFiles": 0
   },
   {
     "Name": "JCLSETUP",
     "JobId": "JOB06041",
     "Owner": "Z33883",
     "Status": "OUTPUT",
-    "Class": "A        RC=0000 3 spool files"
+    "Class": "A        RC=0000 3 spool files",
+    "SpoolFiles": 0
   },
   {
     "Name": "@@REXX1",
     "JobId": "JOB06038",
     "Owner": "Z33873",
     "Status": "OUTPUT",
-    "Class": "A        RC=0000 4 spool files"
+    "Class": "A        RC=0000 4 spool files",
+    "SpoolFiles": 0
   },
   {
     "Name": "JCL3",
     "JobId": "JOB06036",
     "Owner": "Z34008",
     "Status": "OUTPUT",
-    "Class": "A        RC=0000 3 spool files"
+    "Class": "A        RC=0000 3 spool files",
+    "SpoolFiles": 0
   },
   {
     "Name": "ASMPGM",
     "JobId": "JOB06035",
     "Owner": "Z32792",
     "Status": "OUTPUT",
-    "Class": "A        RC=0000 5 spool files"
+    "Class": "A        RC=0000 5 spool files",
+    "SpoolFiles": 0
   },
   {
     "Name": "JCL3",
     "JobId": "JOB06034",
     "Owner": "Z34008",
     "Status": "OUTPUT",
-    "Class": "A        RC=0000 3 spool files"
+    "Class": "A        RC=0000 3 spool files",
+    "SpoolFiles": 0
   },
   {
     "Name": "@@FILES1",
     "JobId": "JOB06028",
     "Owner": "Z33883",
     "Status": "OUTPUT",
-    "Class": "A        RC=0000 4 spool files"
+    "Class": "A        RC=0000 4 spool files",
+    "SpoolFiles": 0
   },
   {
     "Name": "JCL3",
     "JobId": "JOB06027",
     "Owner": "Z34008",
     "Status": "OUTPUT",
-    "Class": "A        RC=0000 3 spool files"
+    "Class": "A        RC=0000 3 spool files",
+    "SpoolFiles": 0
   },
   {
     "Name": "JCL3",
     "JobId": "JOB06019",
     "Owner": "Z33995",
     "Status": "OUTPUT",
-    "Class": "A        RC=0000 3 spool files"
+    "Class": "A        RC=0000 3 spool files",
+    "SpoolFiles": 0
   },
   {
     "Name": "JCLSETUP",
     "JobId": "JOB06018",
     "Owner": "Z32131",
     "Status": "OUTPUT",
-    "Class": "A        RC=0000 3 spool files"
+    "Class": "A        RC=0000 3 spool files",
+    "SpoolFiles": 0
   },
   {
     "Name": "JCLRESET",
     "JobId": "JOB06017",
     "Owner": "Z32131",
     "Status": "OUTPUT",
-    "Class": "A        RC=0000 4 spool files"
+    "Class": "A        RC=0000 4 spool files",
+    "SpoolFiles": 0
   },
   {
     "Name": "JCL3",
     "JobId": "JOB06015",
     "Owner": "Z34008",
     "Status": "OUTPUT",
-    "Class": "A        RC=0000 3 spool files"
+    "Class": "A        RC=0000 3 spool files",
+    "SpoolFiles": 0
   },
   {
     "Name": "@@GO1",
     "JobId": "JOB06010",
     "Owner": "Z32319",
     "Status": "OUTPUT",
-    "Class": "A        RC=0000 4 spool files"
+    "Class": "A        RC=0000 4 spool files",
+    "SpoolFiles": 0
   },
   {
     "Name": "@@FILES1",
     "JobId": "JOB06009",
     "Owner": "Z33883",
     "Status": "OUTPUT",
-    "Class": "A        RC=0000 4 spool files"
+    "Class": "A        RC=0000 4 spool files",
+    "SpoolFiles": 0
   },
   {
     "Name": "JCL2",
     "JobId": "JOB06007",
     "Owner": "Z33995",
     "Status": "OUTPUT",
-    "Class": "A        RC=0000 7 spool files"
+    "Class": "A        RC=0000 7 spool files",
+    "SpoolFiles": 0
   },
   {
     "Name": "NSPECT3",
     "JobId": "JOB06003",
     "Owner": "Z08115",
     "Status": "OUTPUT",
-    "Class": "A        RC=0008 4 spool files"
+    "Class": "A        RC=0008 4 spool files",
+    "SpoolFiles": 0
   },
   {
     "Name": "@@VSC1",
     "JobId": "JOB06001",
     "Owner": "Z32861",
     "Status": "OUTPUT",
-    "Class": "A        RC=0000 4 spool files"
+    "Class": "A        RC=0000 4 spool files",
+    "SpoolFiles": 0
   },
   {
     "Name": "Z08593B",
     "JobId": "JOB06000",
     "Owner": "Z08593",
     "Status": "OUTPUT",
-    "Class": "A        RC=0000 5 spool files"
+    "Class": "A        RC=0000 5 spool files",
+    "SpoolFiles": 0
   },
   {
     "Name": "@@AUTO",
     "JobId": "JOB05999",
     "Owner": "Z33984",
     "Status": "OUTPUT",
-    "Class": "A        RC=0000 4 spool files"
+    "Class": "A        RC=0000 4 spool files",
+    "SpoolFiles": 0
   },
   {
     "Name": "@@AUTO",
     "JobId": "JOB05990",
     "Owner": "Z33984",
     "Status": "OUTPUT",
-    "Class": "A        RC=0127 4 spool files"
+    "Class": "A        RC=0127 4 spool files",
+    "SpoolFiles": 0
   },
   {
     "Name": "Z08593A",
     "JobId": "JOB05989",
     "Owner": "Z08593",
     "Status": "OUTPUT",
-    "Class": "A        RC=0000 5 spool files"
+    "Class": "A        RC=0000 5 spool files",
+    "SpoolFiles": 0
   },
   {
     "Name": "@@USS2",
     "JobId": "JOB05984",
     "Owner": "Z33489",
     "Status": "OUTPUT",
-    "Class": "A        RC=0000 4 spool files"
+    "Class": "A        RC=0000 4 spool files",
+    "SpoolFiles": 0
   },
   {
     "Name": "E378859C",
     "JobId": "JOB05982",
     "Owner": "Z08115",
     "Status": "OUTPUT",
-    "Class": "A        RC=0000 4 spool files"
+    "Class": "A        RC=0000 4 spool files",
+    "SpoolFiles": 0
   },
   {
     "Name": "@@ACLI",
     "JobId": "JOB05978",
     "Owner": "Z32586",
     "Status": "OUTPUT",
-    "Class": "A        RC=0000 4 spool files"
+    "Class": "A        RC=0000 4 spool files",
+    "SpoolFiles": 0
   },
   {
     "Name": "@@AUTO",
     "JobId": "JOB05977",
     "Owner": "Z33234",
     "Status": "OUTPUT",
-    "Class": "A        RC=0000 4 spool files"
+    "Class": "A        RC=0000 4 spool files",
+    "SpoolFiles": 0
   },
   {
     "Name": "JCL2",
     "JobId": "JOB05972",
     "Owner": "Z34008",
     "Status": "OUTPUT",
-    "Class": "A        RC=0000 7 spool files"
+    "Class": "A        RC=0000 7 spool files",
+    "SpoolFiles": 0
   },
   {
     "Name": "@@JCL1",
     "JobId": "JOB05966",
     "Owner": "Z04518",
     "Status": "OUTPUT",
-    "Class": "A        RC=0000 4 spool files"
+    "Class": "A        RC=0000 4 spool files",
+    "SpoolFiles": 0
   },
   {
     "Name": "JCL3",
     "JobId": "JOB05959",
     "Owner": "Z04518",
     "Status": "OUTPUT",
-    "Class": "A        RC=0000 3 spool files"
+    "Class": "A        RC=0000 3 spool files",
+    "SpoolFiles": 0
   },
   {
     "Name": "@@APDS2",
     "JobId": "JOB05958",
     "Owner": "Z33489",
     "Status": "OUTPUT",
-    "Class": "A        RC=0000 4 spool files"
+    "Class": "A        RC=0000 4 spool files",
+    "SpoolFiles": 0
   },
   {
     "Name": "REPRO2",
     "JobId": "JOB05957",
     "Owner": "Z32586",
     "Status": "OUTPUT",
-    "Class": "A        RC=0000 4 spool files"
+    "Class": "A        RC=0000 4 spool files",
+    "SpoolFiles": 0
   },
   {
     "Name": "@@CODE",
     "JobId": "JOB05955",
     "Owner": "Z33873",
     "Status": "OUTPUT",
-    "Class": "A        RC=0000 4 spool files"
+    "Class": "A        RC=0000 4 spool files",
+    "SpoolFiles": 0
   },
   {
     "Name": "@@USS",
     "JobId": "JOB05954",
     "Owner": "Z33997",
     "Status": "OUTPUT",
-    "Class": "A        RC=0000 4 spool files"
+    "Class": "A        RC=0000 4 spool files",
+    "SpoolFiles": 0
   },
   {
     "Name": "JCL2",
     "JobId": "JOB05953",
     "Owner": "Z04518",
     "Status": "OUTPUT",
-    "Class": "A        RC=0000 7 spool files"
+    "Class": "A        RC=0000 7 spool files",
+    "SpoolFiles": 0
   },
   {
     "Name": "@@CODE",
     "JobId": "JOB05947",
     "Owner": "Z33873",
     "Status": "OUTPUT",
-    "Class": "A        RC=0000 4 spool files"
+    "Class": "A        RC=0000 4 spool files",
+    "SpoolFiles": 0
   },
   {
     "Name": "@@REXX1",
     "JobId": "JOB05948",
     "Owner": "Z33984",
     "Status": "OUTPUT",
-    "Class": "A        RC=0000 4 spool files"
+    "Class": "A        RC=0000 4 spool files",
+    "SpoolFiles": 0
   },
   {
     "Name": "REPRO2",
     "JobId": "JOB05942",
     "Owner": "Z32586",
     "Status": "OUTPUT",
-    "Class": "A        RC=0000 4 spool files"
+    "Class": "A        RC=0000 4 spool files",
+    "SpoolFiles": 0
   },
   {
     "Name": "@@FILES1",
     "JobId": "JOB05941",
     "Owner": "Z34015",
     "Status": "OUTPUT",
-    "Class": "A        RC=0000 4 spool files"
+    "Class": "A        RC=0000 4 spool files",
+    "SpoolFiles": 0
   },
   {
     "Name": "@@APDS2",
     "JobId": "JOB05940",
     "Owner": "Z33489",
     "Status": "OUTPUT",
-    "Class": "A        RC=0000 4 spool files"
+    "Class": "A        RC=0000 4 spool files",
+    "SpoolFiles": 0
   },
   {
     "Name": "MERGSORT",
     "JobId": "JOB05934",
     "Owner": "Z33489",
     "Status": "OUTPUT",
-    "Class": "A        RC=0000 4 spool files"
+    "Class": "A        RC=0000 4 spool files",
+    "SpoolFiles": 0
   },
   {
     "Name": "JCLSETUP",
     "JobId": "JOB05931",
     "Owner": "Z33995",
     "Status": "OUTPUT",
-    "Class": "A        RC=0000 3 spool files"
+    "Class": "A        RC=0000 3 spool files",
+    "SpoolFiles": 0
   },
   {
     "Name": "JCLSETUP",
     "JobId": "JOB05929",
     "Owner": "Z33450",
     "Status": "OUTPUT",
-    "Class": "A        RC=0000 3 spool files"
+    "Class": "A        RC=0000 3 spool files",
+    "SpoolFiles": 0
   },
   {
     "Name": "REPRO2",
     "JobId": "JOB05927",
     "Owner": "Z32586",
     "Status": "OUTPUT",
-    "Class": "A        RC=0012 4 spool files"
+    "Class": "A        RC=0012 4 spool files",
+    "SpoolFiles": 0
   },
   {
     "Name": "@@REXX1",
     "JobId": "JOB05926",
     "Owner": "Z33384",
     "Status": "OUTPUT",
-    "Class": "A        RC=0000 4 spool files"
+    "Class": "A        RC=0000 4 spool files",
+    "SpoolFiles": 0
   },
   {
     "Name": "REPRO2",
     "JobId": "JOB05925",
     "Owner": "Z32586",
     "Status": "OUTPUT",
-    "Class": "A        RC=0012 4 spool files"
+    "Class": "A        RC=0012 4 spool files",
+    "SpoolFiles": 0
   },
   {
     "Name": "@@APDS1",
     "JobId": "JOB05924",
     "Owner": "Z33489",
     "Status": "OUTPUT",
-    "Class": "A        RC=0000 4 spool files"
+    "Class": "A        RC=0000 4 spool files",
+    "SpoolFiles": 0
   },
   {
     "Name": "PDS1CCAT",
     "JobId": "JOB05916",
     "Owner": "Z33489",
     "Status": "OUTPUT",
-    "Class": "A        RC=0000 4 spool files"
+    "Class": "A        RC=0000 4 spool files",
+    "SpoolFiles": 0
   },
   {
     "Name": "@@VSC1",
     "JobId": "JOB05914",
     "Owner": "Z34043",
     "Status": "OUTPUT",
-    "Class": "A        RC=0000 4 spool files"
+    "Class": "A        RC=0000 4 spool files",
+    "SpoolFiles": 0
   },
   {
     "Name": "PDSBUILD",
     "JobId": "JOB05910",
     "Owner": "Z34015",
     "Status": "OUTPUT",
-    "Class": "A        RC=0008 5 spool files"
+    "Class": "A        RC=0008 5 spool files",
+    "SpoolFiles": 0
   },
   {
     "Name": "@@APDS1",
     "JobId": "JOB05909",
     "Owner": "Z15237",
     "Status": "OUTPUT",
-    "Class": "A        RC=0000 4 spool files"
+    "Class": "A        RC=0000 4 spool files",
+    "SpoolFiles": 0
   },
   {
     "Name": "@@SQL1",
     "JobId": "JOB05908",
     "Owner": "Z33415",
     "Status": "OUTPUT",
-    "Class": "A        RC=0000 4 spool files"
+    "Class": "A        RC=0000 4 spool files",
+    "SpoolFiles": 0
   },
   {
     "Name": "@@FILES1",
     "JobId": "JOB05907",
     "Owner": "Z33995",
     "Status": "OUTPUT",
-    "Class": "A        RC=0000 4 spool files"
+    "Class": "A        RC=0000 4 spool files",
+    "SpoolFiles": 0
   },
   {
     "Name": "PDS1CCAT",
     "JobId": "JOB05905",
     "Owner": "Z15237",
     "Status": "OUTPUT",
-    "Class": "A        RC=0000 4 spool files"
+    "Class": "A        RC=0000 4 spool files",
+    "SpoolFiles": 0
   },
   {
     "Name": "@@APDS2",
     "JobId": "JOB05886",
     "Owner": "Z33328",
     "Status": "OUTPUT",
-    "Class": "A        RC=0000 4 spool files"
+    "Class": "A        RC=0000 4 spool files",
+    "SpoolFiles": 0
   },
   {
     "Name": "@@JCL2",
     "JobId": "JOB05885",
     "Owner": "Z33489",
     "Status": "OUTPUT",
-    "Class": "A        RC=0000 4 spool files"
+    "Class": "A        RC=0000 4 spool files",
+    "SpoolFiles": 0
   },
   {
     "Name": "JCLSETUP",
     "JobId": "JOB05884",
     "Owner": "Z04518",
     "Status": "OUTPUT",
-    "Class": "A        RC=0000 3 spool files"
+    "Class": "A        RC=0000 3 spool files",
+    "SpoolFiles": 0
   },
   {
     "Name": "JES2JOB1",
     "JobId": "JOB05881",
     "Owner": "Z33489",
     "Status": "OUTPUT",
-    "Class": "A        RC=0000 3 spool files"
+    "Class": "A        RC=0000 3 spool files",
+    "SpoolFiles": 0
   },
   {
     "Name": "MERGSORT",
     "JobId": "JOB05879",
     "Owner": "Z33328",
     "Status": "OUTPUT",
-    "Class": "A        RC=0000 4 spool files"
+    "Class": "A        RC=0000 4 spool files",
+    "SpoolFiles": 0
   },
   {
     "Name": "PDSBUILD",
     "JobId": "JOB05876",
     "Owner": "Z33995",
     "Status": "OUTPUT",
-    "Class": "A        RC=0000 5 spool files"
+    "Class": "A        RC=0000 5 spool files",
+    "SpoolFiles": 0
   },
   {
     "Name": "JES2JOB1",
     "JobId": "JOB05874",
     "Owner": "Z33489",
     "Status": "OUTPUT",
-    "Class": "A        RC=0008 3 spool files"
+    "Class": "A        RC=0008 3 spool files",
+    "SpoolFiles": 0
   },
   {
     "Name": "JCLSETUP",
     "JobId": "JOB05868",
     "Owner": "Z04518",
     "Status": "OUTPUT",
-    "Class": "A        RC=0000 3 spool files"
+    "Class": "A        RC=0000 3 spool files",
+    "SpoolFiles": 0
   },
   {
     "Name": "JCLRESET",
     "JobId": "JOB05867",
     "Owner": "Z04518",
     "Status": "OUTPUT",
-    "Class": "A        RC=0000 4 spool files"
+    "Class": "A        RC=0000 4 spool files",
+    "SpoolFiles": 0
   },
   {
     "Name": "JCLSETUP",
     "JobId": "JOB05863",
     "Owner": "Z04518",
     "Status": "OUTPUT",
-    "Class": "A        RC=0000 3 spool files"
+    "Class": "A        RC=0000 3 spool files",
+    "SpoolFiles": 0
   },
   {
     "Name": "JCLRESET",
     "JobId": "JOB05862",
     "Owner": "Z04518",
     "Status": "OUTPUT",
-    "Class": "A        RC=0000 4 spool files"
+    "Class": "A        RC=0000 4 spool files",
+    "SpoolFiles": 0
   },
   {
     "Name": "@@FILES1",
     "JobId": "JOB05858",
     "Owner": "Z04518",
     "Status": "OUTPUT",
-    "Class": "A        RC=0000 4 spool files"
+    "Class": "A        RC=0000 4 spool files",
+    "SpoolFiles": 0
   },
   {
     "Name": "JCLSETUP",
     "JobId": "JOB05857",
     "Owner": "Z34008",
     "Status": "OUTPUT",
-    "Class": "A        RC=0000 3 spool files"
+    "Class": "A        RC=0000 3 spool files",
+    "SpoolFiles": 0
   },
   {
     "Name": "@@USS2",
     "JobId": "JOB05851",
     "Owner": "Z33328",
     "Status": "OUTPUT",
-    "Class": "A        RC=0000 4 spool files"
+    "Class": "A        RC=0000 4 spool files",
+    "SpoolFiles": 0
   },
   {
     "Name": "PDSBUILD",
     "JobId": "JOB05847",
     "Owner": "Z04518",
     "Status": "OUTPUT",
-    "Class": "A        RC=0008 5 spool files"
+    "Class": "A        RC=0008 5 spool files",
+    "SpoolFiles": 0
   },
   {
     "Name": "@@ACBLH",
     "JobId": "JOB05845",
     "Owner": "Z32319",
     "Status": "OUTPUT",
-    "Class": "A        RC=0000 4 spool files"
+    "Class": "A        RC=0000 4 spool files",
+    "SpoolFiles": 0
   },
   {
     "Name": "@@JCL1",
     "JobId": "JOB05843",
     "Owner": "Z33997",
     "Status": "OUTPUT",
-    "Class": "A        RC=0000 4 spool files"
+    "Class": "A        RC=0000 4 spool files",
+    "SpoolFiles": 0
   },
   {
     "Name": "CBLJSONJ",
     "JobId": "JOB05840",
     "Owner": "Z32319",
     "Status": "OUTPUT",
-    "Class": "A        RC=0000 5 spool files"
+    "Class": "A        RC=0000 5 spool files",
+    "SpoolFiles": 0
   },
   {
     "Name": "JCL3",
     "JobId": "JOB05839",
     "Owner": "Z33997",
     "Status": "OUTPUT",
-    "Class": "A        RC=0000 3 spool files"
+    "Class": "A        RC=0000 3 spool files",
+    "SpoolFiles": 0
   },
   {
     "Name": "@@SQL1",
     "JobId": "JOB05829",
     "Owner": "Z15237",
     "Status": "OUTPUT",
-    "Class": "A        RC=0000 4 spool files"
+    "Class": "A        RC=0000 4 spool files",
+    "SpoolFiles": 0
   },
   {
     "Name": "@@CODE",
     "JobId": "JOB05827",
     "Owner": "Z33984",
     "Status": "OUTPUT",
-    "Class": "A        RC=0000 4 spool files"
+    "Class": "A        RC=0000 4 spool files",
+    "SpoolFiles": 0
   },
   {
     "Name": "@@SQL1",
     "JobId": "JOB05823",
     "Owner": "Z29921",
     "Status": "OUTPUT",
-    "Class": "A        RC=0000 4 spool files"
+    "Class": "A        RC=0000 4 spool files",
+    "SpoolFiles": 0
   },
   {
     "Name": "@@AUTO",
     "JobId": "JOB05821",
     "Owner": "Z33489",
     "Status": "OUTPUT",
-    "Class": "A        RC=0000 4 spool files"
+    "Class": "A        RC=0000 4 spool files",
+    "SpoolFiles": 0
   },
   {
     "Name": "JCL3",
     "JobId": "JOB05811",
     "Owner": "Z33997",
     "Status": "OUTPUT",
-    "Class": "A        RC=0000 3 spool files"
+    "Class": "A        RC=0000 3 spool files",
+    "SpoolFiles": 0
   },
   {
     "Name": "@@USS",
     "JobId": "JOB05799",
     "Owner": "Z33873",
     "Status": "OUTPUT",
-    "Class": "A        RC=0000 4 spool files"
+    "Class": "A        RC=0000 4 spool files",
+    "SpoolFiles": 0
   },
   {
     "Name": "@@FILES1",
     "JobId": "JOB05795",
     "Owner": "Z34008",
     "Status": "OUTPUT",
-    "Class": "A        RC=0000 4 spool files"
+    "Class": "A        RC=0000 4 spool files",
+    "SpoolFiles": 0
   },
   {
     "Name": "JCL2",
     "JobId": "JOB05793",
     "Owner": "Z33997",
     "Status": "OUTPUT",
-    "Class": "A        RC=0000 7 spool files"
+    "Class": "A        RC=0000 7 spool files",
+    "SpoolFiles": 0
   },
   {
     "Name": "@@USS",
     "JobId": "JOB05779",
     "Owner": "Z33984",
     "Status": "OUTPUT",
-    "Class": "A        RC=0000 4 spool files"
+    "Class": "A        RC=0000 4 spool files",
+    "SpoolFiles": 0
   }
 ]

@@ -153,33 +153,7 @@ func (s *FTPSession) SubmitJesGetByDSN(jcl string) (*JobResult, error) {
 	job.DisplayName = res[1]
 
 	/* analyze for job abending or IEF errors */
-
-	errDetails := make([]string, 0)
-	var errType error
-	lines := strings.Split(jobOutput.String(), "\n")
-	/* analyze if job has abend errors */
-	for _, line := range lines {
-		for key := range abaMessages {
-			if strings.Contains(line, key) {
-				errDetails = append(errDetails, strings.TrimSpace(line))
-				errType = ErrAba
-			}
-		}
-	}
-
-	/* analyze if job has errors */
-	for _, line := range lines {
-		for key := range iefMessages {
-			if strings.Contains(line, key) {
-				errDetails = append(errDetails, strings.TrimSpace(line))
-				if errors.Is(errType, ErrAba) || errors.Is(errType, ErrIEFAndABA) {
-					errType = ErrIEFAndABA
-				} else {
-					errType = ErrIEF
-				}
-			}
-		}
-	}
+	errDetails, errType := classifyJesOutput(jobOutput.String())
 
 	/* get job return code from response */
 	res = jesJobDoneRcRegexp.FindStringSubmatch(jobOutput.String())
@@ -196,6 +170,39 @@ func (s *FTPSession) SubmitJesGetByDSN(jcl string) (*JobResult, error) {
 		return job, fmt.Errorf("failed to parse job return code %q: %w", res[2], err)
 	}
 	return job, nil
+}
+
+// classifyJesOutput scans JES job output for ABEND (ABAxxx) and allocation/JCL
+// (IEFxxx) message identifiers, returning the matched, trimmed lines together with
+// the matching sentinel — ErrAba, ErrIEF, or ErrIEFAndABA when both kinds are
+// present. It returns (nil, nil) when no such message is found. The sentinel is
+// returned (not wrapped) so callers can match it with errors.Is once it is
+// wrapped with %w at the call site.
+func classifyJesOutput(output string) (details []string, errType error) {
+	lines := strings.Split(output, "\n")
+	/* analyze if job has abend errors */
+	for _, line := range lines {
+		for key := range abaMessages {
+			if strings.Contains(line, key) {
+				details = append(details, strings.TrimSpace(line))
+				errType = ErrAba
+			}
+		}
+	}
+	/* analyze if job has IEF (allocation/JCL) errors */
+	for _, line := range lines {
+		for key := range iefMessages {
+			if strings.Contains(line, key) {
+				details = append(details, strings.TrimSpace(line))
+				if errors.Is(errType, ErrAba) || errors.Is(errType, ErrIEFAndABA) {
+					errType = ErrIEFAndABA
+				} else {
+					errType = ErrIEF
+				}
+			}
+		}
+	}
+	return details, errType
 }
 
 // Generate a unique job name based on timestamp and random number
@@ -279,15 +286,21 @@ func WithJesPutGetTimeOut(seconds int) JesSpec {
 	})
 }
 
-// WithJesJobPattern changes the search pattern for job-id in the response message
-// default pattern is `(JOB\d{5})`
+// WithJesJobPattern changes the search pattern for the job-id in the response
+// message. The default pattern is `(JOB\d{5})`. The pattern must contain exactly
+// one capturing group — the job-id is read from submatch[1] — so a pattern with
+// none or more than one group is rejected with an error rather than silently
+// breaking job-id extraction.
 func WithJesJobPattern(pattern string) JesSpec {
 	return JesOptionFunc(func(s *FTPSession) error {
-		var err error
-		s.jobPrefix, err = regexp.Compile(pattern)
+		re, err := regexp.Compile(pattern)
 		if err != nil {
 			return err
 		}
+		if n := re.NumSubexp(); n != 1 {
+			return fmt.Errorf("zftp: jes job pattern %q must have exactly one capturing group, has %d", pattern, n)
+		}
+		s.jobPrefix = re
 		return nil
 	})
 }

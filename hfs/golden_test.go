@@ -196,22 +196,24 @@ func TestGolden_ParseInfoPdsMember(t *testing.T) {
 // ---------------------------------------------------------------------------
 
 type jobSnapshot struct {
-	Name   string
-	JobId  string
-	Owner  string
-	Status string
-	Class  string
+	Name       string
+	JobId      string
+	Owner      string
+	Status     string
+	Class      string
+	SpoolFiles int
 }
 
 func snapJobs(js []hfs.InfoJob) []jobSnapshot {
 	out := make([]jobSnapshot, len(js))
 	for i := range js {
 		out[i] = jobSnapshot{
-			Name:   js[i].Name.String(),
-			JobId:  js[i].JobId.String(),
-			Owner:  js[i].Owner.String(),
-			Status: js[i].Status.String(),
-			Class:  js[i].Class.String(),
+			Name:       js[i].Name.String(),
+			JobId:      js[i].JobId.String(),
+			Owner:      js[i].Owner.String(),
+			Status:     js[i].Status.String(),
+			Class:      js[i].Class.String(),
+			SpoolFiles: js[i].SpoolFiles,
 		}
 	}
 	return out

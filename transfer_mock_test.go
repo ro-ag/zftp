@@ -141,6 +141,76 @@ func TestStoreIOAt_AsciiOffsetRejected(t *testing.T) {
 	}
 }
 
+// TestRetrieveIO_RestoresTypeOnControlFailure verifies the transfer type is
+// restored even when the retrieve fails at the control level — RETR is rejected
+// with 550 before the data phase, so (unlike a data-stream failure) the session
+// stays open and must not be left on the wrong TYPE. The login default is TYPE I;
+// the ASCII retrieve issues TYPE A, and after the failed RETR a TYPE I must
+// follow to put the session back.
+func TestRetrieveIO_RestoresTypeOnControlFailure(t *testing.T) {
+	s, srv := dialMock(t)
+	srv.Script("RETR", "550 not found")
+
+	var buf bytes.Buffer
+	_, _, err := s.RetrieveIO("NO.SUCH.FILE", &buf, zftp.TypeAscii)
+	if err == nil {
+		t.Fatal("expected an error from the rejected RETR")
+	}
+
+	cmds := srv.Commands()
+	a := cmdIndex(cmds, "TYPE A")
+	if a < 0 {
+		t.Fatalf("expected a TYPE A for the ASCII retrieve; commands=%v", cmds)
+	}
+	if !hasCmd(cmds[a+1:], "TYPE I") {
+		t.Errorf("transfer type not restored to TYPE I after a failed retrieve; commands=%v", cmds)
+	}
+}
+
+// TestStoreIO_RestoresTypeOnControlFailure is the StoreIO counterpart: STOR is
+// rejected with 550 before the data phase (session stays open), and the ASCII
+// store's TYPE A must still be restored to the login default TYPE I.
+func TestStoreIO_RestoresTypeOnControlFailure(t *testing.T) {
+	s, srv := dialMock(t)
+	srv.Script("STOR", "550 access denied")
+
+	_, _, err := s.StoreIO("NO.SUCH.FILE", strings.NewReader("data"), zftp.TypeAscii)
+	if err == nil {
+		t.Fatal("expected an error from the rejected STOR")
+	}
+
+	cmds := srv.Commands()
+	a := cmdIndex(cmds, "TYPE A")
+	if a < 0 {
+		t.Fatalf("expected a TYPE A for the ASCII store; commands=%v", cmds)
+	}
+	if !hasCmd(cmds[a+1:], "TYPE I") {
+		t.Errorf("transfer type not restored to TYPE I after a failed store; commands=%v", cmds)
+	}
+}
+
+// TestRetrieveIO_RestoresTypeOnSuccess is a success-path regression guard for the
+// defer-based restore: a normal ASCII retrieve must still put the type back to
+// the login default TYPE I after its TYPE A.
+func TestRetrieveIO_RestoresTypeOnSuccess(t *testing.T) {
+	s, srv := dialMock(t)
+	srv.DataFor("RETR", "MY.TXT", "hello\r\n")
+
+	var buf bytes.Buffer
+	if _, _, err := s.RetrieveIO("MY.TXT", &buf, zftp.TypeAscii); err != nil {
+		t.Fatalf("RetrieveIO: %v", err)
+	}
+
+	cmds := srv.Commands()
+	a := cmdIndex(cmds, "TYPE A")
+	if a < 0 {
+		t.Fatalf("expected a TYPE A for the ASCII retrieve; commands=%v", cmds)
+	}
+	if !hasCmd(cmds[a+1:], "TYPE I") {
+		t.Errorf("transfer type not restored to TYPE I after retrieve; commands=%v", cmds)
+	}
+}
+
 // TestStoreIOAt_BinaryOffset is a regression guard: image/binary resume must keep
 // working — REST <n> is sent before STOR and the exact bytes are stored.
 func TestStoreIOAt_BinaryOffset(t *testing.T) {

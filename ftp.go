@@ -136,10 +136,41 @@ func (s *FTPSession) SetLogger(l *slog.Logger) {
 	s.log.SetSlog(l)
 }
 
-// Conn exposes the underlying network connection used by the session.
-// This allows the caller to apply custom options such as TCP keep alive.
-func (s *FTPSession) Conn() net.Conn {
-	return s.conn
+// SetKeepAlive enables TCP keep-alive on the underlying control socket with the
+// given idle period, or disables keep-alive when d <= 0. It returns an error if
+// the underlying connection is not a *net.TCPConn (for example, a custom dialer
+// supplied a different net.Conn implementation).
+//
+// Read/write deadlines and Read/Write/Close are deliberately not exposed: the
+// command layer owns deadlines and connection lifecycle, and handing out the raw
+// socket would let callers corrupt the control stream or bypass session
+// bookkeeping. Use RemoteAddr/LocalAddr for the peer/local addresses.
+func (s *FTPSession) SetKeepAlive(d time.Duration) error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	tcp, ok := s.rawConn.(*net.TCPConn)
+	if !ok {
+		return fmt.Errorf("zftp: SetKeepAlive: underlying connection is not a *net.TCPConn (%T)", s.rawConn)
+	}
+	if d <= 0 {
+		return tcp.SetKeepAlive(false)
+	}
+	if err := tcp.SetKeepAlive(true); err != nil {
+		return err
+	}
+	return tcp.SetKeepAlivePeriod(d)
+}
+
+// RemoteAddr returns the remote network address of the underlying control
+// connection (the FTP server), or nil if it is unavailable.
+func (s *FTPSession) RemoteAddr() net.Addr {
+	return s.rawConn.RemoteAddr()
+}
+
+// LocalAddr returns the local network address of the underlying control
+// connection, or nil if it is unavailable.
+func (s *FTPSession) LocalAddr() net.Addr {
+	return s.rawConn.LocalAddr()
 }
 
 // AuthTLS sends the AUTH TLS command to the FTP server and sets up the TLS connection

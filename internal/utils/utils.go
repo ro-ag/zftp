@@ -117,14 +117,17 @@ func RemoveNewLine(name string) string {
 	return trims.ReplaceAllString(name, "")
 }
 
-var regexLastWord = regexp.MustCompile(`\s(\w+)$`)
-
+// LastWord returns the last whitespace-delimited token of str, or "" when str has
+// no non-space content. The token may contain any non-space characters, so it
+// preserves values a `\w+` match would truncate or drop entirely: dotted dataset
+// names (MY.MODEL.DSN), '*'/'?' wildcards, parenthesized codepage pairs, and
+// hyphenated codepage names (IBM-1047).
 func LastWord(str string) string {
-	matches := regexLastWord.FindStringSubmatch(str)
-	if len(matches) == 2 {
-		return matches[1]
+	fields := strings.Fields(str)
+	if len(fields) == 0 {
+		return ""
 	}
-	return ""
+	return fields[len(fields)-1]
 }
 
 func LastWordToInt(str string) (int, error) {
