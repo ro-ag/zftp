@@ -153,33 +153,7 @@ func (s *FTPSession) SubmitJesGetByDSN(jcl string) (*JobResult, error) {
 	job.DisplayName = res[1]
 
 	/* analyze for job abending or IEF errors */
-
-	errDetails := make([]string, 0)
-	var errType error
-	lines := strings.Split(jobOutput.String(), "\n")
-	/* analyze if job has abend errors */
-	for _, line := range lines {
-		for key := range abaMessages {
-			if strings.Contains(line, key) {
-				errDetails = append(errDetails, strings.TrimSpace(line))
-				errType = ErrAba
-			}
-		}
-	}
-
-	/* analyze if job has errors */
-	for _, line := range lines {
-		for key := range iefMessages {
-			if strings.Contains(line, key) {
-				errDetails = append(errDetails, strings.TrimSpace(line))
-				if errors.Is(errType, ErrAba) || errors.Is(errType, ErrIEFAndABA) {
-					errType = ErrIEFAndABA
-				} else {
-					errType = ErrIEF
-				}
-			}
-		}
-	}
+	errType, errDetails := classifyJesOutput(jobOutput.String())
 
 	/* get job return code from response */
 	res = jesJobDoneRcRegexp.FindStringSubmatch(jobOutput.String())
@@ -196,6 +170,39 @@ func (s *FTPSession) SubmitJesGetByDSN(jcl string) (*JobResult, error) {
 		return job, fmt.Errorf("failed to parse job return code %q: %w", res[2], err)
 	}
 	return job, nil
+}
+
+// classifyJesOutput scans JES job output for ABEND (ABAxxx) and allocation/JCL
+// (IEFxxx) message identifiers, returning the matching sentinel — ErrAba, ErrIEF,
+// or ErrIEFAndABA when both kinds are present — together with the matched, trimmed
+// lines. It returns (nil, nil) when no such message is found. The sentinel is
+// returned (not wrapped) so callers can match it with errors.Is once it is
+// wrapped with %w at the call site.
+func classifyJesOutput(output string) (errType error, details []string) {
+	lines := strings.Split(output, "\n")
+	/* analyze if job has abend errors */
+	for _, line := range lines {
+		for key := range abaMessages {
+			if strings.Contains(line, key) {
+				details = append(details, strings.TrimSpace(line))
+				errType = ErrAba
+			}
+		}
+	}
+	/* analyze if job has IEF (allocation/JCL) errors */
+	for _, line := range lines {
+		for key := range iefMessages {
+			if strings.Contains(line, key) {
+				details = append(details, strings.TrimSpace(line))
+				if errors.Is(errType, ErrAba) || errors.Is(errType, ErrIEFAndABA) {
+					errType = ErrIEFAndABA
+				} else {
+					errType = ErrIEF
+				}
+			}
+		}
+	}
+	return errType, details
 }
 
 // Generate a unique job name based on timestamp and random number

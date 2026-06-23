@@ -4,6 +4,7 @@ package zftp_test
 
 import (
 	"errors"
+	"io"
 	"strings"
 	"testing"
 
@@ -43,6 +44,46 @@ func TestSendCommand_ReturnError(t *testing.T) {
 	}
 	if !strings.Contains(re.Error(), "550") || !strings.Contains(re.Error(), "250") {
 		t.Errorf("Error() should mention got/want codes: %q", re.Error())
+	}
+}
+
+// TestSendCommand_CodeErrorMatch verifies a caller can match a real server
+// rejection by code via errors.Is(err, CodeError(rc)) on the live SendCommand
+// path, and that a different code does not match.
+func TestSendCommand_CodeErrorMatch(t *testing.T) {
+	s, srv := dialMock(t)
+	srv.Script("DELE BAD.DSN", "550 dataset not found")
+
+	_, err := s.SendCommand(zftp.CodeFileActionOK, "DELE", "BAD.DSN")
+	if err == nil {
+		t.Fatal("want error for unexpected return code")
+	}
+	if !errors.Is(err, zftp.CodeError(zftp.CodeFileActionNotTakenPerm)) { // 550
+		t.Errorf("errors.Is(err, CodeError(550)) = false, want true: %v", err)
+	}
+	if errors.Is(err, zftp.CodeError(zftp.CodeCmdOK)) { // 200
+		t.Errorf("errors.Is(err, CodeError(200)) = true, want false")
+	}
+}
+
+// TestSendCommand_TransportCauseIsWrapped verifies a transport failure (the peer
+// dropping the control stream) surfaces as a wrapped io.ErrUnexpectedEOF —
+// discoverable with errors.Is — and is NOT a *ReturnError, so a transport failure
+// is distinguishable from a protocol rejection.
+func TestSendCommand_TransportCauseIsWrapped(t *testing.T) {
+	s, srv := dialMock(t)
+	srv.Hangup("NOOP")
+
+	_, err := s.SendCommand(zftp.CodeCmdOK, "NOOP")
+	if err == nil {
+		t.Fatal("want error from a dropped control connection")
+	}
+	if !errors.Is(err, io.ErrUnexpectedEOF) {
+		t.Errorf("errors.Is(err, io.ErrUnexpectedEOF) = false, want true: %v", err)
+	}
+	var re *zftp.ReturnError
+	if errors.As(err, &re) {
+		t.Errorf("a transport failure must not be a *ReturnError; got %v", re)
 	}
 }
 

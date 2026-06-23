@@ -58,11 +58,14 @@ const (
 	CodeBadFileName            ReturnCode = 553
 )
 
-// ReturnError is an FTP return code error
+// ReturnError reports that the server answered with an FTP reply whose code was
+// not the one the command expected. It carries the code received (rc), the code
+// wanted (wantRc), the reply text, and optionally an underlying transport cause.
 type ReturnError struct {
 	rc      int
 	message string
 	wantRc  int
+	cause   error // optional underlying transport cause, exposed via Unwrap
 }
 
 // ReturnCode returns the FTP return code
@@ -73,6 +76,37 @@ func (e *ReturnError) ReturnCode() ReturnCode {
 // Error returns the error message
 func (e *ReturnError) Error() string {
 	return fmt.Sprintf("FTP response code: got %d, want %d, message: %s", e.rc, e.wantRc, e.message)
+}
+
+// Is reports whether target is a *ReturnError carrying the same FTP return code.
+// It lets callers match a result by code with errors.Is — for example
+// errors.Is(err, zftp.CodeError(zftp.CodeFileActionNotTakenPerm)) — without
+// unpacking the error or comparing ReturnCode() by hand. The expected code and
+// message are intentionally ignored, so any failure carrying that code matches.
+// Non-*ReturnError targets return false so errors.Is continues on to Unwrap.
+func (e *ReturnError) Is(target error) bool {
+	t, ok := target.(*ReturnError)
+	return ok && t.rc == e.rc
+}
+
+// Unwrap returns the underlying transport cause attached to this error, or nil
+// for a pure protocol error (a well-formed but unexpected FTP reply). When a
+// cause is present — e.g. an io.ErrUnexpectedEOF for a reply cut short by a
+// dropped control stream — errors.Is/errors.As can traverse to it.
+func (e *ReturnError) Unwrap() error {
+	return e.cause
+}
+
+// CodeError returns an error usable only as an errors.Is target: it matches any
+// *ReturnError carrying the given FTP return code. External callers cannot build
+// a *ReturnError directly (its fields are unexported), so this is the supported
+// way to test a result by code:
+//
+//	if errors.Is(err, zftp.CodeError(zftp.CodeFileActionNotTakenPerm)) {
+//		// the server rejected the request with 550
+//	}
+func CodeError(rc ReturnCode) error {
+	return &ReturnError{rc: int(rc), wantRc: int(rc)}
 }
 
 // check reads a (possibly multiline) FTP reply and returns its message.

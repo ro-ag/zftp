@@ -2,11 +2,21 @@
 
 package zftp
 
-import "fmt"
+import "errors"
 
-var ErrIEF = fmt.Errorf("IEF error")
-var ErrAba = fmt.Errorf("ABA error")
-var ErrIEFAndABA = fmt.Errorf("IEF/ABA error")
+// Sentinels reported by SubmitJesGetByDSN when scanning a job's spool output for
+// system messages. They are wrapped with %w at the call site, so callers match
+// them with errors.Is, e.g. errors.Is(err, zftp.ErrAba).
+var (
+	// ErrIEF indicates the job output contained one or more IEFxxx allocation or
+	// JCL messages (see iefMessages).
+	ErrIEF = errors.New("IEF error")
+	// ErrAba indicates the job output contained one or more ABAxxx abend messages
+	// (see abaMessages).
+	ErrAba = errors.New("ABA error")
+	// ErrIEFAndABA indicates the job output contained both IEF and ABA messages.
+	ErrIEFAndABA = errors.New("IEF/ABA error")
+)
 
 var iefMessages = map[string]string{
 	"IEF001I": "ERROR ON WRITE TO SYSTEM MESSAGE FILE",

@@ -22,10 +22,17 @@ const (
 	jesInterfaceLevel2
 )
 
+// Sentinels reported by InfoJobDetail.ReturnCode (and ParseInfoJobDetail) for a
+// job that has not completed normally. They are returned directly, so callers
+// match them with errors.Is, e.g. errors.Is(err, hfs.ErrAbendedJob).
 var (
-	ErrActiveJob  = errors.New("job is active")
+	// ErrActiveJob indicates the job is still running, so no return code is
+	// available yet.
+	ErrActiveJob = errors.New("job is active")
+	// ErrAbendedJob indicates the job abended (its class reports an ABEND).
 	ErrAbendedJob = errors.New("job abended")
-	ErrJCLError   = errors.New("job has JCL error")
+	// ErrJCLError indicates the job failed with a JCL error.
+	ErrJCLError = errors.New("job has JCL error")
 )
 
 // InfoJob represents a job record from the JES spool.
