@@ -146,11 +146,15 @@ func (s *FTPSession) transfer(t transfer.DataTransfer, remote string, offset int
 // stack emit an RST. It closes the data connection and reads the terminal reply on
 // the control connection; that read is timeout-bounded by checkLast because z/OS
 // sends the reply asynchronously to the data close and it can be lost.
+//
+// The transfer is complete on either 250 (CodeFileActionOK) or 226
+// (CodeClosingDataConn): RFC 959 and the z/OS FTP dialect both allow either to
+// close a successful RETR/STOR/LIST, so checkLast accepts both.
 func (s *FTPSession) confirmData(child *childConnection) (string, error) {
 	if err := child.Close(); err != nil {
 		return "", err
 	}
-	return s.checkLast(CodeFileActionOK)
+	return s.checkLast(CodeFileActionOK, CodeClosingDataConn)
 }
 
 // restoreType puts the session back to a prior transfer type and is meant to be

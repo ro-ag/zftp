@@ -16,6 +16,8 @@ import (
 // ReturnCode is an FTP return code
 type ReturnCode int
 
+// FTP reply codes, per RFC 959 and the z/OS FTP dialect. They name the replies
+// the client expects from the server and matches each command's result against.
 const (
 	CodeListOK                 ReturnCode = 125
 	CodeFileStatusOK           ReturnCode = 150

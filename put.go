@@ -10,6 +10,7 @@ import (
 	"strings"
 )
 
+// Block-size bounds accepted by WithBlkSize for dataset transfers.
 const (
 	MinBlockSize = 1
 	MaxBlockSize = 32768
@@ -130,6 +131,8 @@ type DataSpec interface {
 	Apply() (string, error)
 }
 
+// Recfm is a z/OS record format (RECFM) usable as a DataSpec via the WithRecfm…
+// constants; its Apply renders the SITE RECFM= subcommand.
 type Recfm string
 
 const (
@@ -175,6 +178,8 @@ func isValidRECFM(recfm Recfm) (string, bool) {
 	}
 }
 
+// Apply renders the SITE subcommand for this record format, or an error if the
+// value is not a recognized RECFM.
 func (rec Recfm) Apply() (string, error) {
 	_, ok := isValidRECFM(rec)
 	if !ok {

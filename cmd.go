@@ -113,7 +113,12 @@ func (s *FTPSession) CheckLast(expect ReturnCode) (string, error) {
 	return s.checkLast(expect)
 }
 
-func (s *FTPSession) checkLast(expect ReturnCode) (string, error) {
+// checkLast reads the terminal reply after a data transfer. It accepts the reply
+// when its code is expect or any code in alsoAccept — a data transfer may finish
+// with either 226 or 250 (see confirmData) — reports a *ReturnError on any other
+// complete reply (the control stream stays in sync, so the session is kept), and
+// closes the session on an I/O-level failure (the stream is then unrecoverable).
+func (s *FTPSession) checkLast(expect ReturnCode, alsoAccept ...ReturnCode) (string, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), s.dialCfg.replyTimeout())
 	defer cancel()
 
@@ -141,13 +146,24 @@ func (s *FTPSession) checkLast(expect ReturnCode) (string, error) {
 	s.lastMessage.WriteString(msg)
 
 	if err != nil {
-		s.log.Serverf("[res|error] %s", err)
 		var re *ReturnError
-		if !errors.As(err, &re) {
-			// I/O-level failure on the post-transfer reply read: like sendLocked,
-			// the control stream is desynchronized for good, so close the session.
-			s.closeLocked()
+		if errors.As(err, &re) {
+			// A complete, in-sync reply whose code is not expect. Accept it when it is
+			// one of the alternate completion codes (e.g. 226 vs 250); the stream is
+			// still synchronized, so on a genuine mismatch the session is kept open and
+			// the error surfaced.
+			for _, code := range alsoAccept {
+				if re.rc == int(code) {
+					return msg, nil
+				}
+			}
+			s.log.Serverf("[res|error] %s", err)
+			return "", err
 		}
+		s.log.Serverf("[res|error] %s", err)
+		// I/O-level failure on the post-transfer reply read: like sendLocked, the
+		// control stream is desynchronized for good, so close the session.
+		s.closeLocked()
 		return "", err
 	}
 

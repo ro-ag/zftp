@@ -13,6 +13,7 @@ package mockzos
 
 import (
 	"bufio"
+	"crypto/tls"
 	"fmt"
 	"net"
 	"strings"
@@ -33,19 +34,21 @@ type Server struct {
 	closed atomic.Bool
 	wg     sync.WaitGroup
 
-	mu            sync.Mutex
-	lineScripts   map[string][]string // full command line (upper) -> raw reply lines
-	verbScripts   map[string][]string // verb (upper) -> raw reply lines
-	dataByLine    map[string]string   // full command line (upper) -> payload to send
-	dataByVerb    map[string]string   // verb (upper) -> payload to send
-	stored        map[string][]byte   // STOR arg (upper) -> captured payload
-	withheld      map[string]bool     // full line or verb (upper) -> swallow without replying
-	hangup        map[string]bool     // full line or verb (upper) -> drop the control conn without replying
-	dropAfterData map[string]bool     // download verb (upper) -> drop control after data, before the closing reply
-	truncate      map[string]bool     // download verb (upper) -> RST the data conn instead of a clean close
-	hangData      map[string]bool     // download verb (upper) -> hold the data conn open after sending payload
-	withholdReply map[string]bool     // download verb (upper) -> deliver data + clean close, but send no closing reply
-	received      []string            // every command line received, in order
+	mu              sync.Mutex
+	lineScripts     map[string][]string // full command line (upper) -> raw reply lines
+	verbScripts     map[string][]string // verb (upper) -> raw reply lines
+	dataByLine      map[string]string   // full command line (upper) -> payload to send
+	dataByVerb      map[string]string   // verb (upper) -> payload to send
+	stored          map[string][]byte   // STOR arg (upper) -> captured payload
+	withheld        map[string]bool     // full line or verb (upper) -> swallow without replying
+	hangup          map[string]bool     // full line or verb (upper) -> drop the control conn without replying
+	dropAfterData   map[string]bool     // download verb (upper) -> drop control after data, before the closing reply
+	truncate        map[string]bool     // download verb (upper) -> RST the data conn instead of a clean close
+	hangData        map[string]bool     // download verb (upper) -> hold the data conn open after sending payload
+	withholdReply   map[string]bool     // download verb (upper) -> deliver data + clean close, but send no closing reply
+	completionReply map[string][]string // transfer verb (upper) -> override the closing reply (default "250 ...")
+	tlsConfig       *tls.Config         // when set, AUTH TLS upgrades the control connection
+	received        []string            // every command line received, in order
 }
 
 // New starts a Server on 127.0.0.1:0 and registers cleanup with the test.
@@ -56,19 +59,20 @@ func New(tb testing.TB) *Server {
 		tb.Fatalf("mockzos listen: %v", err)
 	}
 	s := &Server{
-		tb:            tb,
-		ln:            ln,
-		lineScripts:   map[string][]string{},
-		verbScripts:   map[string][]string{},
-		dataByLine:    map[string]string{},
-		dataByVerb:    map[string]string{},
-		stored:        map[string][]byte{},
-		withheld:      map[string]bool{},
-		hangup:        map[string]bool{},
-		dropAfterData: map[string]bool{},
-		truncate:      map[string]bool{},
-		hangData:      map[string]bool{},
-		withholdReply: map[string]bool{},
+		tb:              tb,
+		ln:              ln,
+		lineScripts:     map[string][]string{},
+		verbScripts:     map[string][]string{},
+		dataByLine:      map[string]string{},
+		dataByVerb:      map[string]string{},
+		stored:          map[string][]byte{},
+		withheld:        map[string]bool{},
+		hangup:          map[string]bool{},
+		dropAfterData:   map[string]bool{},
+		truncate:        map[string]bool{},
+		hangData:        map[string]bool{},
+		withholdReply:   map[string]bool{},
+		completionReply: map[string][]string{},
 	}
 	s.wg.Add(1)
 	go s.serve()
@@ -101,15 +105,17 @@ func (s *Server) serve() {
 	}
 }
 
-// session holds per-connection state (the pending passive data listener).
+// session holds per-connection state: the (possibly TLS-upgraded) control
+// connection, its buffered reader, and the pending passive data listener.
 type session struct {
 	conn net.Conn
+	r    *bufio.Reader
 	pasv net.Listener
 }
 
 func (s *Server) handle(conn net.Conn) {
 	defer conn.Close()
-	sess := &session{conn: conn}
+	sess := &session{conn: conn, r: bufio.NewReader(conn)}
 	defer func() {
 		if sess.pasv != nil {
 			_ = sess.pasv.Close()
@@ -118,9 +124,11 @@ func (s *Server) handle(conn net.Conn) {
 
 	writeLines(conn, []string{"220 mockzos FTP service ready"})
 
-	r := bufio.NewReader(conn)
 	for {
-		line, err := r.ReadString('\n')
+		// Read from sess.r, not a captured reader: AUTH TLS swaps both the
+		// connection and its reader, so subsequent commands must be read through
+		// the upgraded reader.
+		line, err := sess.r.ReadString('\n')
 		if err != nil {
 			return
 		}
@@ -156,6 +164,8 @@ func (s *Server) dispatch(sess *session, line, verb, arg string) bool {
 	}
 
 	switch verb {
+	case "AUTH":
+		s.handleAuth(sess, arg)
 	case "USER":
 		writeLines(sess.conn, []string{"331 send password"})
 	case "PASS":
@@ -185,7 +195,7 @@ func (s *Server) dispatch(sess *session, line, verb, arg string) bool {
 	case "LIST", "NLST", "RETR":
 		s.handleDownload(sess, line, verb, arg)
 	case "STOR", "STOU", "APPE":
-		s.handleUpload(sess, arg)
+		s.handleUpload(sess, verb, arg)
 	case "QUIT":
 		writeLines(sess.conn, []string{"221 goodbye"})
 		return true
@@ -193,6 +203,30 @@ func (s *Server) dispatch(sess *session, line, verb, arg string) bool {
 		writeLines(sess.conn, []string{"200 command okay"})
 	}
 	return false
+}
+
+// handleAuth answers AUTH TLS when TLS has been enabled via EnableTLS: it replies
+// 234 and upgrades the control connection to a TLS server session, swapping the
+// connection and its reader so every later command on this session runs
+// encrypted. AUTH with any other mechanism, or when TLS is not enabled, is
+// rejected with 504.
+func (s *Server) handleAuth(sess *session, arg string) {
+	s.mu.Lock()
+	cfg := s.tlsConfig
+	s.mu.Unlock()
+	if cfg == nil || !strings.EqualFold(strings.TrimSpace(arg), "TLS") {
+		writeLines(sess.conn, []string{"504 security mechanism not supported"})
+		return
+	}
+	writeLines(sess.conn, []string{"234 security environment established, ready for TLS negotiation"})
+	tconn := tls.Server(sess.conn, cfg)
+	if err := tconn.Handshake(); err != nil {
+		s.tb.Logf("mockzos: TLS handshake failed: %v", err)
+		_ = sess.conn.Close()
+		return
+	}
+	sess.conn = tconn
+	sess.r = bufio.NewReader(tconn)
 }
 
 // handlePasv opens a fresh loopback data listener and advertises it.
@@ -259,11 +293,11 @@ func (s *Server) handleDownload(sess *session, line, verb, arg string) {
 	if s.isWithholdReplyAfterData(verb) {
 		return
 	}
-	writeLines(sess.conn, []string{"250 transfer completed successfully"})
+	writeLines(sess.conn, s.completionReplyFor(verb))
 }
 
 // handleUpload captures the payload the client sends over the data connection.
-func (s *Server) handleUpload(sess *session, arg string) {
+func (s *Server) handleUpload(sess *session, verb, arg string) {
 	dc := s.acceptData(sess)
 	if dc == nil {
 		writeLines(sess.conn, []string{"425 cannot open data connection"})
@@ -276,7 +310,7 @@ func (s *Server) handleUpload(sess *session, arg string) {
 	s.mu.Lock()
 	s.stored[strings.ToUpper(strings.TrimSpace(arg))] = []byte(buf.String())
 	s.mu.Unlock()
-	writeLines(sess.conn, []string{"250 transfer completed successfully"})
+	writeLines(sess.conn, s.completionReplyFor(verb))
 }
 
 // acceptData accepts the pending passive data connection.

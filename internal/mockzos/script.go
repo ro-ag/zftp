@@ -2,7 +2,46 @@
 
 package mockzos
 
-import "strings"
+import (
+	"crypto/tls"
+	"strings"
+)
+
+// EnableTLS makes the server accept AUTH TLS and upgrade the control connection
+// to a TLS server session using cfg (which must carry a certificate). It lets
+// tests exercise the client's AuthTLS/PBSZ/PROT path over a real, in-process TLS
+// handshake. Call it before the client dials.
+func (s *Server) EnableTLS(cfg *tls.Config) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	s.tlsConfig = cfg
+}
+
+// CompletionReply overrides the closing reply the server sends after a transfer
+// completes for the given verb (RETR/LIST/NLST or STOR/STOU/APPE). The default is
+// a single "250 transfer completed successfully" line; pass replies to script a
+// different terminal code (e.g. "226 ...") or a multiline z/OS JES message that
+// carries a job id. The key is a verb.
+//
+//	srv.CompletionReply("STOR", "250-IT IS KNOWN TO JES AS JOB12345", "250 SUBMIT successful")
+//	srv.CompletionReply("RETR", "226 Closing data connection; transfer complete")
+func (s *Server) CompletionReply(verb string, replies ...string) {
+	key := strings.ToUpper(strings.TrimSpace(verb))
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	s.completionReply[key] = replies
+}
+
+// completionReplyFor returns the scripted closing reply for a transfer verb, or
+// the default "250 transfer completed successfully" when none is set.
+func (s *Server) completionReplyFor(verb string) []string {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	if r, ok := s.completionReply[verb]; ok {
+		return r
+	}
+	return []string{"250 transfer completed successfully"}
+}
 
 // Script registers raw control reply line(s) for a command. The match key may be
 // a full command line ("XSTA (BLOCKSIze") or just a verb ("STAT"); a full-line
