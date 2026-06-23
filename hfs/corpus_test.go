@@ -99,6 +99,66 @@ func TestGolden_Corpus_Datasets(t *testing.T) {
 	assertGolden(t, "corpus_datasets.golden.json", toJSON(t, snaps))
 }
 
+// parseListing reads a fixture, builds a DatasetListParser from its header line,
+// and parses the data rows, indexing them by dataset name.
+func parseListing(t *testing.T, rel string) map[string]hfs.InfoDataset {
+	t.Helper()
+	b, err := os.ReadFile(filepath.Join("..", "tests", rel))
+	if err != nil {
+		t.Fatalf("read %s: %v", rel, err)
+	}
+	lines := strings.Split(strings.TrimRight(string(b), "\n"), "\n")
+	p := hfs.NewDatasetListParser(lines[0])
+	out := map[string]hfs.InfoDataset{}
+	for _, l := range lines[1:] {
+		if strings.TrimSpace(l) == "" {
+			continue
+		}
+		d, err := p.Parse(l)
+		if err != nil {
+			t.Fatalf("%s: parse %q: %v", rel, l, err)
+		}
+		out[d.Name()] = d
+	}
+	return out
+}
+
+// TestDatasetListParser_AlternateFormats verifies the header-driven parser reads
+// the alternate column geometries that the fixed-width modern parser cannot:
+// the legacy "Date" header (mm/dd/yy), the LISTLEVEL 2 wide format (de-overflowed
+// track counts), and the Co:Z SFTP "Tracks"-column format.
+func TestDatasetListParser_AlternateFormats(t *testing.T) {
+	// Legacy "Volume Unit Date …" header, 2-digit year.
+	legacy := parseListing(t, "dataset_listings/04_legacy_date.txt")
+	if d := legacy["HLQ.PROJ.MIME.README"]; d.Volume.String() != "STG002" || d.Unit.String() != "3380E" ||
+		d.Recfm.String() != "VB" || d.Dsorg.String() != "PS" || d.Referred.String() == "" {
+		t.Errorf("legacy row mis-parsed: %+v", d.String())
+	}
+	if d := legacy["HLQ.PROJ.TEST.PDS"]; !d.IsPartitioned() || d.Used.Value() != 7 {
+		t.Errorf("legacy PO row mis-parsed: %+v", d.String())
+	}
+
+	// LISTLEVEL 2 wide format: Used can be a 9-digit de-overflowed track count.
+	l2 := parseListing(t, "dataset_listings/05_listlevel2.txt")
+	if d := l2["HLQ.PROJ.BDATA.XBB"]; d.Volume.String() != "TERNBH" || d.Used.Value() != 327674532 ||
+		d.Recfm.String() != "VBS" || d.Dsorg.String() != "PS" {
+		t.Errorf("listlevel2 wide-Used row mis-parsed: %+v", d.String())
+	}
+	if _, ok := l2["HLQ.PROJ.ASM"]; !ok {
+		t.Errorf("listlevel2 PO-E row missing")
+	}
+
+	// Co:Z SFTP format: distinct Tracks column; '?' Used on a load library.
+	coz := parseListing(t, "dataset_listings/06_coz_tracks.txt")
+	if d := coz["HLQ.PROJ.AFILE.TXT"]; d.Volume.String() != "WORK84" || d.Tracks.Value() != 1 ||
+		d.Recfm.String() != "FB" || d.BlkSz.Value() != 27920 || d.Dsorg.String() != "PS" {
+		t.Errorf("coz row mis-parsed: %+v", d.String())
+	}
+	if d := coz["HLQ.PROJ.COZ.LOADLIB"]; d.Tracks.Value() != 30 || d.Recfm.String() != "U" {
+		t.Errorf("coz loadlib row mis-parsed (Tracks=%d Recfm=%q)", d.Tracks.Value(), d.Recfm.String())
+	}
+}
+
 // datasetsByName parses a fixture and indexes the records by dataset name.
 func datasetsByName(t *testing.T, file string) map[string]hfs.InfoDataset {
 	t.Helper()

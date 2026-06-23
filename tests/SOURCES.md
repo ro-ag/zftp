@@ -42,8 +42,25 @@ and intentionally excluded.**
 | `dataset_listings/01_canonical.txt` | normal rows: PS/PO/PO-E, F/FB/VB/VBS/VBA/VA/FBA/U recfm |
 | `dataset_listings/02_special_states.txt` | Migrated, Not Mounted, Tape unit, ARCIVE "Not Direct Access Device", "< Not a DASD device >", "< File not on volume >", "Error determining attributes", "Pseudo Directory", "User catalog connector", VSAM (blank + set volume), GDG base, PATH |
 | `dataset_listings/03_overflow_none_quoted.txt` | `+++++` track-overflow, `**NONE**` referred date, quoted DSNs |
+| `dataset_listings/04_legacy_date.txt` | legacy OS/390 `Volume Unit Date …` header, 2-digit `mm/dd/yy` dates |
+| `dataset_listings/05_listlevel2.txt` | LISTLEVEL 2 wide format (no Unit; de-overflowed track counts up to 9 digits) |
+| `dataset_listings/06_coz_tracks.txt` | Co:Z SFTP `Volume Referred Ext Tracks Used …` (distinct Tracks column, no Unit, `?` unknown Used) |
 | `pds_members/01_with_stats.txt` | PDS members with ISPF statistics |
 | `pds_members/02_name_only.txt` | PDS members with no ISPF statistics (name-only rows) interleaved with stat rows |
+
+## Parsing strategy (multi-format)
+
+The modern format (`Volume Unit Referred …`, dataset name at a fixed column) is
+parsed by the fixed-width `ParseInfoDataset`, which deterministically splits
+jammed columns such as the `1+++++` track-overflow. The three alternate
+geometries above shift the columns, so a listing is parsed through
+`hfs.NewDatasetListParser(header)`, which inspects the header line and routes the
+modern format to the fixed-width parser and the alternate formats to a
+token-and-type-anchored parser (`ListDatasets` does this automatically). The
+token parser anchors on the dataset name (last token), Dsorg (token before it),
+and the date column, so it tolerates the differing column widths and wide values
+of each geometry. `FieldDate` accepts both `yyyy/mm/dd` and 2-digit `mm/dd/yy`;
+`FieldInt` accepts the `?` unknown marker alongside `+++++` overflow.
 
 ## Sources observed (verification)
 
@@ -74,9 +91,15 @@ PDS member formats (ISPF-stats and name-only) observed in: Apache Commons Net
 Javadoc, IBM/zos-node-accessor, WinSCP forum (t=32082, name-only `LOADLIST`),
 Co:Z docs, OpenSalamander digest.
 
-### Known-different formats NOT covered here (candidate follow-ups)
+### Remaining limitations
 
-- Legacy `Volume Unit Date …` header (2-digit `mm/dd/yy`, OS/390-era) — different
-  fixed-width geometry.
-- LISTLEVEL 2 wide format (de-overflowed track counts, e.g. `327674532`).
-- Co:Z SFTP `Volume Referred Ext Tracks Used …` (extra `Tracks` column).
+- The token parser handles the alternate geometries' normal and no-attribute
+  (VSAM/GDG/PATH) rows. A *jammed* overflow column (`1+++++` with Ext and Used run
+  together) is split only by the fixed-width modern parser — the alternate
+  formats either don't jam (LISTLEVEL 2 is the de-overflowed wide form; Co:Z has a
+  separate Tracks column) or would need their own fixed-width geometry.
+- Multivolume datasets render only their primary volser on the row (per IBM), so
+  there is no multi-volser row form to parse.
+- The alternate-format column widths are modeled from public samples, not a live
+  capture of each server/LISTLEVEL combination; the token parser is width-tolerant
+  by design, but a real-LPAR capture of each would further harden coverage.

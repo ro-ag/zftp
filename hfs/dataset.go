@@ -20,6 +20,10 @@ type InfoDataset struct {
 	Lrecl    FieldInt    `json:"Lrecl"`
 	BlkSz    FieldInt    `json:"BlkSz"`
 	Dsorg    FieldString `json:"Dsorg"`
+	// Tracks is the allocated-track count reported only by the Co:Z SFTP listing
+	// format (which has a distinct Tracks column); it is zero for the IBM z/OS FTP
+	// formats, which do not carry it.
+	Tracks FieldInt `json:"Tracks,omitempty"`
 	// state is the status label for a record that carries a status phrase in
 	// place of the attribute columns (e.g. "Migrated", "Not Mounted",
 	// "Pseudo Directory"); it is empty for a normal, fully-attributed dataset.
@@ -175,6 +179,17 @@ var datasetStateMarkers = []struct{ marker, label string }{
 	{"User catalog connector", "User catalog connector"},
 }
 
+// datasetStateLabel returns the status label found in the given attribute area
+// (the part of a record before the dataset name), or "" when none is present.
+func datasetStateLabel(area string) string {
+	for _, m := range datasetStateMarkers {
+		if strings.Contains(area, m.marker) {
+			return m.label
+		}
+	}
+	return ""
+}
+
 // classifyDataset returns the status label for a non-columnar record, or "" when
 // the record carries the normal attribute columns. The dataset-name column is
 // excluded from the search so a name like HLQ.MIGRATED.X cannot be misread.
@@ -183,12 +198,7 @@ func classifyDataset(record string) string {
 	if len(prefix) > dsnameStart {
 		prefix = prefix[:dsnameStart]
 	}
-	for _, m := range datasetStateMarkers {
-		if strings.Contains(prefix, m.marker) {
-			return m.label
-		}
-	}
-	return ""
+	return datasetStateLabel(prefix)
 }
 
 // setField routes a raw column value to its typed destination on the dataset.
@@ -204,6 +214,8 @@ func (d *InfoDataset) setField(name, raw string) error {
 		return d.Ext.parse(raw)
 	case "Used":
 		return d.Used.parse(raw)
+	case "Tracks":
+		return d.Tracks.parse(raw)
 	case "Recfm":
 		return d.Recfm.parse(raw)
 	case "Lrecl":
