@@ -35,7 +35,7 @@ func TestParseInfoDataset_OverflowVsRealMax(t *testing.T) {
 			first = false
 			continue
 		}
-		d, err := hfs.ParseInfoDataset(sc.Text())
+		d, err := modernParser.Parse(sc.Text())
 		if err != nil {
 			t.Fatalf("ParseInfoDataset(%q): %v", sc.Text(), err)
 		}

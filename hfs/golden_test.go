@@ -117,7 +117,7 @@ func TestGolden_ParseInfoDataset(t *testing.T) {
 			continue
 		}
 		line := sc.Text()
-		d, err := hfs.ParseInfoDataset(line)
+		d, err := modernParser.Parse(line)
 		if err != nil {
 			t.Fatalf("ParseInfoDataset(%q): %v", line, err)
 		}
@@ -330,7 +330,7 @@ func TestInfoDataset_IsVSAM(t *testing.T) {
 			first = false
 			continue
 		}
-		d, err := hfs.ParseInfoDataset(sc.Text())
+		d, err := modernParser.Parse(sc.Text())
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -357,7 +357,7 @@ func TestInfoDataset_IsVSAM(t *testing.T) {
 }
 
 func TestParsers_Malformed(t *testing.T) {
-	if _, err := hfs.ParseInfoDataset("too short"); err == nil {
+	if _, err := modernParser.Parse("too short"); err == nil {
 		t.Error("ParseInfoDataset: want error for short record")
 	}
 	// A short non-empty record is now a valid name-only member (a member with no

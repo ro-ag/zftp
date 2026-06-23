@@ -50,17 +50,21 @@ and intentionally excluded.**
 
 ## Parsing strategy (multi-format)
 
-The modern format (`Volume Unit Referred …`, dataset name at a fixed column) is
-parsed by the fixed-width `ParseInfoDataset`, which deterministically splits
-jammed columns such as the `1+++++` track-overflow. The three alternate
-geometries above shift the columns, so a listing is parsed through
-`hfs.NewDatasetListParser(header)`, which inspects the header line and routes the
-modern format to the fixed-width parser and the alternate formats to a
-token-and-type-anchored parser (`ListDatasets` does this automatically). The
-token parser anchors on the dataset name (last token), Dsorg (token before it),
-and the date column, so it tolerates the differing column widths and wide values
-of each geometry. `FieldDate` accepts both `yyyy/mm/dd` and 2-digit `mm/dd/yy`;
-`FieldInt` accepts the `?` unknown marker alongside `+++++` overflow.
+All dataset-listing geometries are fixed-width and positional — which is what lets
+the parser split jammed columns such as the `1+++++` / `165535` Ext+Used overflow
+that carries no gap between values. Each geometry is described by a
+`datasetLayout` (column offsets + dataset-name start); a single engine slices a
+row by the selected layout. `hfs.NewDatasetListParser(header)` inspects the header
+line and picks the layout — modern (default), legacy `Date`, LISTLEVEL 2, or Co:Z
+— and `ListDatasets` builds it from the listing's header automatically.
+`ParseInfoDataset` is the modern-layout shortcut. `FieldDate` accepts both
+`yyyy/mm/dd` and 2-digit `mm/dd/yy`; `FieldInt` accepts the `?` unknown marker
+alongside `+++++` overflow.
+
+The fixtures `04_legacy_date.txt` / `05_listlevel2.txt` / `06_coz_tracks.txt` are
+column-aligned to their layout. The modern layout's offsets are pinned by the
+golden fixtures; the alternate-format offsets are modeled from public samples and
+would be further hardened by a real-LPAR capture of each server/LISTLEVEL.
 
 ## Sources observed (verification)
 
@@ -93,13 +97,10 @@ Co:Z docs, OpenSalamander digest.
 
 ### Remaining limitations
 
-- The token parser handles the alternate geometries' normal and no-attribute
-  (VSAM/GDG/PATH) rows. A *jammed* overflow column (`1+++++` with Ext and Used run
-  together) is split only by the fixed-width modern parser — the alternate
-  formats either don't jam (LISTLEVEL 2 is the de-overflowed wide form; Co:Z has a
-  separate Tracks column) or would need their own fixed-width geometry.
+- The alternate-format column offsets are modeled from public samples rather than
+  a live capture of each server/LISTLEVEL combination. A real listing whose
+  columns are positioned differently would mis-slice — the same fixed-width
+  tradeoff the modern layout already makes; a real-LPAR capture of each would
+  harden the offsets.
 - Multivolume datasets render only their primary volser on the row (per IBM), so
   there is no multi-volser row form to parse.
-- The alternate-format column widths are modeled from public samples, not a live
-  capture of each server/LISTLEVEL combination; the token parser is width-tolerant
-  by design, but a real-LPAR capture of each would further harden coverage.
