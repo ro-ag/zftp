@@ -6,7 +6,6 @@ import (
 	"errors"
 	"fmt"
 	"gopkg.in/ro-ag/zftp.v2/hfs"
-	"gopkg.in/ro-ag/zftp.v2/internal/log"
 	"gopkg.in/ro-ag/zftp.v2/internal/utils"
 	"strings"
 )
@@ -22,7 +21,8 @@ func (s *FTPSession) anyList(cmd, expression string) ([]string, string, error) {
 	case "NLST":
 		trimLine = true
 	default:
-		log.Panicf("invalid command: %s", cmd)
+		s.log.Errorf("invalid command: %s", cmd)
+		panic(fmt.Sprintf("invalid command: %s", cmd))
 	}
 
 	current := s.currentType()
@@ -33,7 +33,7 @@ func (s *FTPSession) anyList(cmd, expression string) ([]string, string, error) {
 		}
 		defer func() {
 			if err := s.SetType(current); err != nil {
-				log.Error(err)
+				s.log.Error(err)
 			}
 		}()
 	}
@@ -49,7 +49,7 @@ func (s *FTPSession) anyList(cmd, expression string) ([]string, string, error) {
 	}
 	defer func(child *childConnection) {
 		if err := child.Close(); err != nil {
-			log.Error(err)
+			s.log.Error(err)
 		}
 	}(child)
 
@@ -66,7 +66,7 @@ func (s *FTPSession) anyList(cmd, expression string) ([]string, string, error) {
 			line = strings.TrimSpace(line)
 		}
 		lines = append(lines, line)
-		log.Passivef("%s", line)
+		s.log.Passivef("%s", line)
 	}
 
 	// Classify why the scan stopped before trusting the result. A concurrent close
