@@ -43,7 +43,7 @@ func assertGolden(t *testing.T, name string, got []byte) {
 	}
 }
 
-func toJSON(t *testing.T, v interface{}) []byte {
+func toJSON(t *testing.T, v any) []byte {
 	t.Helper()
 	b, err := json.MarshalIndent(v, "", "  ")
 	if err != nil {

@@ -81,7 +81,7 @@ func TestLevelsAreDistinctSingleBits(t *testing.T) {
 		t.Errorf("union of the four levels must occupy 4 distinct bits, has %d (union=%d)", got, union)
 	}
 
-	for i := 0; i < len(flags); i++ {
+	for i := range flags {
 		for j := i + 1; j < len(flags); j++ {
 			if flags[i]&flags[j] != 0 {
 				t.Errorf("levels %d and %d overlap (AND=%d)", flags[i], flags[j], flags[i]&flags[j])
@@ -230,16 +230,14 @@ func TestLogger_NilSlogUsesDefault(t *testing.T) {
 func TestLogger_ConcurrentSwapRace(t *testing.T) {
 	lg := New(slog.New(newCapture()), All)
 	var wg sync.WaitGroup
-	for i := 0; i < 8; i++ {
-		wg.Add(1)
-		go func() {
-			defer wg.Done()
-			for j := 0; j < 200; j++ {
+	for range 8 {
+		wg.Go(func() {
+			for j := range 200 {
 				lg.Commandf("c%d", j)
 				lg.SetLevel(All)
 				lg.SetSlog(slog.New(newCapture()))
 			}
-		}()
+		})
 	}
 	wg.Wait()
 }

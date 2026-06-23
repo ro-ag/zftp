@@ -63,8 +63,8 @@ func TestFieldInt_NoSilentWrap(t *testing.T) {
 		in   string
 		want uint32
 	}{
-		{"70000", 70000},  // 5-char Used column; uint16 wrapped to 4464
-		{"65536", 65536},  // uint16 wrapped to 0, rendered as ""
+		{"70000", 70000},   // 5-char Used column; uint16 wrapped to 4464
+		{"65536", 65536},   // uint16 wrapped to 0, rendered as ""
 		{"999999", 999999}, // 6-char Lrecl/BlkSz column max
 	}
 	for _, tc := range cases {
@@ -90,7 +90,7 @@ func TestFieldInt_OutOfRangeErrors(t *testing.T) {
 	for _, in := range []string{
 		"4294967296", // one past uint32 max
 		"99999999999",
-		"-1",  // counts are non-negative; a leading '-' must not wrap
+		"-1",   // counts are non-negative; a leading '-' must not wrap
 		"12x3", // non-numeric
 	} {
 		var f FieldInt
@@ -146,7 +146,7 @@ func TestFieldInt_JSONRoundTrip(t *testing.T) {
 	}
 }
 
-func mustMarshal(t *testing.T, v interface{}) string {
+func mustMarshal(t *testing.T, v any) string {
 	t.Helper()
 	b, err := json.Marshal(v)
 	if err != nil {

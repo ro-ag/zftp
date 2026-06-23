@@ -27,9 +27,6 @@ func (f field) slice(record string) string {
 	if f.width <= 0 {
 		return record[f.start:]
 	}
-	end := f.start + f.width
-	if end > len(record) {
-		end = len(record)
-	}
+	end := min(f.start+f.width, len(record))
 	return record[f.start:end]
 }

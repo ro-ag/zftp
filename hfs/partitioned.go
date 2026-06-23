@@ -52,10 +52,9 @@ func (m *InfoPdsMember) ToStringSlice() []string {
 
 // Headers returns the headers for the dataset
 func (m *InfoPdsMember) Headers() []string {
-	t := reflect.TypeOf(*m)
+	t := reflect.TypeFor[InfoPdsMember]()
 	headers := make([]string, 0, t.NumField())
-	for i := 0; i < t.NumField(); i++ {
-		field := t.Field(i)
+	for field := range t.Fields() {
 		jsonTag := field.Tag.Get("json")
 		if jsonTag != "" {
 			headers = append(headers, jsonTag)

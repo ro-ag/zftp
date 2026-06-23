@@ -100,7 +100,7 @@ func (d *InfoDataset) String() string {
 
 // Headers returns the headers for the dataset
 func (d *InfoDataset) Headers() []string {
-	t := reflect.TypeOf(*d)
+	t := reflect.TypeFor[InfoDataset]()
 	headers := make([]string, 0, t.NumField())
 	for i := 0; i < t.NumField(); i++ {
 		field := t.Field(i)

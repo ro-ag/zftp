@@ -98,7 +98,7 @@ func parseCommand(lg *log.Logger, cmd string, a ...string) []byte {
 		lg.Commandf("%s", command)
 	}
 
-	fullCommand := []byte(fmt.Sprintf("%s %s\r\n", command, args))
+	fullCommand := fmt.Appendf(nil, "%s %s\r\n", command, args)
 
 	return fullCommand
 }
