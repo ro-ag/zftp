@@ -78,7 +78,7 @@ A compile-checked version of this snippet lives in
 
 - `Open(address string, opts ...Option) (*FTPSession, error)` — open a session
   to `host:port`. Options include `WithTimeout`, `WithKeepAlive`, `WithDialer`,
-  and `WithSignalHandler`.
+  `WithSignalHandler`, and `WithLogger` (see [Logging](#logging)).
 - `(*FTPSession) Login(user, pass string) error`
 - `(*FTPSession) Get(remote, local string, mode TransferType) error` /
   `Put(local, remote string, mode TransferType, a ...DataSpec) error`
@@ -93,6 +93,46 @@ A compile-checked version of this snippet lives in
   retrieve and gzip in one step.
 
 Full reference: [pkg.go.dev/gopkg.in/ro-ag/zftp.v2](https://pkg.go.dev/gopkg.in/ro-ag/zftp.v2).
+
+## Logging
+
+zftp logs through the standard library's [`log/slog`](https://pkg.go.dev/log/slog).
+Logging is **per session** and **silent by default** — nothing is emitted until you
+opt in with `SetVerbose`.
+
+`SetVerbose` selects which trace categories a session emits: a bitmask of
+`LogServer`, `LogPassive`, `LogCommand`, `LogDebug` (or `LogAll`; `NoLog` disables
+them). Route the records into your own logger with `WithLogger` at open time, or
+`SetLogger` at runtime:
+
+```go
+h := slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{Level: slog.LevelDebug})
+s, err := zftp.Open("host:21", zftp.WithLogger(slog.New(h)))
+// ...
+s.SetVerbose(zftp.LogCommand | zftp.LogServer)
+```
+
+With no `WithLogger`, zftp falls back to `slog.Default()`.
+
+**Record shape.** Every record carries `component=zftp`. The four trace categories
+are emitted at `slog.LevelDebug` with a `category` attribute
+(`server`/`passive`/`command`/`debug`); warnings at `slog.LevelWarn` and errors at
+`slog.LevelError`. Your handler's own level still applies on top of `SetVerbose`, so
+a handler set to `LevelInfo` drops the trace lines while keeping warnings and errors.
+
+**Bringing your own logger (zap, zerolog).** The core depends only on `log/slog`, so
+any logger that exposes a `slog.Handler` plugs in — the bridge package lives in your
+application's `go.mod`, and zftp stays dependency-free:
+
+```go
+// zap — via a zap→slog handler (go.uber.org/zap/exp/zapslog)
+s, _ := zftp.Open(addr, zftp.WithLogger(slog.New(zapHandler)))     // zapHandler is a slog.Handler
+
+// zerolog — via a zerolog→slog handler (e.g. samber/slog-zerolog)
+s, _ := zftp.Open(addr, zftp.WithLogger(slog.New(zerologHandler))) // zerologHandler is a slog.Handler
+```
+
+Check each bridge's current release for its exact handler constructor.
 
 ## Testing without a mainframe
 
