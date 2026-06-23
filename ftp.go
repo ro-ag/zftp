@@ -10,6 +10,7 @@ import (
 	"gopkg.in/ro-ag/zftp.v2/eol"
 	"gopkg.in/ro-ag/zftp.v2/internal/log"
 	"gopkg.in/ro-ag/zftp.v2/internal/utils"
+	"log/slog"
 	"net"
 	"os"
 	"os/signal"
@@ -35,6 +36,7 @@ type FTPSession struct {
 	dataConns   sync.Map
 	tlsConfig   *tls.Config
 	dialCfg     dialOptions
+	log         *log.Logger
 	mu          sync.Mutex
 }
 
@@ -100,6 +102,7 @@ func newSession(conn net.Conn, cfg dialOptions) *FTPSession {
 		reader:    bufio.NewReader(conn),
 		dialCfg:   cfg,
 		jobPrefix: regexp.MustCompile(`(JOB\d{5})`),
+		log:       log.New(cfg.logger, log.None),
 	}
 }
 
@@ -118,11 +121,19 @@ func (s *FTPSession) installSignalHandler() {
 	}()
 }
 
-// SetVerbose sets the verbose flag
+// SetVerbose selects which trace categories this session emits. The level is a
+// bitmask of the Log* constants (or NoLog/LogAll) and is independent of any
+// injected logger's own level filter.
 func (s *FTPSession) SetVerbose(level LogLevel) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
-	log.SetLevel(log.Level(level))
+	s.log.SetLevel(log.Level(level))
+}
+
+// SetLogger swaps the destination logger for this session's logs at runtime.
+// A nil l reverts to slog.Default(). See WithLogger to set it at Open time.
+func (s *FTPSession) SetLogger(l *slog.Logger) {
+	s.log.SetSlog(l)
 }
 
 // Conn exposes the underlying network connection used by the session.

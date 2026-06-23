@@ -2,7 +2,10 @@
 
 package zftp
 
-import "time"
+import (
+	"log/slog"
+	"time"
+)
 
 // Option configures behavior for Open and passive connections.
 type Option func(*dialOptions)
@@ -14,6 +17,7 @@ type dialOptions struct {
 	ReplyTimeout    time.Duration
 	dialer          Dialer
 	signalHandler   bool
+	logger          *slog.Logger
 }
 
 // defaultReplyTimeout bounds the wait for a post-transfer control reply. It is
@@ -75,4 +79,13 @@ func WithKeepAlive(d time.Duration) Option {
 // restores the default.
 func WithReplyTimeout(d time.Duration) Option {
 	return func(o *dialOptions) { o.ReplyTimeout = d }
+}
+
+// WithLogger routes this session's logs into l, a *slog.Logger. zftp emits its
+// trace categories (selected with SetVerbose) at slog.LevelDebug, warnings at
+// LevelWarn and errors at LevelError, each tagged with component="zftp" and trace
+// lines with a category attribute. A nil l selects slog.Default(). To bridge zap
+// or zerolog, wrap them in their respective slog.Handler.
+func WithLogger(l *slog.Logger) Option {
+	return func(o *dialOptions) { o.logger = l }
 }
