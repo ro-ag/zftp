@@ -152,31 +152,3 @@ func (l *Logger) Warning(v ...any)            { l.emit(slog.LevelWarn, fmt.Sprin
 func (l *Logger) Warningf(f string, v ...any) { l.emit(slog.LevelWarn, fmt.Sprintf(f, v...)) }
 func (l *Logger) Error(v ...any)              { l.emit(slog.LevelError, fmt.Sprint(v...)) }
 func (l *Logger) Errorf(f string, v ...any)   { l.emit(slog.LevelError, fmt.Sprintf(f, v...)) }
-
-// --- transitional package-level shims (removed once every call site uses a
-// *Logger; see the migration plan). They delegate to a package default so existing
-// call sites compile unchanged during the migration. ---
-
-var std = New(nil, None)
-
-func SetLevel(lvl Level)          { std.SetLevel(lvl) }
-func Debug(v ...any)              { std.Debug(v...) }
-func Debugf(f string, v ...any)   { std.Debugf(f, v...) }
-func Command(v ...any)            { std.Command(v...) }
-func Commandf(f string, v ...any) { std.Commandf(f, v...) }
-func Passive(v ...any)            { std.Passive(v...) }
-func Passivef(f string, v ...any) { std.Passivef(f, v...) }
-func Server(v ...any)             { std.Server(v...) }
-func Serverf(f string, v ...any)  { std.Serverf(f, v...) }
-func Warning(v ...any)            { std.Warning(v...) }
-func Warningf(f string, v ...any) { std.Warningf(f, v...) }
-func Error(v ...any)              { std.Error(v...) }
-func Errorf(f string, v ...any)   { std.Errorf(f, v...) }
-
-// Panicf is a transitional shim for the single lists.go programmer-error guard;
-// it logs at Error then panics. The call site is rewritten to Error+panic during
-// migration, and this shim is removed with the others.
-func Panicf(f string, v ...any) {
-	std.Errorf(f, v...)
-	panic(fmt.Sprintf(f, v...))
-}

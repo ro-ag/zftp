@@ -10,7 +10,7 @@ import (
 
 // TestLogLevelMirrorsInternal guards the invariant that the public LogLevel
 // constants carry the exact bit values of internal/log.Level. SetVerbose maps
-// one onto the other with a plain cast (log.SetLevel(log.Level(level))), so any
+// one onto the other with a plain cast (s.log.SetLevel(log.Level(level))), so any
 // drift between the two blocks would silently mis-route logging categories.
 func TestLogLevelMirrorsInternal(t *testing.T) {
 	cases := []struct {
