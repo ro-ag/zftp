@@ -86,6 +86,77 @@ func TestStatusSetter_FileType(t *testing.T) {
 	}
 }
 
+// TestServerStatus_DCBDSN_DottedName verifies a fully-qualified, dotted model DSN
+// survives parsing. The old LastWord regex `\s(\w+)$` excluded '.', so a dotted
+// DCBDSN came back empty.
+func TestServerStatus_DCBDSN_DottedName(t *testing.T) {
+	s, srv := dialMock(t)
+	srv.Script("XSTA (DCBDSN",
+		"211-DCBDSN MY.MODEL.DSN",
+		"211 *** end of status ***")
+
+	got, err := s.StatusOf().DCBDSN()
+	if err != nil {
+		t.Fatalf("DCBDSN: %v", err)
+	}
+	if got != "MY.MODEL.DSN" {
+		t.Errorf("DCBDSN = %q, want MY.MODEL.DSN", got)
+	}
+}
+
+// TestServerStatus_UMask_Octal verifies UMask is parsed as octal: "022" is octal
+// for decimal 18. It was previously parsed as decimal (returning 22).
+func TestServerStatus_UMask_Octal(t *testing.T) {
+	s, srv := dialMock(t)
+	srv.Script("XSTA (UMask",
+		"211-UMask 022",
+		"211 *** end of status ***")
+
+	got, err := s.StatusOf().UMask()
+	if err != nil {
+		t.Fatalf("UMask: %v", err)
+	}
+	if got != 18 {
+		t.Errorf("UMask = %d, want 18 (octal 022)", got)
+	}
+}
+
+// TestServerStatus_SBDataConn_Codepage verifies SBDataConn returns the codepage
+// as a string. SBDATACONN is a codepage (e.g. IBM-1047), not an integer; the old
+// (int) signature could not represent it and the hyphenated token failed the
+// integer parse. The scripted reply is representative, not a captured LPAR reply.
+func TestServerStatus_SBDataConn_Codepage(t *testing.T) {
+	s, srv := dialMock(t)
+	srv.Script("XSTA (SBDataConn",
+		"211-SBDataConn IBM-1047",
+		"211 *** end of status ***")
+
+	got, err := s.StatusOf().SBDataConn()
+	if err != nil {
+		t.Fatalf("SBDataConn: %v", err)
+	}
+	if got != "IBM-1047" {
+		t.Errorf("SBDataConn = %q, want IBM-1047", got)
+	}
+}
+
+// TestServerStatus_Unit_Sibling is a regression guard: a plain-token LastWord
+// sibling getter must keep returning its token after the LastWord change.
+func TestServerStatus_Unit_Sibling(t *testing.T) {
+	s, srv := dialMock(t)
+	srv.Script("XSTA (Unit",
+		"211-Unit SYSDA",
+		"211 *** end of status ***")
+
+	got, err := s.StatusOf().Unit()
+	if err != nil {
+		t.Fatalf("Unit: %v", err)
+	}
+	if got != "SYSDA" {
+		t.Errorf("Unit = %q, want SYSDA", got)
+	}
+}
+
 func TestTransferType_Concrete(t *testing.T) {
 	if !zftp.TypeAscii.IsAscii() || zftp.TypeAscii.IsBinary() {
 		t.Error("TypeAscii classification wrong")

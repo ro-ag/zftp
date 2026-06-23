@@ -446,12 +446,15 @@ func (s *ServerStatus) RetPD() (int, error) {
 	return utils.LastWordToInt(resp)
 }
 
-func (s *ServerStatus) SBDataConn() (int, error) {
+// SBDataConn returns the single-byte data-connection codepage reported by the
+// server (e.g. IBM-1047). SBDATACONN is a codepage string, not an integer, so it
+// is returned as a string (mirroring MBDataConn).
+func (s *ServerStatus) SBDataConn() (string, error) {
 	resp, err := s.xstat("SBDataConn")
 	if err != nil {
-		return 0, err
+		return "", err
 	}
-	return utils.LastWordToInt(resp)
+	return utils.LastWord(resp), nil
 }
 
 func (s *ServerStatus) SBSendEol() (string, error) {
@@ -578,12 +581,20 @@ func (s *ServerStatus) UCSTrunc() (string, error) {
 	return utils.LastWord(resp), nil
 }
 
+// UMask returns the file-mode creation mask reported by the server. z/OS reports
+// UMASK in octal, so the value is parsed base 8 and returned as its integer value
+// (e.g. "022" -> 18).
 func (s *ServerStatus) UMask() (int, error) {
 	resp, err := s.xstat("UMask")
 	if err != nil {
 		return 0, err
 	}
-	return utils.LastWordToInt(resp)
+	w := utils.LastWord(resp)
+	n, err := strconv.ParseInt(w, 8, 0)
+	if err != nil {
+		return 0, fmt.Errorf("could not parse octal UMask %q: %w", w, err)
+	}
+	return int(n), nil
 }
 
 func (s *ServerStatus) UnicodeFileSystemBOM() (string, error) {
