@@ -1,0 +1,18 @@
+Volume Unit    Referred Ext Used Recfm Lrecl BlkSz Dsorg Dsname
+Migrated                                                HLQ.PROJ.OLD.FFS2
+Migrated                                                HLQ.PROJ.CNTYIM.V1.DATA.D052093
+MVSWRK Not Mounted                                      HLQ.PROJ.NOTMOUNT.BKP
+ARCIVE Not Direct Access Device                         HLQ.PROJ.ARCHIVED.UNITTEST
+VTAP01 < Not a DASD device >                            HLQ.PROJ.NONDASD.BACKUP1
+MVSWRK < File not on volume >                           HLQ.PROJ.NOTONVOL
+Error determining attributes                            HLQ.PROJ.ERRATTR.DISTLLIB
+MVSWRK Error determining attributes                     HLQ.PROJ.ERRATTR.BKP
+Pseudo Directory                                        ETC
+Pseudo Directory                                        ISPF
+User catalog connector                                  HLQ.UCAT
+VTAP02 Tape                                             HLQ.PROJ.TAPE.SVCDUMP
+MVS007 3390                                         VSAMHLQ.PROJ.DDIR.D
+                                                   VSAM HLQ.PROJ.DDIR
+                                                    GDG HLQ.PROJ.TEST.GDG
+MVS008 3390   2024/04/01  1    1  FB      80 27920  PS  HLQ.PROJ.TEST.GDG.G0003V00
+                                                    PATHHLQ.PROJ.CSD.PATHA
