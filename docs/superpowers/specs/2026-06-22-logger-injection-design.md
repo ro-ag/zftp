@@ -246,8 +246,11 @@ assertions.
 
 ## Breaking changes & migration (pre-ship, approved)
 
-- `go.mod`: `go 1.20` → **`go 1.21`** (slog is stdlib from 1.21).
-- CI matrix `.github/workflows`: `["1.20","stable"]` → `["1.21","stable"]`.
+- `go.mod` (and `cli/go.mod`): `go 1.20` → **`go 1.26`**. slog needs ≥1.21, but
+  Go 1.21's macOS `-race`/CGO binaries hit a dyld "missing LC_UUID" loader bug
+  (fixed in 1.22+); the maintainer chose to set the floor to the current Go (1.26)
+  so the full race matrix is green with no per-leg exclusions.
+- CI matrix `.github/workflows`: `["1.20","stable"]` → `["1.26","stable"]`.
 - Removed (internal only): package-global log funcs, the stdlib-shaped `Logger`
   interface, `internal/log.SetLogger/SetOutput/SetLevel` globals.
 - Public: `SetVerbose`/`LogLevel` source-compatible; **new** `WithLogger` +
@@ -286,5 +289,5 @@ assertions.
   by an isolation test.
 - `SetVerbose`/`LogLevel` unchanged for callers; ZH06 bit invariants intact.
 - `CGO_ENABLED=0 go build ./...`, `go vet ./...`, `staticcheck ./...`,
-  `go test -race ./...`, `govulncheck ./...` all green; CI green on `go 1.21` +
+  `go test -race ./...`, `govulncheck ./...` all green; CI green on `go 1.26` +
   `stable`.

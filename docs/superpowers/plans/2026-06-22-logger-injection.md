@@ -6,11 +6,11 @@
 
 **Architecture:** Rewrite `internal/log` from a global singleton into a `Logger` value type that applies the category bitmask prefilter and emits structured `slog` records. Each `*FTPSession` owns one. Transitional package-level shims keep the build green while ~60 call sites migrate file-by-file; the shims are deleted at the end.
 
-**Tech Stack:** Go 1.21+ (`log/slog`), `internal/mockzos` loopback for tests.
+**Tech Stack:** Go 1.26 (`log/slog`; floor set to current Go — see Global Constraints), `internal/mockzos` loopback for tests.
 
 ## Global Constraints
 
-- **Go floor:** `go 1.21` in `go.mod`; CI matrix `["1.21","stable"]`. (slog is stdlib from 1.21.)
+- **Go floor:** `go 1.26` in `go.mod` + `cli/go.mod`; CI matrix `["1.26","stable"]`. (slog needs ≥1.21; floor set to 1.26 to dodge the Go 1.21 macOS `-race` LC_UUID toolchain bug.)
 - **Zero third-party deps in core.** Only stdlib (incl. `log/slog`). zap/zerolog bridge in the user's app.
 - **SPDX header** `// SPDX-License-Identifier: Apache-2.0` on every `.go` file (first line).
 - **Errors:** `errors.New` for static sentinels, `%w` for wraps.
