@@ -68,7 +68,16 @@ func (s *FTPSession) Put(srcLocal string, destRemote string, mode TransferType, 
 
 // PutAt resumes uploading a file starting from the given offset.
 // If dataset attributes are provided, they will be applied before the transfer.
+//
+// Resume requires image/binary mode: a positive offset combined with TypeAscii
+// returns ErrAsciiResumeUnsupported before the source file is opened or seeked and
+// before any SITE/REST is sent, because in ASCII mode the server's EOL/codepage
+// translation makes a byte offset corrupt the data.
 func (s *FTPSession) PutAt(srcLocal string, destRemote string, mode TransferType, offset int64, a ...DataSpec) error {
+
+	if err := guardResume(mode, offset); err != nil {
+		return err
+	}
 
 	if len(a) > 0 {
 		log.Debug("dataset attributes passed to PutAt()")

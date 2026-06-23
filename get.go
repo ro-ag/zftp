@@ -45,7 +45,16 @@ func (s *FTPSession) Get(remote string, localFile string, mode TransferType) err
 
 // GetAt retrieves a file from the FTP server starting at a given offset.
 // The data is written to the local file beginning at the same offset.
+//
+// Resume requires image/binary mode: a positive offset combined with TypeAscii
+// returns ErrAsciiResumeUnsupported before the local file is opened, created, or
+// truncated, because in ASCII mode the server's EOL/codepage translation makes a
+// byte offset corrupt the data.
 func (s *FTPSession) GetAt(remote string, localFile string, mode TransferType, offset int64) error {
+	if err := guardResume(mode, offset); err != nil {
+		return err
+	}
+
 	log.Debug("opening local file: ", localFile)
 
 	file, err := os.OpenFile(localFile, os.O_CREATE|os.O_WRONLY, 0644)
