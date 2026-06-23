@@ -4,7 +4,9 @@ package zftp_test
 
 import (
 	"bytes"
+	"compress/gzip"
 	"errors"
+	"io"
 	"os"
 	"path/filepath"
 	"testing"
@@ -44,6 +46,92 @@ func TestPutGet_BinaryRoundTrip(t *testing.T) {
 	}
 	if !bytes.Equal(got, content) {
 		t.Errorf("downloaded = % x, want % x", got, content)
+	}
+}
+
+// TestGetAndGzip_RoundTrip retrieves a payload and compresses it on the fly, then
+// asserts the resulting .gz decompresses byte-for-byte to the original — covering
+// the gzip writer/footer path and VerifyGzSize, which previously had no test.
+func TestGetAndGzip_RoundTrip(t *testing.T) {
+	s, srv := dialMock(t)
+	dir := t.TempDir()
+	payload := []byte("hello z/OS - gzip round trip\nline two\nline three\n")
+	srv.DataFor("RETR", "MY.DATA", string(payload))
+
+	local := filepath.Join(dir, "out") // GetAndGzip appends ".gz"
+	if err := s.GetAndGzip("MY.DATA", local, zftp.TypeBinary); err != nil {
+		t.Fatalf("GetAndGzip: %v", err)
+	}
+
+	f, err := os.Open(local + ".gz")
+	if err != nil {
+		t.Fatalf("open gz: %v", err)
+	}
+	defer f.Close()
+	zr, err := gzip.NewReader(f)
+	if err != nil {
+		t.Fatalf("gzip.NewReader: %v", err)
+	}
+	got, err := io.ReadAll(zr)
+	if err != nil {
+		t.Fatalf("read gz: %v", err)
+	}
+	if err := zr.Close(); err != nil {
+		t.Errorf("gzip reader Close (checksum/size mismatch?): %v", err)
+	}
+	if !bytes.Equal(got, payload) {
+		t.Errorf("decompressed = %q, want %q", got, payload)
+	}
+}
+
+// TestGetAt_BinaryOffset_WritesAtOffset covers the binary resume path of the
+// local-file GetAt: with a positive offset it must send REST <n>, seek the local
+// file to the offset (not truncate), and write the retrieved bytes there, leaving
+// the bytes already present before the offset intact.
+func TestGetAt_BinaryOffset_WritesAtOffset(t *testing.T) {
+	s, srv := dialMock(t)
+	dir := t.TempDir()
+	local := filepath.Join(dir, "out.bin")
+	if err := os.WriteFile(local, []byte("HEAD"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	srv.DataFor("RETR", "BIG.BIN", "TAILDATA")
+
+	if err := s.GetAt("BIG.BIN", local, zftp.TypeBinary, 4); err != nil {
+		t.Fatalf("GetAt: %v", err)
+	}
+	if !hasCmd(srv.Commands(), "REST 4") {
+		t.Errorf("expected REST 4 in command sequence; got %v", srv.Commands())
+	}
+	got, err := os.ReadFile(local)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if string(got) != "HEADTAILDATA" {
+		t.Errorf("local file = %q, want HEADTAILDATA", got)
+	}
+}
+
+// TestPutAt_BinaryOffset_UploadsFromOffset covers the binary resume path of the
+// local-file PutAt: with a positive offset it must seek the source to the offset
+// and send only the bytes from there, prefixed by REST <n>.
+func TestPutAt_BinaryOffset_UploadsFromOffset(t *testing.T) {
+	s, srv := dialMock(t)
+	dir := t.TempDir()
+	src := filepath.Join(dir, "src.bin")
+	if err := os.WriteFile(src, []byte("HEADTAILDATA"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+
+	if err := s.PutAt(src, "BIG.BIN", zftp.TypeBinary, 4); err != nil {
+		t.Fatalf("PutAt: %v", err)
+	}
+	if !hasCmd(srv.Commands(), "REST 4") {
+		t.Errorf("expected REST 4 in command sequence; got %v", srv.Commands())
+	}
+	stored, ok := srv.Stored("BIG.BIN")
+	if !ok || string(stored) != "TAILDATA" {
+		t.Errorf("stored = %q (ok=%v), want TAILDATA", stored, ok)
 	}
 }
 
