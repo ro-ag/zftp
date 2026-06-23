@@ -43,7 +43,7 @@ func (s *FTPSession) sendLocked(ctx context.Context, expect ReturnCode, command 
 	}
 
 	conn, reader := s.conn, s.reader
-	fullCommand := parseCommand(command, a...)
+	fullCommand := parseCommand(s.log, command, a...)
 
 	if dl, ok := ctx.Deadline(); ok {
 		if err := conn.SetDeadline(dl); err != nil {
@@ -54,14 +54,14 @@ func (s *FTPSession) sendLocked(ctx context.Context, expect ReturnCode, command 
 
 	// log has already been printed in parseCommand
 	if _, err := conn.Write(fullCommand); err != nil {
-		log.Commandf("error %s", err)
+		s.log.Commandf("error %s", err)
 		s.closeLocked()
 		return "", fmt.Errorf("zftp: control connection write failed, session closed: %w", err)
 	}
 
 	msg, err := expect.check(reader)
 	if err != nil {
-		log.Serverf("error %s", err)
+		s.log.Serverf("error %s", err)
 		var re *ReturnError
 		if errors.As(err, &re) {
 			// Reply read in full but with an unexpected (yet valid) FTP code; the
@@ -81,7 +81,7 @@ func (s *FTPSession) sendLocked(ctx context.Context, expect ReturnCode, command 
 }
 
 // parseCommand parses a command and its arguments into a byte slice.
-func parseCommand(cmd string, a ...string) []byte {
+func parseCommand(lg *log.Logger, cmd string, a ...string) []byte {
 
 	var (
 		command = strings.TrimSpace(strings.ToUpper(cmd))
@@ -91,11 +91,11 @@ func parseCommand(cmd string, a ...string) []byte {
 	switch {
 	case strings.HasPrefix(command, "PASS"):
 		maskPassword := strings.Repeat("*", len(args))
-		log.Commandf("PASS %s", maskPassword)
+		lg.Commandf("PASS %s", maskPassword)
 	case len(a) > 0:
-		log.Commandf("%s %s", command, args)
+		lg.Commandf("%s %s", command, args)
 	default:
-		log.Commandf("%s", command)
+		lg.Commandf("%s", command)
 	}
 
 	fullCommand := []byte(fmt.Sprintf("%s %s\r\n", command, args))
@@ -121,7 +121,7 @@ func (s *FTPSession) checkLast(expect ReturnCode) (string, error) {
 	defer s.mu.Unlock()
 
 	if s.isClosed.Load() {
-		log.Warningf("<%s> session %s is closed", utils.Caller(), s.conn.RemoteAddr().String())
+		s.log.Warningf("<%s> session %s is closed", utils.Caller(), s.conn.RemoteAddr().String())
 		return "", nil
 	}
 
@@ -141,7 +141,7 @@ func (s *FTPSession) checkLast(expect ReturnCode) (string, error) {
 	s.lastMessage.WriteString(msg)
 
 	if err != nil {
-		log.Serverf("[res|error] %s", err)
+		s.log.Serverf("[res|error] %s", err)
 		var re *ReturnError
 		if !errors.As(err, &re) {
 			// I/O-level failure on the post-transfer reply read: like sendLocked,

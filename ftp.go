@@ -59,7 +59,7 @@ func Open(server string, opts ...Option) (*FTPSession, error) {
 		_ = conn.Close()
 		return nil, err
 	}
-	log.Debug(utils.WrapText(msg))
+	session.log.Debug(utils.WrapText(msg))
 
 	if cfg.signalHandler {
 		session.installSignalHandler()
@@ -114,7 +114,7 @@ func (s *FTPSession) installSignalHandler() {
 	go func() {
 		<-c
 		if err := s.Close(); err != nil {
-			log.Errorf("error closing FTP session: %s", err)
+			s.log.Errorf("error closing FTP session: %s", err)
 			os.Exit(1)
 		}
 		os.Exit(0)
@@ -203,16 +203,16 @@ func (s *FTPSession) closeLocked() error {
 	// Close all data connections.
 	s.dataConns.Range(func(name, conn any) bool {
 		child := conn.(*childConnection)
-		log.Debugf("closing child net connection %s", child.RemoteAddr())
+		s.log.Debugf("closing child net connection %s", child.RemoteAddr())
 		if err := child.Close(); err != nil {
-			log.Warningf("Error closing child net connection %s: %s", child.RemoteAddr(), err)
+			s.log.Warningf("Error closing child net connection %s: %s", child.RemoteAddr(), err)
 		}
 		return true
 	})
 
-	log.Debugf("closing session connection %s", s.conn.RemoteAddr())
+	s.log.Debugf("closing session connection %s", s.conn.RemoteAddr())
 	if err := s.conn.Close(); err != nil {
-		log.Warningf("Error closing session connection: %s", err)
+		s.log.Warningf("Error closing session connection: %s", err)
 		return err
 	}
 	return nil
