@@ -4,6 +4,7 @@ package zftp_test
 
 import (
 	"bytes"
+	"errors"
 	"strings"
 	"testing"
 
@@ -95,5 +96,69 @@ func TestRetrieveIOAt_Offset(t *testing.T) {
 	}
 	if buf.String() != "tail-bytes" {
 		t.Errorf("data = %q, want tail-bytes", buf.String())
+	}
+}
+
+// TestRetrieveIOAt_AsciiOffsetRejected verifies that requesting a byte-offset
+// resume in ASCII mode is rejected with ErrAsciiResumeUnsupported before any I/O:
+// in TYPE A the server translates EOL/codepage, so a byte offset would slice
+// mid-record and corrupt the data. No control command (REST/RETR/TYPE) may be
+// sent and nothing may be written to the destination.
+func TestRetrieveIOAt_AsciiOffsetRejected(t *testing.T) {
+	s, srv := dialMock(t)
+	srv.DataFor("RETR", "BIG.SEQ", "should-not-be-delivered")
+
+	before := len(srv.Commands())
+	var buf bytes.Buffer
+	_, _, err := s.RetrieveIOAt("BIG.SEQ", &buf, zftp.TypeAscii, 100)
+	if !errors.Is(err, zftp.ErrAsciiResumeUnsupported) {
+		t.Fatalf("err = %v, want ErrAsciiResumeUnsupported", err)
+	}
+	if after := srv.Commands(); len(after) != before {
+		t.Errorf("rejected ASCII resume sent control command(s): %v", after[before:])
+	}
+	if buf.Len() != 0 {
+		t.Errorf("wrote %d byte(s) on rejected ASCII resume, want 0", buf.Len())
+	}
+}
+
+// TestStoreIOAt_AsciiOffsetRejected verifies that an ASCII store with a byte
+// offset is rejected with ErrAsciiResumeUnsupported before any I/O: no control
+// command (REST/STOR/TYPE) may be sent and nothing may be stored on the server.
+func TestStoreIOAt_AsciiOffsetRejected(t *testing.T) {
+	s, srv := dialMock(t)
+
+	before := len(srv.Commands())
+	_, _, err := s.StoreIOAt("OUT.TXT", strings.NewReader("alpha\nbeta\n"), zftp.TypeAscii, 100)
+	if !errors.Is(err, zftp.ErrAsciiResumeUnsupported) {
+		t.Fatalf("err = %v, want ErrAsciiResumeUnsupported", err)
+	}
+	if after := srv.Commands(); len(after) != before {
+		t.Errorf("rejected ASCII resume sent control command(s): %v", after[before:])
+	}
+	if _, ok := srv.Stored("OUT.TXT"); ok {
+		t.Errorf("server stored data on a rejected ASCII resume")
+	}
+}
+
+// TestStoreIOAt_BinaryOffset is a regression guard: image/binary resume must keep
+// working — REST <n> is sent before STOR and the exact bytes are stored.
+func TestStoreIOAt_BinaryOffset(t *testing.T) {
+	s, srv := dialMock(t)
+	payload := []byte{0xDE, 0xAD, 0xBE, 0xEF, 0x00, 0x10}
+
+	n, _, err := s.StoreIOAt("BIG.BIN", bytes.NewReader(payload), zftp.TypeBinary, 2048)
+	if err != nil {
+		t.Fatalf("StoreIOAt: %v", err)
+	}
+	if !hasCmd(srv.Commands(), "REST 2048") {
+		t.Errorf("expected REST 2048 in command sequence; got %v", srv.Commands())
+	}
+	stored, ok := srv.Stored("BIG.BIN")
+	if !ok || !bytes.Equal(stored, payload) {
+		t.Fatalf("stored = % x (ok=%v), want % x", stored, ok, payload)
+	}
+	if n != int64(len(payload)) {
+		t.Errorf("n = %d, want %d", n, len(payload))
 	}
 }

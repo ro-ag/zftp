@@ -4,12 +4,33 @@ package zftp
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"gopkg.in/ro-ag/zftp.v2/eol"
 	"gopkg.in/ro-ag/zftp.v2/internal/log"
 	"gopkg.in/ro-ag/zftp.v2/internal/transfer"
 	"io"
 )
+
+// ErrAsciiResumeUnsupported is returned by the *At transfer methods when a
+// byte-offset resume (REST) is requested for an ASCII transfer. A REST argument
+// is a byte position, which only has a stable correspondence to a remote position
+// in image/binary mode. In TYPE A the server performs end-of-line and codepage
+// translation, so resuming by byte offset slices mid-record and silently corrupts
+// the data. Resume requires image/binary mode (TypeImage/TypeBinary).
+var ErrAsciiResumeUnsupported = errors.New("zftp: byte-offset resume (REST) requires image/binary mode; ASCII transfers cannot be resumed by byte offset")
+
+// guardResume rejects a byte-offset resume that cannot be honored. It returns
+// ErrAsciiResumeUnsupported when a positive offset is paired with an ASCII
+// transfer type and nil otherwise. The check lives here so every *At entry point
+// (RetrieveIOAt, StoreIOAt, GetAt, PutAt) enforces the same rule before any
+// local-file or network I/O. Image/binary resume (offset > 0) is unaffected.
+func guardResume(t TransferType, offset int64) error {
+	if offset > 0 && t.IsAscii() {
+		return ErrAsciiResumeUnsupported
+	}
+	return nil
+}
 
 // TransferType is the FTP representation type for a transfer. It is a concrete
 // enum (not an interface): callers pass one of the exported values rather than
@@ -193,7 +214,15 @@ func (s *FTPSession) RetrieveIO(remote string, dest io.Writer, t TransferType) (
 
 // StoreIOAt performs a store operation starting at the given offset on the remote file.
 // The transfer type is restored to the previous value after the transfer.
+//
+// Resume requires image/binary mode: a positive offset combined with TypeAscii
+// returns ErrAsciiResumeUnsupported before any I/O, because in ASCII mode the
+// server's EOL/codepage translation makes a byte offset corrupt the data.
 func (s *FTPSession) StoreIOAt(remote string, src io.Reader, t TransferType, offset int64) (int64, string, error) {
+
+	if err := guardResume(t, offset); err != nil {
+		return 0, "", err
+	}
 
 	current := s.currentType()
 	if err := s.SetType(t); err != nil {
@@ -222,7 +251,14 @@ func (s *FTPSession) StoreIOAt(remote string, src io.Reader, t TransferType, off
 
 // RetrieveIOAt performs a retrieve operation starting from the given offset of the remote file.
 // The transfer type is restored to the previous value after the transfer.
+//
+// Resume requires image/binary mode: a positive offset combined with TypeAscii
+// returns ErrAsciiResumeUnsupported before any I/O, because in ASCII mode the
+// server's EOL/codepage translation makes a byte offset corrupt the data.
 func (s *FTPSession) RetrieveIOAt(remote string, dest io.Writer, t TransferType, offset int64) (int64, string, error) {
+	if err := guardResume(t, offset); err != nil {
+		return 0, "", err
+	}
 	current := s.currentType()
 	if t.IsAscii() {
 		if err := s.SetStatusOf().SBSendEol(eol.System); err != nil {
