@@ -1,5 +1,5 @@
-Volume  Referred  Ext  Tracks    Used Recfm Lrecl BlkSz Dsorg  Dsname
-WORK84 2008/09/05   1       1       1  FB      80 27920  PS    HLQ.PROJ.AFILE.TXT
-WORK81 2008/09/08   1      30       ?  U        0  6144  PO-E  HLQ.PROJ.COZ.LOADLIB
-WORK81 2008/09/11   1      15       4  FB      80 27920  PO    HLQ.PROJ.COZ.SAMPJCL
-WORK84 2008/09/11   1       1       1  U        0  6144  PS    HLQ.PROJ.COZ.TEST.SEQ
+Volume Referred     Ext  Tracks   Used Recfm Lrecl BlkSz Dsorg  Dsname
+WORK842008/09/05     1       1       1FB        80 27920PS    HLQ.PROJ.AFILE.TXT
+WORK812008/09/08     1      30       ?U          0  6144PO-E  HLQ.PROJ.COZ.LOADLIB
+WORK812008/09/11     1      15       4FB        80 27920PO    HLQ.PROJ.COZ.SAMPJCL
+WORK842008/09/11     1       1       1U          0  6144PS    HLQ.PROJ.COZ.TEST.SEQ

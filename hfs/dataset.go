@@ -143,10 +143,6 @@ func (d *InfoDataset) Headers() []string {
 // column begins. A record must reach at least this column to be parseable.
 const dsnameStart = 56
 
-// dsnameField is parsed for every record kind, including migrated and
-// not-mounted entries that carry no other attributes.
-var dsnameField = field{"Dsname", dsnameStart, 0}
-
 // datasetFields is the fixed-width column layout of a z/OS dataset LIST record
 // (excluding Dsname, which is handled separately). Offsets and widths are
 // derived from real server output; see hfs/dataset_test.txt and the golden
@@ -190,17 +186,6 @@ func datasetStateLabel(area string) string {
 	return ""
 }
 
-// classifyDataset returns the status label for a non-columnar record, or "" when
-// the record carries the normal attribute columns. The dataset-name column is
-// excluded from the search so a name like HLQ.MIGRATED.X cannot be misread.
-func classifyDataset(record string) string {
-	prefix := record
-	if len(prefix) > dsnameStart {
-		prefix = prefix[:dsnameStart]
-	}
-	return datasetStateLabel(prefix)
-}
-
 // setField routes a raw column value to its typed destination on the dataset.
 func (d *InfoDataset) setField(name, raw string) error {
 	switch name {
@@ -237,34 +222,5 @@ func (d *InfoDataset) setField(name, raw string) error {
 // aborts a whole listing. Migrated and not-mounted entries additionally report
 // their state in the Volume column for backward compatibility.
 func ParseInfoDataset(record string) (InfoDataset, error) {
-	if len(record) < dsnameStart+1 {
-		return InfoDataset{}, fmt.Errorf("invalid record size: %d", len(record))
-	}
-
-	dataset := InfoDataset{}
-	if err := dataset.Dsname.parse(dsnameField.slice(record)); err != nil {
-		return InfoDataset{}, fmt.Errorf("failed to parse Dsname field: %w", err)
-	}
-
-	if label := classifyDataset(record); label != "" {
-		dataset.state = label
-		// Migrated and Not Mounted have historically reported their state in the
-		// Volume column; keep that for compatibility. Other states leave Volume
-		// empty (the phrase occupies the attribute area, not a real volser).
-		switch label {
-		case "Migrated", "Not Mounted":
-			if err := dataset.Volume.parse(label); err != nil {
-				return InfoDataset{}, fmt.Errorf("failed to parse Volume field: %w", err)
-			}
-		}
-		return dataset, nil
-	}
-
-	for _, f := range datasetFields {
-		if err := dataset.setField(f.name, f.slice(record)); err != nil {
-			return InfoDataset{}, fmt.Errorf("failed to parse %s field: %w", f.name, err)
-		}
-	}
-
-	return dataset, nil
+	return parseDatasetLayout(record, modernDatasetLayout)
 }
