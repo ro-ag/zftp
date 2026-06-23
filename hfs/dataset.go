@@ -10,18 +10,20 @@ import (
 
 // InfoDataset is a struct that represents a z/OS dataset
 type InfoDataset struct {
-	Dsname     FieldString `json:"Dsname"`
-	Volume     FieldString `json:"Volume"`
-	Unit       FieldString `json:"Unit"`
-	Referred   FieldDate   `json:"Referred"`
-	Ext        FieldInt    `json:"Ext"`
-	Used       FieldInt    `json:"Used"`
-	Recfm      FieldString `json:"Recfm"`
-	Lrecl      FieldInt    `json:"Lrecl"`
-	BlkSz      FieldInt    `json:"BlkSz"`
-	Dsorg      FieldString `json:"Dsorg"`
-	isMigrated bool
-	isNotMount bool
+	Dsname   FieldString `json:"Dsname"`
+	Volume   FieldString `json:"Volume"`
+	Unit     FieldString `json:"Unit"`
+	Referred FieldDate   `json:"Referred"`
+	Ext      FieldInt    `json:"Ext"`
+	Used     FieldInt    `json:"Used"`
+	Recfm    FieldString `json:"Recfm"`
+	Lrecl    FieldInt    `json:"Lrecl"`
+	BlkSz    FieldInt    `json:"BlkSz"`
+	Dsorg    FieldString `json:"Dsorg"`
+	// state is the status label for a record that carries a status phrase in
+	// place of the attribute columns (e.g. "Migrated", "Not Mounted",
+	// "Pseudo Directory"); it is empty for a normal, fully-attributed dataset.
+	state string
 }
 
 // Name returns DName but without the quotes
@@ -29,19 +31,40 @@ func (d *InfoDataset) Name() string {
 	return strings.Trim(d.Dsname.String(), "'")
 }
 
+// State returns the status label of a non-attributed record ("Migrated",
+// "Not Mounted", "Archived", "Pseudo Directory", "Error determining attributes",
+// …), or "" for a normal dataset that carries its attribute columns.
+func (d *InfoDataset) State() string {
+	return d.state
+}
+
 // IsMigrated returns true if the dataset is migrated
 func (d *InfoDataset) IsMigrated() bool {
-	return d.isMigrated
+	return d.state == "Migrated"
 }
 
 // IsNotMounted returns true if the dataset is not mounted
 func (d *InfoDataset) IsNotMounted() bool {
-	return d.isNotMount
+	return d.state == "Not Mounted"
 }
 
-// Active returns true if the dataset is not migrated and not, not mounted
+// IsArchived returns true if the dataset is archived to a non-DASD device (z/OS
+// reports such entries as "Not Direct Access Device" or "Not a DASD device").
+func (d *InfoDataset) IsArchived() bool {
+	return d.state == "Archived" || d.state == "Not a DASD device"
+}
+
+// IsPseudoDirectory returns true if the record is a pseudo-directory entry — a
+// single qualifier level z/OS emits under SITE DIRECTORYMODE rather than a real
+// dataset.
+func (d *InfoDataset) IsPseudoDirectory() bool {
+	return d.state == "Pseudo Directory"
+}
+
+// Active returns true if the dataset carries real attributes — i.e. it is not in
+// a special state (migrated, not mounted, archived, pseudo-directory, …).
 func (d *InfoDataset) Active() bool {
-	return !d.IsMigrated() && !d.IsNotMounted()
+	return d.state == ""
 }
 
 // IsPartitioned returns true if the dataset is partitioned
@@ -136,27 +159,36 @@ var datasetFields = []field{
 	{"Dsorg", 51, 5},
 }
 
-// datasetKind classifies a raw LIST record before column parsing.
-type datasetKind int
+// datasetStateMarkers maps a status phrase z/OS emits in place of the attribute
+// columns to the label recorded on the dataset. The marker is matched within the
+// attribute area only (the text before the dataset-name column), so a dataset
+// name can never trigger a false state. Order matters only for phrases that could
+// co-occur; the listed phrases are mutually exclusive in practice.
+var datasetStateMarkers = []struct{ marker, label string }{
+	{"Migrated", "Migrated"},
+	{"Not Mounted", "Not Mounted"},
+	{"Not Direct Access Device", "Archived"},
+	{"Not a DASD device", "Not a DASD device"},
+	{"File not on volume", "File not on volume"},
+	{"Error determining attributes", "Error determining attributes"},
+	{"Pseudo Directory", "Pseudo Directory"},
+	{"User catalog connector", "User catalog connector"},
+}
 
-const (
-	dsNormal datasetKind = iota
-	dsMigrated
-	dsNotMounted
-)
-
-// classifyDataset detects the special non-columnar record states that z/OS
-// emits in place of attribute columns.
-func classifyDataset(record string) datasetKind {
-	trimmed := strings.TrimSpace(record)
-	switch {
-	case strings.HasPrefix(trimmed, "Migrated"):
-		return dsMigrated
-	case strings.Contains(trimmed, "Not Mounted"):
-		return dsNotMounted
-	default:
-		return dsNormal
+// classifyDataset returns the status label for a non-columnar record, or "" when
+// the record carries the normal attribute columns. The dataset-name column is
+// excluded from the search so a name like HLQ.MIGRATED.X cannot be misread.
+func classifyDataset(record string) string {
+	prefix := record
+	if len(prefix) > dsnameStart {
+		prefix = prefix[:dsnameStart]
 	}
+	for _, m := range datasetStateMarkers {
+		if strings.Contains(prefix, m.marker) {
+			return m.label
+		}
+	}
+	return ""
 }
 
 // setField routes a raw column value to its typed destination on the dataset.
@@ -186,9 +218,12 @@ func (d *InfoDataset) setField(name, raw string) error {
 }
 
 // ParseInfoDataset parses a single dataset record from the z/OS FTP "LIST"
-// command output. Migrated and not-mounted datasets carry only a name; their
-// volume column is set to the state label and the remaining attributes are left
-// zero-valued.
+// command output. Records that carry a status phrase in place of the attribute
+// columns — migrated, not mounted, archived (non-DASD), a pseudo-directory, "Error
+// determining attributes", and similar — are classified into State() with their
+// attributes left zero-valued rather than being rejected, so one such row never
+// aborts a whole listing. Migrated and not-mounted entries additionally report
+// their state in the Volume column for backward compatibility.
 func ParseInfoDataset(record string) (InfoDataset, error) {
 	if len(record) < dsnameStart+1 {
 		return InfoDataset{}, fmt.Errorf("invalid record size: %d", len(record))
@@ -199,17 +234,16 @@ func ParseInfoDataset(record string) (InfoDataset, error) {
 		return InfoDataset{}, fmt.Errorf("failed to parse Dsname field: %w", err)
 	}
 
-	switch classifyDataset(record) {
-	case dsMigrated:
-		dataset.isMigrated = true
-		if err := dataset.Volume.parse("Migrated"); err != nil {
-			return InfoDataset{}, fmt.Errorf("failed to parse Volume field: %w", err)
-		}
-		return dataset, nil
-	case dsNotMounted:
-		dataset.isNotMount = true
-		if err := dataset.Volume.parse("Not Mounted"); err != nil {
-			return InfoDataset{}, fmt.Errorf("failed to parse Volume field: %w", err)
+	if label := classifyDataset(record); label != "" {
+		dataset.state = label
+		// Migrated and Not Mounted have historically reported their state in the
+		// Volume column; keep that for compatibility. Other states leave Volume
+		// empty (the phrase occupies the attribute area, not a real volser).
+		switch label {
+		case "Migrated", "Not Mounted":
+			if err := dataset.Volume.parse(label); err != nil {
+				return InfoDataset{}, fmt.Errorf("failed to parse Volume field: %w", err)
+			}
 		}
 		return dataset, nil
 	}
