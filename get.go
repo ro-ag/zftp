@@ -122,11 +122,9 @@ func (s *FTPSession) GetAndGzip(remote string, localFile string, mode TransferTy
 		return fmt.Errorf("failed to retrieve and compress file: %w", err)
 	}
 
-	err = gzWriter.Flush()
-	if err != nil {
-		return fmt.Errorf("failed to flush gzip writer: %w", err)
-	}
-
+	// Close flushes any buffered compressed data and writes the gzip footer, so the
+	// file is complete before VerifyGzSize reads it. A separate Flush beforehand is
+	// redundant (Flush does not write the footer; Close does both).
 	err = gzWriter.Close()
 	if err != nil {
 		return fmt.Errorf("failed to close gzip writer: %w", err)

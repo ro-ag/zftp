@@ -74,11 +74,17 @@ func WrapText(str string) string {
 	return builder.String()
 }
 
-// MaxUint32 is the maximum value that can be represented by a 32-bit unsigned integer.
+// MaxUint32 is 2^32, the modulus of the gzip footer's uncompressed-size (ISIZE)
+// field.
 const MaxUint32 = 4294967296
 
-// VerifyGzSize verifies that the size of the transferred file matches the size in the gzip footer.
-// This is necessary because the gzip format only supports files up to 2^32 bytes.
+// VerifyGzSize checks that the uncompressed size recorded in the gzip footer
+// (ISIZE, the last four bytes) matches the number of bytes transferred. Because
+// ISIZE stores the original size modulo 2^32, this check is only meaningful for
+// streams smaller than 4 GiB: at or above 4 GiB both the footer and the expected
+// value wrap by the same modulus, so the comparison still passes but no longer
+// proves the sizes match. Callers needing integrity for 4 GiB+ payloads must
+// verify by other means (e.g. a checksum).
 func VerifyGzSize(lg *log.Logger, file *os.File, size int64) error {
 	// Sanity check
 	const footerSize = 4
