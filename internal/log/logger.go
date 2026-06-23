@@ -28,14 +28,21 @@ type Logger interface {
 
 type Level uint32
 
+// None disables every logging category.
+const None Level = 0
+
+// The four logging categories are independent, single-bit flags: combine them
+// with OR and test membership with IsEnabled. Each occupies a distinct bit, so
+// enabling one category never implies another.
 const (
-	None Level = iota << 1
-	ServerLevel
-	PassiveLevel
-	CommandLevel
-	DebugLevel
-	All = ServerLevel | PassiveLevel | CommandLevel | DebugLevel
+	ServerLevel  Level = 1 << iota // 1 — server replies
+	PassiveLevel                   // 2 — passive-mode negotiation
+	CommandLevel                   // 4 — commands sent
+	DebugLevel                     // 8 — verbose debug
 )
+
+// All enables every logging category.
+const All = ServerLevel | PassiveLevel | CommandLevel | DebugLevel
 
 type logger struct {
 	level atomic.Uint32
