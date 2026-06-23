@@ -153,17 +153,34 @@ func (s *FTPSession) confirmData(child *childConnection) (string, error) {
 	return s.checkLast(CodeFileActionOK)
 }
 
+// restoreType puts the session back to a prior transfer type and is meant to be
+// deferred immediately after a successful SetType. It guards the error path: a
+// transfer failure must surface, so it never overwrites a non-nil *errp; it only
+// reports a restore failure when the transfer itself succeeded. When the session
+// was already torn down (e.g. a data-stream failure closed it), there is nothing
+// to restore and it returns without touching the control connection.
+func (s *FTPSession) restoreType(prev TransferType, errp *error) {
+	if s.IsClosed() {
+		return
+	}
+	if rerr := s.SetType(prev); rerr != nil && *errp == nil {
+		*errp = fmt.Errorf("error while setting back the transfer type: %w", rerr)
+	}
+}
+
 // StoreIO stores the contents of the reader to the remote file in the specified
 // mode and returns the number of bytes transferred.
 //
-// The original transfer type is restored to the previous value after the transfer,
-// supports ASCII and binary/Image transfers
-func (s *FTPSession) StoreIO(remote string, src io.Reader, t TransferType) (int64, string, error) {
+// The original transfer type is restored to the previous value after the transfer
+// (including when the transfer fails at the control level and the session stays
+// open); supports ASCII and binary/Image transfers.
+func (s *FTPSession) StoreIO(remote string, src io.Reader, t TransferType) (sz int64, msg string, err error) {
 
 	current := s.currentType()
-	if err := s.SetType(t); err != nil {
+	if err = s.SetType(t); err != nil {
 		return 0, "", err
 	}
+	defer s.restoreType(current, &err)
 
 	var format transfer.DataTransfer
 
@@ -173,60 +190,48 @@ func (s *FTPSession) StoreIO(remote string, src io.Reader, t TransferType) (int6
 		format = transfer.NewStore(src)
 	}
 
-	sz, msg, err := s.transfer(format, remote, 0)
-	if err != nil {
-		return sz, msg, err
-	}
-
-	if err = s.SetType(current); err != nil {
-		return sz, msg, fmt.Errorf("error while setting back the transfer type: %w", err)
-	}
-
+	sz, msg, err = s.transfer(format, remote, 0)
 	return sz, msg, err
 }
 
-// RetrieveIO retrieves the contents of the remote file and writes it to the writer
-// The transfer type is restored to the previous value after the transfer
-// supports ASCII and binary/Image transfers
-func (s *FTPSession) RetrieveIO(remote string, dest io.Writer, t TransferType) (int64, string, error) {
+// RetrieveIO retrieves the contents of the remote file and writes it to the writer.
+// The transfer type is restored to the previous value after the transfer (including
+// when the transfer fails at the control level and the session stays open);
+// supports ASCII and binary/Image transfers.
+func (s *FTPSession) RetrieveIO(remote string, dest io.Writer, t TransferType) (sz int64, msg string, err error) {
 	current := s.currentType()
 	if t.IsAscii() {
-		if err := s.SetStatusOf().SBSendEol(eol.System); err != nil {
+		if err = s.SetStatusOf().SBSendEol(eol.System); err != nil {
 			return 0, "", err
 		}
 	}
-	if err := s.SetType(t); err != nil {
+	if err = s.SetType(t); err != nil {
 		return 0, "", err
 	}
+	defer s.restoreType(current, &err)
 
-	sz, msg, err := s.transfer(transfer.NewRetrieve(dest), remote, 0)
-	if err != nil {
-		return sz, msg, err
-	}
-
-	if err = s.SetType(current); err != nil {
-		return sz, msg, fmt.Errorf("error while setting back the transfer type: %w", err)
-	}
-
+	sz, msg, err = s.transfer(transfer.NewRetrieve(dest), remote, 0)
 	return sz, msg, err
 }
 
 // StoreIOAt performs a store operation starting at the given offset on the remote file.
-// The transfer type is restored to the previous value after the transfer.
+// The transfer type is restored to the previous value after the transfer (including
+// when the transfer fails at the control level and the session stays open).
 //
 // Resume requires image/binary mode: a positive offset combined with TypeAscii
 // returns ErrAsciiResumeUnsupported before any I/O, because in ASCII mode the
 // server's EOL/codepage translation makes a byte offset corrupt the data.
-func (s *FTPSession) StoreIOAt(remote string, src io.Reader, t TransferType, offset int64) (int64, string, error) {
+func (s *FTPSession) StoreIOAt(remote string, src io.Reader, t TransferType, offset int64) (sz int64, msg string, err error) {
 
-	if err := guardResume(t, offset); err != nil {
+	if err = guardResume(t, offset); err != nil {
 		return 0, "", err
 	}
 
 	current := s.currentType()
-	if err := s.SetType(t); err != nil {
+	if err = s.SetType(t); err != nil {
 		return 0, "", err
 	}
+	defer s.restoreType(current, &err)
 
 	var format transfer.DataTransfer
 
@@ -236,46 +241,32 @@ func (s *FTPSession) StoreIOAt(remote string, src io.Reader, t TransferType, off
 		format = transfer.NewStore(src)
 	}
 
-	sz, msg, err := s.transfer(format, remote, offset)
-	if err != nil {
-		return sz, msg, err
-	}
-
-	if err = s.SetType(current); err != nil {
-		return sz, msg, fmt.Errorf("error while setting back the transfer type: %w", err)
-	}
-
+	sz, msg, err = s.transfer(format, remote, offset)
 	return sz, msg, err
 }
 
 // RetrieveIOAt performs a retrieve operation starting from the given offset of the remote file.
-// The transfer type is restored to the previous value after the transfer.
+// The transfer type is restored to the previous value after the transfer (including
+// when the transfer fails at the control level and the session stays open).
 //
 // Resume requires image/binary mode: a positive offset combined with TypeAscii
 // returns ErrAsciiResumeUnsupported before any I/O, because in ASCII mode the
 // server's EOL/codepage translation makes a byte offset corrupt the data.
-func (s *FTPSession) RetrieveIOAt(remote string, dest io.Writer, t TransferType, offset int64) (int64, string, error) {
-	if err := guardResume(t, offset); err != nil {
+func (s *FTPSession) RetrieveIOAt(remote string, dest io.Writer, t TransferType, offset int64) (sz int64, msg string, err error) {
+	if err = guardResume(t, offset); err != nil {
 		return 0, "", err
 	}
 	current := s.currentType()
 	if t.IsAscii() {
-		if err := s.SetStatusOf().SBSendEol(eol.System); err != nil {
+		if err = s.SetStatusOf().SBSendEol(eol.System); err != nil {
 			return 0, "", err
 		}
 	}
-	if err := s.SetType(t); err != nil {
+	if err = s.SetType(t); err != nil {
 		return 0, "", err
 	}
+	defer s.restoreType(current, &err)
 
-	sz, msg, err := s.transfer(transfer.NewRetrieve(dest), remote, offset)
-	if err != nil {
-		return sz, msg, err
-	}
-
-	if err = s.SetType(current); err != nil {
-		return sz, msg, fmt.Errorf("error while setting back the transfer type: %w", err)
-	}
-
+	sz, msg, err = s.transfer(transfer.NewRetrieve(dest), remote, offset)
 	return sz, msg, err
 }
