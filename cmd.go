@@ -154,20 +154,21 @@ func (s *FTPSession) checkLast(expect ReturnCode) (string, error) {
 	return msg, nil
 }
 
-// System get the system type of the FTP server. will panic
-func (s *FTPSession) System() string {
+// System returns the operating-system type reported by the FTP server.
+//
+// When the value is already known — it is cached during Login — it is returned
+// with a nil error and no network round-trip. Otherwise a SYST command is issued
+// and its reply (or the resulting error) is returned. A control-connection or
+// protocol failure is surfaced as an error, never a panic.
+func (s *FTPSession) System() (string, error) {
 	s.mu.Lock()
 	sys := s.system
 	s.mu.Unlock()
 	if sys != "" {
-		return sys
+		return sys, nil
 	}
 
-	system, err := s.SendCommand(CodeSysType, "SYST")
-	if err != nil {
-		panic(err)
-	}
-	return system
+	return s.SendCommand(CodeSysType, "SYST")
 }
 
 // CWD changes the current working directory to the specified path.
