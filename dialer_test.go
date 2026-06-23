@@ -33,7 +33,7 @@ func TestOpen_WithInjectedDialer(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Open with injected dialer: %v", err)
 	}
-	if s.Conn() == nil {
+	if s.RemoteAddr() == nil {
 		t.Fatal("session has no connection")
 	}
 	if err := s.Close(); err != nil {
