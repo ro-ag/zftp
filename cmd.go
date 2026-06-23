@@ -59,7 +59,7 @@ func (s *FTPSession) sendLocked(ctx context.Context, expect ReturnCode, command 
 		return "", fmt.Errorf("zftp: control connection write failed, session closed: %w", err)
 	}
 
-	msg, err := expect.check(reader)
+	msg, err := expect.check(reader, s.log)
 	if err != nil {
 		s.log.Serverf("error %s", err)
 		var re *ReturnError
@@ -136,7 +136,7 @@ func (s *FTPSession) checkLast(expect ReturnCode) (string, error) {
 
 	s.lastMessage.Reset()
 
-	msg, err := expect.check(s.reader)
+	msg, err := expect.check(s.reader, s.log)
 
 	s.lastMessage.WriteString(msg)
 

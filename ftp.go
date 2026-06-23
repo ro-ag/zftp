@@ -54,7 +54,7 @@ func Open(server string, opts ...Option) (*FTPSession, error) {
 
 	session := newSession(conn, cfg)
 
-	msg, err := CodeSvcReadySoon.check(session.reader)
+	msg, err := CodeSvcReadySoon.check(session.reader, session.log)
 	if err != nil {
 		_ = conn.Close()
 		return nil, err
