@@ -107,7 +107,7 @@ func (s *FTPSession) NList(expression string) ([]string, error) {
 // ListDatasets returns a list of files matching the given expression, including file attributes.
 func (s *FTPSession) ListDatasets(expression string) ([]hfs.InfoDataset, error) {
 
-	curr, err := utils.SetValueAndGetCurrent("SEQ", s.SetStatusOf().FileType, s.StatusOf().FileType)
+	curr, err := utils.SetValueAndGetCurrent(s.log, "SEQ", s.SetStatusOf().FileType, s.StatusOf().FileType)
 	if err != nil {
 		return nil, err
 	}
@@ -134,7 +134,7 @@ func (s *FTPSession) ListDatasets(expression string) ([]hfs.InfoDataset, error) 
 // ListPds returns a list of files matching the given expression, including file attributes.
 func (s *FTPSession) ListPds(expression string) ([]hfs.InfoPdsMember, error) {
 
-	curr, err := utils.SetValueAndGetCurrent("SEQ", s.SetStatusOf().FileType, s.StatusOf().FileType)
+	curr, err := utils.SetValueAndGetCurrent(s.log, "SEQ", s.SetStatusOf().FileType, s.StatusOf().FileType)
 	if err != nil {
 		return nil, err
 	}
@@ -169,7 +169,7 @@ func (s *FTPSession) ListSpool(expression string) ([]hfs.InfoJob, error) {
 		return nil, fmt.Errorf("invalid search pattern: %s", expression)
 	}
 
-	curr, err := utils.SetValueAndGetCurrent("JES", s.SetStatusOf().FileType, s.StatusOf().FileType)
+	curr, err := utils.SetValueAndGetCurrent(s.log, "JES", s.SetStatusOf().FileType, s.StatusOf().FileType)
 	if err != nil {
 		return nil, err
 	}

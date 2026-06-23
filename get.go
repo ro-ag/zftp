@@ -134,7 +134,7 @@ func (s *FTPSession) GetAndGzip(remote string, localFile string, mode TransferTy
 
 	s.log.Debugf("successfully transferred and compressed %d bytes from %s", bytesTransferred, remote)
 
-	err = utils.VerifyGzSize(file, bytesTransferred)
+	err = utils.VerifyGzSize(s.log, file, bytesTransferred)
 	if err != nil {
 		return err
 	}

@@ -35,7 +35,7 @@ func (s *FTPSession) SubmitIO(jr io.Reader, options ...JesSpec) (*JesJob, error)
 		}
 	}
 
-	curr, err := utils.SetValueAndGetCurrent("JES", s.SetStatusOf().FileType, s.StatusOf().FileType)
+	curr, err := utils.SetValueAndGetCurrent(s.log, "JES", s.SetStatusOf().FileType, s.StatusOf().FileType)
 	if err != nil {
 		return nil, err
 	}
@@ -89,7 +89,7 @@ var (
 // it returns the whole Spool output as a string
 // this function waits for the job to complete
 func (s *FTPSession) SubmitJesGetByDSN(jcl string) (*JobResult, error) {
-	currSeq, err := utils.SetValueAndGetCurrent("SEQ", s.SetStatusOf().FileType, s.StatusOf().FileType)
+	currSeq, err := utils.SetValueAndGetCurrent(s.log, "SEQ", s.SetStatusOf().FileType, s.StatusOf().FileType)
 	if err != nil {
 		return nil, err
 	}
@@ -109,13 +109,13 @@ func (s *FTPSession) SubmitJesGetByDSN(jcl string) (*JobResult, error) {
 		return nil, fmt.Errorf("failed to write JCL to FTP server: %w", err)
 	}
 
-	currJes, err := utils.SetValueAndGetCurrent("JES NOJESGETBYDSN", s.SetStatusOf().FileType, s.StatusOf().FileType)
+	currJes, err := utils.SetValueAndGetCurrent(s.log, "JES NOJESGETBYDSN", s.SetStatusOf().FileType, s.StatusOf().FileType)
 	if err != nil {
 		return nil, err
 	}
 	defer currJes.Restore()
 
-	currName, err := utils.SetValueAndGetCurrent("*", s.SetStatusOf().JesJobName, s.StatusOf().JesJobName)
+	currName, err := utils.SetValueAndGetCurrent(s.log, "*", s.SetStatusOf().JesJobName, s.StatusOf().JesJobName)
 	if err != nil {
 		return nil, err
 	}
@@ -228,14 +228,14 @@ func (s *FTPSession) GetJobStatus(jobID string) (*hfs.InfoJobDetail, error) {
 	}
 
 	// set JES parameters and restore them after the function returns
-	FileType, err := utils.SetValueAndGetCurrent("JES", s.SetStatusOf().FileType, s.StatusOf().FileType)
+	FileType, err := utils.SetValueAndGetCurrent(s.log, "JES", s.SetStatusOf().FileType, s.StatusOf().FileType)
 	if err != nil {
 		return nil, err
 	}
 	defer FileType.Restore()
 
 	// set jes job name to * and restore it after the function returns
-	JesJobName, err := utils.SetValueAndGetCurrent("*", s.SetStatusOf().JesJobName, s.StatusOf().JesJobName)
+	JesJobName, err := utils.SetValueAndGetCurrent(s.log, "*", s.SetStatusOf().JesJobName, s.StatusOf().JesJobName)
 	if err != nil {
 		return nil, err
 	}

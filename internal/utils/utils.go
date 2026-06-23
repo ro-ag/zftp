@@ -79,7 +79,7 @@ const MaxUint32 = 4294967296
 
 // VerifyGzSize verifies that the size of the transferred file matches the size in the gzip footer.
 // This is necessary because the gzip format only supports files up to 2^32 bytes.
-func VerifyGzSize(file *os.File, size int64) error {
+func VerifyGzSize(lg *log.Logger, file *os.File, size int64) error {
 	// Sanity check
 	const footerSize = 4
 	footer := make([]byte, footerSize)
@@ -98,7 +98,7 @@ func VerifyGzSize(file *os.File, size int64) error {
 	have := binary.LittleEndian.Uint32(footer)
 	want := uint32(size % MaxUint32)
 
-	log.Debugf("file %s size=%d, uncompress size: %d, expected size: %d", file.Name(), fileInfo.Size(), have, want)
+	lg.Debugf("file %s size=%d, uncompress size: %d, expected size: %d", file.Name(), fileInfo.Size(), have, want)
 
 	if have != want {
 		return fmt.Errorf("transferred file size doesn't match the size in gzip footer (expected %d, got %d)", have, want)
@@ -162,9 +162,10 @@ type SetRestorer struct {
 	orig string
 	set  func(string) error
 	get  func() (string, error)
+	lg   *log.Logger
 }
 
-func SetValueAndGetCurrent(value string, set func(string) error, get func() (string, error)) (*SetRestorer, error) {
+func SetValueAndGetCurrent(lg *log.Logger, value string, set func(string) error, get func() (string, error)) (*SetRestorer, error) {
 	orig, err := get()
 	if err != nil {
 		return nil, fmt.Errorf("failed to get current value: %w", err)
@@ -179,12 +180,13 @@ func SetValueAndGetCurrent(value string, set func(string) error, get func() (str
 		orig: orig,
 		set:  set,
 		get:  get,
+		lg:   lg,
 	}, nil
 }
 
 func (f *SetRestorer) Restore() {
 	err := f.set(f.orig)
 	if err != nil {
-		log.Warning(err)
+		f.lg.Warning(err)
 	}
 }
