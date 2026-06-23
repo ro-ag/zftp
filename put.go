@@ -4,7 +4,6 @@ package zftp
 
 import (
 	"fmt"
-	"gopkg.in/ro-ag/zftp.v2/internal/log"
 	"gopkg.in/ro-ag/zftp.v2/internal/utils"
 	"io"
 	"os"
@@ -24,14 +23,14 @@ const (
 func (s *FTPSession) Put(srcLocal string, destRemote string, mode TransferType, a ...DataSpec) error {
 
 	if len(a) > 0 {
-		log.Debug("dataset attributes passed to Put()")
+		s.log.Debug("dataset attributes passed to Put()")
 		err := s.SetDataSpecs(a...)
 		if err != nil {
 			return err
 		}
 	}
 
-	log.Debugf("attempting to open source file: %s", srcLocal)
+	s.log.Debugf("attempting to open source file: %s", srcLocal)
 
 	file, err := os.Open(srcLocal)
 	if err != nil {
@@ -40,28 +39,28 @@ func (s *FTPSession) Put(srcLocal string, destRemote string, mode TransferType, 
 
 	defer func() {
 		if cerr := file.Close(); cerr != nil {
-			log.Errorf("failed to close file: %s", cerr)
+			s.log.Errorf("failed to close file: %s", cerr)
 		}
 	}()
 
 	fileInfo, err := file.Stat()
 	if err != nil {
-		log.Error("Failed to get file stats for:", srcLocal)
+		s.log.Error("Failed to get file stats for:", srcLocal)
 		return err
 	}
-	log.Debugf("file stats for %s :", srcLocal)
-	log.Debugf("   - size in bytes     : %d", fileInfo.Size())
-	log.Debugf("   - file mode         : %s", fileInfo.Mode())
-	log.Debugf("   - modification time : %s", fileInfo.ModTime())
+	s.log.Debugf("file stats for %s :", srcLocal)
+	s.log.Debugf("   - size in bytes     : %d", fileInfo.Size())
+	s.log.Debugf("   - file mode         : %s", fileInfo.Mode())
+	s.log.Debugf("   - modification time : %s", fileInfo.ModTime())
 
-	log.Debugf("starting transfer to: %s", destRemote)
+	s.log.Debugf("starting transfer to: %s", destRemote)
 
 	bytesTransferred, _, err := s.StoreIO(destRemote, file, mode)
 	if err != nil {
 		return fmt.Errorf("failed to store file: %w", err)
 	}
 
-	log.Debugf("successfully transferred %d bytes to %s", bytesTransferred, destRemote)
+	s.log.Debugf("successfully transferred %d bytes to %s", bytesTransferred, destRemote)
 
 	return nil
 }
@@ -80,13 +79,13 @@ func (s *FTPSession) PutAt(srcLocal string, destRemote string, mode TransferType
 	}
 
 	if len(a) > 0 {
-		log.Debug("dataset attributes passed to PutAt()")
+		s.log.Debug("dataset attributes passed to PutAt()")
 		if err := s.SetDataSpecs(a...); err != nil {
 			return err
 		}
 	}
 
-	log.Debugf("attempting to open source file: %s", srcLocal)
+	s.log.Debugf("attempting to open source file: %s", srcLocal)
 
 	file, err := os.Open(srcLocal)
 	if err != nil {
@@ -100,28 +99,28 @@ func (s *FTPSession) PutAt(srcLocal string, destRemote string, mode TransferType
 
 	defer func() {
 		if cerr := file.Close(); cerr != nil {
-			log.Errorf("failed to close file: %s", cerr)
+			s.log.Errorf("failed to close file: %s", cerr)
 		}
 	}()
 
 	fileInfo, err := file.Stat()
 	if err != nil {
-		log.Error("Failed to get file stats for:", srcLocal)
+		s.log.Error("Failed to get file stats for:", srcLocal)
 		return err
 	}
-	log.Debugf("file stats for %s :", srcLocal)
-	log.Debugf("   - size in bytes     : %d", fileInfo.Size())
-	log.Debugf("   - file mode         : %s", fileInfo.Mode())
-	log.Debugf("   - modification time : %s", fileInfo.ModTime())
+	s.log.Debugf("file stats for %s :", srcLocal)
+	s.log.Debugf("   - size in bytes     : %d", fileInfo.Size())
+	s.log.Debugf("   - file mode         : %s", fileInfo.Mode())
+	s.log.Debugf("   - modification time : %s", fileInfo.ModTime())
 
-	log.Debugf("starting transfer to: %s at offset %d", destRemote, offset)
+	s.log.Debugf("starting transfer to: %s at offset %d", destRemote, offset)
 
 	bytesTransferred, _, err := s.StoreIOAt(destRemote, file, mode, offset)
 	if err != nil {
 		return fmt.Errorf("failed to store file: %w", err)
 	}
 
-	log.Debugf("successfully transferred %d bytes to %s", bytesTransferred, destRemote)
+	s.log.Debugf("successfully transferred %d bytes to %s", bytesTransferred, destRemote)
 
 	return nil
 }
@@ -242,7 +241,7 @@ func (s *FTPSession) SetDataSpecs(attributes ...DataSpec) error {
 		return err
 	}
 	if msg != "SITE command was accepted" {
-		log.Warning(utils.WrapText(msg))
+		s.log.Warning(utils.WrapText(msg))
 	}
 	return nil
 }

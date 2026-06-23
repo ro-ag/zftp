@@ -7,7 +7,6 @@ import (
 	"errors"
 	"fmt"
 	"gopkg.in/ro-ag/zftp.v2/eol"
-	"gopkg.in/ro-ag/zftp.v2/internal/log"
 	"gopkg.in/ro-ag/zftp.v2/internal/transfer"
 	"io"
 )
@@ -109,7 +108,7 @@ func (s *FTPSession) transfer(t transfer.DataTransfer, remote string, offset int
 	defer func(child *childConnection) {
 		if !child.IsClosed() {
 			if err = child.Close(); err != nil {
-				log.Error(err)
+				s.log.Error(err)
 			}
 		}
 	}(child)
