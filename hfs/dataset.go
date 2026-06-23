@@ -213,14 +213,3 @@ func (d *InfoDataset) setField(name, raw string) error {
 		return fmt.Errorf("unknown dataset field %q", name)
 	}
 }
-
-// ParseInfoDataset parses a single dataset record from the z/OS FTP "LIST"
-// command output. Records that carry a status phrase in place of the attribute
-// columns — migrated, not mounted, archived (non-DASD), a pseudo-directory, "Error
-// determining attributes", and similar — are classified into State() with their
-// attributes left zero-valued rather than being rejected, so one such row never
-// aborts a whole listing. Migrated and not-mounted entries additionally report
-// their state in the Volume column for backward compatibility.
-func ParseInfoDataset(record string) (InfoDataset, error) {
-	return parseDatasetLayout(record, modernDatasetLayout)
-}

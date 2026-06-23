@@ -29,7 +29,7 @@ func TestParseDataset(t *testing.T) {
 				continue
 			}
 			line := s.Text()
-			fields, err := hfs.ParseInfoDataset(line)
+			fields, err := modernParser.Parse(line)
 			if err != nil {
 				t.Fatalf("error %v\n%s", err, line)
 			}
@@ -57,7 +57,7 @@ func TestParseDataset(t *testing.T) {
 				continue
 			}
 			line := s.Text()
-			fields, err := hfs.ParseInfoDataset(line)
+			fields, err := modernParser.Parse(line)
 			if err != nil {
 				t.Fatalf("error %v\n%s", err, line)
 			}
@@ -88,7 +88,7 @@ func TestParseDataset(t *testing.T) {
 				continue
 			}
 			line := s.Text()
-			fields, err := hfs.ParseInfoDataset(line)
+			fields, err := modernParser.Parse(line)
 			if err != nil {
 				t.Fatalf("error %v\n%s", err, line)
 			}

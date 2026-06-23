@@ -11,6 +11,11 @@ import (
 	"gopkg.in/ro-ag/zftp.v2/hfs"
 )
 
+// modernParser parses a single modern-format dataset row (an empty header selects
+// the default modern layout) — the package-level equivalent of building a
+// DatasetListParser from a modern listing's header.
+var modernParser = hfs.NewDatasetListParser("")
+
 // corpusLines reads a sanitized listing fixture from ../tests and returns its
 // data rows (the column-header line and any blank lines removed), mirroring how
 // ListDatasets/ListPds skip the header before parsing.
@@ -48,7 +53,7 @@ var datasetCorpus = []string{
 func TestCorpus_DatasetListings_ParseWithoutError(t *testing.T) {
 	for _, file := range datasetCorpus {
 		for _, line := range corpusLines(t, file) {
-			if _, err := hfs.ParseInfoDataset(line); err != nil {
+			if _, err := modernParser.Parse(line); err != nil {
 				t.Errorf("%s: ParseInfoDataset(%q) error: %v", file, line, err)
 			}
 		}
@@ -89,7 +94,7 @@ func TestGolden_Corpus_Datasets(t *testing.T) {
 	var snaps []corpusDsSnap
 	for _, file := range datasetCorpus {
 		for _, line := range corpusLines(t, file) {
-			d, err := hfs.ParseInfoDataset(line)
+			d, err := modernParser.Parse(line)
 			if err != nil {
 				t.Fatalf("%s: parse %q: %v", file, line, err)
 			}
@@ -164,7 +169,7 @@ func datasetsByName(t *testing.T, file string) map[string]hfs.InfoDataset {
 	t.Helper()
 	out := map[string]hfs.InfoDataset{}
 	for _, line := range corpusLines(t, file) {
-		d, err := hfs.ParseInfoDataset(line)
+		d, err := modernParser.Parse(line)
 		if err != nil {
 			t.Fatalf("%s: parse %q: %v", file, line, err)
 		}
