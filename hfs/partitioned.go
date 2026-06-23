@@ -106,12 +106,28 @@ func (m *InfoPdsMember) setField(name, raw string) error {
 
 // ParseInfoPdsMember parses a single Partitioned Dataset member record from the
 // z/OS FTP listing output.
+//
+// A member saved without ISPF statistics is rendered as just its name — a record
+// too short to carry the statistics columns. Such a row is parsed into a member
+// whose Name is set and whose statistics are left zero-valued, rather than being
+// rejected (which would abort the whole listing in ListPds).
 func ParseInfoPdsMember(record string) (InfoPdsMember, error) {
+	member := InfoPdsMember{}
+
 	if len(record) < idStart {
-		return InfoPdsMember{}, fmt.Errorf("record too short: %d", len(record))
+		name := strings.TrimSpace(record)
+		if name == "" {
+			return InfoPdsMember{}, fmt.Errorf("empty member record")
+		}
+		if fields := strings.Fields(name); len(fields) > 0 {
+			name = fields[0]
+		}
+		if err := member.Name.parse(name); err != nil {
+			return InfoPdsMember{}, fmt.Errorf("failed to parse Name field: %w", err)
+		}
+		return member, nil
 	}
 
-	member := InfoPdsMember{}
 	for _, f := range pdsFields {
 		if err := member.setField(f.name, f.slice(record)); err != nil {
 			return InfoPdsMember{}, fmt.Errorf("failed to parse %s field: %w", f.name, err)

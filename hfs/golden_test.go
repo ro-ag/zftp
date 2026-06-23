@@ -360,8 +360,13 @@ func TestParsers_Malformed(t *testing.T) {
 	if _, err := hfs.ParseInfoDataset("too short"); err == nil {
 		t.Error("ParseInfoDataset: want error for short record")
 	}
-	if _, err := hfs.ParseInfoPdsMember("too short"); err == nil {
-		t.Error("ParseInfoPdsMember: want error for short record")
+	// A short non-empty record is now a valid name-only member (a member with no
+	// ISPF statistics); only a blank record is malformed.
+	if _, err := hfs.ParseInfoPdsMember("   "); err == nil {
+		t.Error("ParseInfoPdsMember: want error for blank record")
+	}
+	if m, err := hfs.ParseInfoPdsMember("NOSTATS"); err != nil || m.Name.String() != "NOSTATS" {
+		t.Errorf("ParseInfoPdsMember(name-only) = (%q, %v), want (NOSTATS, nil)", m.Name.String(), err)
 	}
 	if _, err := hfs.ParseInfoJob(nil); err == nil {
 		t.Error("ParseInfoJob(nil): want error")
