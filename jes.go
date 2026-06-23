@@ -153,7 +153,7 @@ func (s *FTPSession) SubmitJesGetByDSN(jcl string) (*JobResult, error) {
 	job.DisplayName = res[1]
 
 	/* analyze for job abending or IEF errors */
-	errType, errDetails := classifyJesOutput(jobOutput.String())
+	errDetails, errType := classifyJesOutput(jobOutput.String())
 
 	/* get job return code from response */
 	res = jesJobDoneRcRegexp.FindStringSubmatch(jobOutput.String())
@@ -173,12 +173,12 @@ func (s *FTPSession) SubmitJesGetByDSN(jcl string) (*JobResult, error) {
 }
 
 // classifyJesOutput scans JES job output for ABEND (ABAxxx) and allocation/JCL
-// (IEFxxx) message identifiers, returning the matching sentinel — ErrAba, ErrIEF,
-// or ErrIEFAndABA when both kinds are present — together with the matched, trimmed
-// lines. It returns (nil, nil) when no such message is found. The sentinel is
+// (IEFxxx) message identifiers, returning the matched, trimmed lines together with
+// the matching sentinel — ErrAba, ErrIEF, or ErrIEFAndABA when both kinds are
+// present. It returns (nil, nil) when no such message is found. The sentinel is
 // returned (not wrapped) so callers can match it with errors.Is once it is
 // wrapped with %w at the call site.
-func classifyJesOutput(output string) (errType error, details []string) {
+func classifyJesOutput(output string) (details []string, errType error) {
 	lines := strings.Split(output, "\n")
 	/* analyze if job has abend errors */
 	for _, line := range lines {
@@ -202,7 +202,7 @@ func classifyJesOutput(output string) (errType error, details []string) {
 			}
 		}
 	}
-	return errType, details
+	return details, errType
 }
 
 // Generate a unique job name based on timestamp and random number
@@ -286,15 +286,21 @@ func WithJesPutGetTimeOut(seconds int) JesSpec {
 	})
 }
 
-// WithJesJobPattern changes the search pattern for job-id in the response message
-// default pattern is `(JOB\d{5})`
+// WithJesJobPattern changes the search pattern for the job-id in the response
+// message. The default pattern is `(JOB\d{5})`. The pattern must contain exactly
+// one capturing group — the job-id is read from submatch[1] — so a pattern with
+// none or more than one group is rejected with an error rather than silently
+// breaking job-id extraction.
 func WithJesJobPattern(pattern string) JesSpec {
 	return JesOptionFunc(func(s *FTPSession) error {
-		var err error
-		s.jobPrefix, err = regexp.Compile(pattern)
+		re, err := regexp.Compile(pattern)
 		if err != nil {
 			return err
 		}
+		if n := re.NumSubexp(); n != 1 {
+			return fmt.Errorf("zftp: jes job pattern %q must have exactly one capturing group, has %d", pattern, n)
+		}
+		s.jobPrefix = re
 		return nil
 	})
 }

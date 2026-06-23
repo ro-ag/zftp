@@ -9,26 +9,30 @@ import (
 	"gopkg.in/ro-ag/zftp.v2/hfs"
 )
 
-// detailFromLine builds an InfoJobDetail from a single JesInterfaceLevel=1 record
-// line (Name JobId Status Class) via the public parser.
-func detailFromLine(t *testing.T, line string) *hfs.InfoJobDetail {
-	t.Helper()
-	d, err := hfs.ParseInfoJobDetail([]string{line})
-	if err != nil {
-		t.Fatalf("ParseInfoJobDetail(%q): %v", line, err)
-	}
-	return d
-}
-
 // TestReturnCode_SentinelsMatchable verifies the hfs sentinels are
-// errors.Is-matchable straight from their producer (ReturnCode): an ACTIVE job
-// yields ErrActiveJob and a JCL-error class yields ErrJCLError. (ErrAbendedJob is
-// covered by the ABEND cases in the ReturnCode robustness tests.)
+// errors.Is-matchable straight from their producers: an ACTIVE job yields
+// ErrActiveJob (returned by ParseInfoJobDetail) and a "JCL error" class yields
+// ErrJCLError (returned by ReturnCode). ErrAbendedJob is covered by the ABEND
+// ReturnCode tests. Records use the JesInterfaceLevel=2 shape (the level that
+// carries Status/Class), detected from the JOBNAME column header.
 func TestReturnCode_SentinelsMatchable(t *testing.T) {
-	if _, err := detailFromLine(t, "MYJOB JOB00001 ACTIVE A").ReturnCode(); !errors.Is(err, hfs.ErrActiveJob) {
+	const header = "JOBNAME  JOBID    OWNER    STATUS CLASS"
+
+	if _, err := hfs.ParseInfoJobDetail([]string{
+		header,
+		"MYJOB    JOB00001 Z00000   ACTIVE A",
+	}); !errors.Is(err, hfs.ErrActiveJob) {
 		t.Errorf("ACTIVE job: err = %v, want ErrActiveJob", err)
 	}
-	if _, err := detailFromLine(t, "MYJOB JOB00002 OUTPUT JCL error").ReturnCode(); !errors.Is(err, hfs.ErrJCLError) {
+
+	jd, err := hfs.ParseInfoJobDetail([]string{
+		header,
+		"MYJOB    JOB00002 Z00000   OUTPUT JCL error",
+	})
+	if err != nil {
+		t.Fatalf("ParseInfoJobDetail: %v", err)
+	}
+	if _, err := jd.ReturnCode(); !errors.Is(err, hfs.ErrJCLError) {
 		t.Errorf("JCL-error class: err = %v, want ErrJCLError", err)
 	}
 }
