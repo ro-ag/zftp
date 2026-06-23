@@ -128,17 +128,13 @@ func TestSession_ConcurrentRetrieveAndClose_NoPanic(t *testing.T) {
 
 	runWithTimeout(t, 10*time.Second, func() {
 		var wg sync.WaitGroup
-		wg.Add(1)
-		go func() {
-			defer wg.Done()
+		wg.Go(func() {
 			var buf bytes.Buffer
 			_, _, _ = s.RetrieveIO("BIG.BIN", &buf, zftp.TypeBinary)
-		}()
-		wg.Add(1)
-		go func() {
-			defer wg.Done()
+		})
+		wg.Go(func() {
 			_ = s.Close()
-		}()
+		})
 		wg.Wait()
 	})
 }

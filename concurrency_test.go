@@ -4,6 +4,7 @@ package zftp_test
 
 import (
 	"context"
+	"strings"
 	"sync"
 	"testing"
 	"time"
@@ -42,42 +43,34 @@ func TestSession_ConcurrentCommandsAndClose_RaceFree(t *testing.T) {
 		var wg sync.WaitGroup
 
 		// Concurrent control round-trips: each reads the shared control reader.
-		for i := 0; i < 8; i++ {
-			wg.Add(1)
-			go func() {
-				defer wg.Done()
+		for range 8 {
+			wg.Go(func() {
 				_, _ = s.SendCommand(zftp.CodeCmdOK, "NOOP")
-			}()
+			})
 		}
 
 		// Concurrent passive-mode negotiations (PASV round-trip + parse).
-		for i := 0; i < 4; i++ {
-			wg.Add(1)
-			go func() {
-				defer wg.Done()
+		for range 4 {
+			wg.Go(func() {
 				_, _ = s.SetPassiveMode()
-			}()
+			})
 		}
 
 		// Concurrent transfer-type writes (exercise the currType field).
-		for i := 0; i < 4; i++ {
+		for i := range 4 {
 			typ := zftp.TypeAscii
 			if i%2 == 1 {
 				typ = zftp.TypeBinary
 			}
-			wg.Add(1)
-			go func() {
-				defer wg.Done()
+			wg.Go(func() {
 				_ = s.SetType(typ)
-			}()
+			})
 		}
 
 		// A concurrent Close must not race the in-flight commands.
-		wg.Add(1)
-		go func() {
-			defer wg.Done()
+		wg.Go(func() {
 			_ = s.Close()
-		}()
+		})
 
 		wg.Wait()
 	})
@@ -181,24 +174,20 @@ func TestList_ControlDropClosesSession(t *testing.T) {
 func TestSession_ConcurrentListAndClose_NoPanic(t *testing.T) {
 	s, srv := dialMock(t)
 	// A sizable listing so the data scan is still draining when Close lands.
-	var listing string
-	for i := 0; i < 500; i++ {
-		listing += "FA00FF 3390   2023/06/02  1  360  VB    8004 27998  PS  'ABCD.EF.SEQ'\r\n"
+	var listing strings.Builder
+	for range 500 {
+		listing.WriteString("FA00FF 3390   2023/06/02  1  360  VB    8004 27998  PS  'ABCD.EF.SEQ'\r\n")
 	}
-	srv.DataFor("LIST", "", listing)
+	srv.DataFor("LIST", "", listing.String())
 
 	runWithTimeout(t, 10*time.Second, func() {
 		var wg sync.WaitGroup
-		wg.Add(1)
-		go func() {
-			defer wg.Done()
+		wg.Go(func() {
 			_, _ = s.List("ABCD.EF.*")
-		}()
-		wg.Add(1)
-		go func() {
-			defer wg.Done()
+		})
+		wg.Go(func() {
 			_ = s.Close()
-		}()
+		})
 		wg.Wait()
 	})
 }

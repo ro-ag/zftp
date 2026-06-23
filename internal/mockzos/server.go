@@ -95,11 +95,9 @@ func (s *Server) serve() {
 		if err != nil {
 			return // listener closed
 		}
-		s.wg.Add(1)
-		go func() {
-			defer s.wg.Done()
+		s.wg.Go(func() {
 			s.handle(conn)
-		}()
+		})
 	}
 }
 
@@ -303,8 +301,8 @@ func (s *Server) acceptData(sess *session) net.Conn {
 // splitCommand splits a request line into an uppercased verb and its argument.
 func splitCommand(line string) (verb, arg string) {
 	line = strings.TrimSpace(line)
-	if i := strings.IndexByte(line, ' '); i >= 0 {
-		return strings.ToUpper(line[:i]), strings.TrimSpace(line[i+1:])
+	if before, after, ok := strings.Cut(line, " "); ok {
+		return strings.ToUpper(before), strings.TrimSpace(after)
 	}
 	return strings.ToUpper(line), ""
 }

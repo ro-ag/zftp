@@ -33,8 +33,7 @@ func TestFTPSession_StatusOf(t *testing.T) {
 	tp := reflect.TypeOf(s.StatusOf())
 	vl := reflect.ValueOf(s.StatusOf())
 
-	for i := 0; i < tp.NumMethod(); i++ {
-		method := tp.Method(i)
+	for method := range tp.Methods() {
 		t.Run(method.Name, func(t *testing.T) {
 			fmt.Printf("Calling %s\n", method.Name)
 			function := vl.MethodByName(method.Name)
