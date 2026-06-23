@@ -31,6 +31,34 @@ func TestServerStatus_BlockSize(t *testing.T) {
 	}
 }
 
+func TestServerStatus_Lrecl(t *testing.T) {
+	s, srv := dialMock(t)
+	// Distinct Lrecl (80) and Blocksize (27920) so a getter that returns the
+	// wrong capture group of the shared recFmt regex is visible. A real z/OS
+	// XSTA status reply is multiline (211-... continuation, 211 terminator).
+	const recLine = "211-Record format FB, Lrecl: 80, Blocksize: 27920"
+	srv.Script("XSTA (Lrecl", recLine, "211 *** end of status ***")
+	srv.Script("XSTA (BLOCKSIze", recLine, "211 *** end of status ***")
+
+	lrecl, err := s.StatusOf().Lrecl()
+	if err != nil {
+		t.Fatalf("Lrecl: %v", err)
+	}
+	if lrecl != 80 {
+		t.Errorf("Lrecl = %d, want 80 (returning the Blocksize is the bug)", lrecl)
+	}
+
+	// Guard against a "fix" that merely swaps the two capture groups: BlockSize
+	// must still report the Blocksize from the same reply shape.
+	bs, err := s.StatusOf().BlockSize()
+	if err != nil {
+		t.Fatalf("BlockSize: %v", err)
+	}
+	if bs != 27920 {
+		t.Errorf("BlockSize = %d, want 27920", bs)
+	}
+}
+
 func TestServerStatus_FileType(t *testing.T) {
 	s, srv := dialMock(t)
 	srv.Script("XSTA (FileType",
