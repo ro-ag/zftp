@@ -336,7 +336,8 @@ func (s *ServerStatus) Lrecl() (int, error) {
 	if len(m) < 4 {
 		return 0, fmt.Errorf("could not parse Lrecl: %s", resp)
 	}
-	return strconv.Atoi(m[3])
+	// recFmt groups: m[1]=Recfm, m[2]=Lrecl, m[3]=Blocksize.
+	return strconv.Atoi(m[2])
 }
 
 func (s *ServerStatus) MBDataConn() (string, error) {
