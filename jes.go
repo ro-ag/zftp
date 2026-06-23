@@ -17,7 +17,9 @@ import (
 
 // JesJob represents a JES job on the FTP server
 type JesJob struct {
-	ID  string
+	// ID is the JES job id (e.g. JOB12345) parsed from the submit reply.
+	ID string
+	// DSN is the internal-reader dataset name the JCL was written to.
 	DSN string
 }
 
@@ -71,11 +73,17 @@ func (s *FTPSession) SubmitJCLFile(jclFile string, options ...JesSpec) (*JesJob,
 	return s.SubmitIO(jcl, options...)
 }
 
+// JobResult is the outcome of a JES submit-and-fetch (SubmitJesGetByDSN): the
+// submitted job plus its retrieved spool output, display name, and return code.
 type JobResult struct {
 	JesJob
-	Spool       []string
+	// Spool holds the job's spool files, one entry per spool dataset.
+	Spool []string
+	// DisplayName is the job name as reported in the spool output.
 	DisplayName string
-	ReturnCode  int
+	// ReturnCode is the job's numeric return code, or -1 when the job did not end
+	// with a parseable RC (e.g. an abend or a JCL/allocation error).
+	ReturnCode int
 }
 
 var (
@@ -260,28 +268,28 @@ func (s *FTPSession) GetJobStatus(jobID string) (*hfs.InfoJobDetail, error) {
 
 // WithJesEntryLimit sets the maximum number of entries to retrieve from JES
 func WithJesEntryLimit(limit int) JesSpec {
-	return JesOptionFunc(func(s *FTPSession) error {
+	return jesOptionFunc(func(s *FTPSession) error {
 		return s.SetStatusOf().JesEntryLimit(limit)
 	})
 }
 
 // WithJesGetByDSN sets the JESGETBYDSN parameter to true or false
 func WithJesGetByDSN(option bool) JesSpec {
-	return JesOptionFunc(func(s *FTPSession) error {
+	return jesOptionFunc(func(s *FTPSession) error {
 		return s.SetStatusOf().JesGetByDSN(option)
 	})
 }
 
 // WithJesLrecl sets the LRECL parameter for JES
 func WithJesLrecl(len int) JesSpec {
-	return JesOptionFunc(func(s *FTPSession) error {
+	return jesOptionFunc(func(s *FTPSession) error {
 		return s.SetStatusOf().JesLrecl(len)
 	})
 }
 
 // WithJesPutGetTimeOut sets the timeout for JES PUT and GET commands
 func WithJesPutGetTimeOut(seconds int) JesSpec {
-	return JesOptionFunc(func(s *FTPSession) error {
+	return jesOptionFunc(func(s *FTPSession) error {
 		return s.SetStatusOf().JesPutGetTimeOut(seconds)
 	})
 }
@@ -292,7 +300,7 @@ func WithJesPutGetTimeOut(seconds int) JesSpec {
 // none or more than one group is rejected with an error rather than silently
 // breaking job-id extraction.
 func WithJesJobPattern(pattern string) JesSpec {
-	return JesOptionFunc(func(s *FTPSession) error {
+	return jesOptionFunc(func(s *FTPSession) error {
 		re, err := regexp.Compile(pattern)
 		if err != nil {
 			return err
@@ -305,12 +313,17 @@ func WithJesJobPattern(pattern string) JesSpec {
 	})
 }
 
+// JesSpec is a JES submission option applied to a session before a job is
+// submitted. Construct one with the With… helpers (e.g. WithJesEntryLimit,
+// WithJesGetByDSN).
 type JesSpec interface {
 	Apply(*FTPSession) error
 }
 
-type JesOptionFunc func(*FTPSession) error
+// jesOptionFunc adapts a plain function to the JesSpec interface. Callers use the
+// With… constructors rather than this type directly.
+type jesOptionFunc func(*FTPSession) error
 
-func (f JesOptionFunc) Apply(s *FTPSession) error {
+func (f jesOptionFunc) Apply(s *FTPSession) error {
 	return f(s)
 }

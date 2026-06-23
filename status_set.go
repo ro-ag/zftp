@@ -36,6 +36,8 @@ func (s *StatusSetter) FileType(Type string) error {
 	return err
 }
 
+// JesEntryLimit sets the maximum number of JES entries a query may return (SITE
+// JESENTRYLIMIT). The valid range is 0 to 1024.
 func (s *StatusSetter) JesEntryLimit(limit int) error {
 	if limit < 0 || limit > 1024 {
 		return fmt.Errorf("JesEntryLimit must be between 0 and 1024")
@@ -45,6 +47,8 @@ func (s *StatusSetter) JesEntryLimit(limit int) error {
 	return err
 }
 
+// JesGetByDSN enables or disables retrieving a job's output by DSN (SITE
+// JESGETBYDSN / NOJESGETBYDSN).
 func (s *StatusSetter) JesGetByDSN(option bool) error {
 	cmd := "NOJESGETBYDSN"
 	if option {
@@ -55,6 +59,8 @@ func (s *StatusSetter) JesGetByDSN(option bool) error {
 	return err
 }
 
+// JesJobName sets the job-name filter applied to JES queries (SITE JESJOBNAME);
+// "*" matches every job name.
 func (s *StatusSetter) JesJobName(expression string) error {
 	_, err := s.site(fmt.Sprintf("JESJOBNAME=%s", expression))
 	return err
@@ -94,11 +100,16 @@ func (s *StatusSetter) JesPutGetTimeOut(seconds int) error {
 	return err
 }
 
+// JesOwner sets the owner filter applied to JES queries (SITE JESOWNER); "*"
+// matches every owner.
 func (s *StatusSetter) JesOwner(expression string) error {
 	_, err := s.site(fmt.Sprintf("JESOWNER=%s", expression))
 	return err
 }
 
+// JesStatus sets the job-status filter applied to JES queries (SITE JESSTATUS).
+// Valid values are ALL, ACTIVE, OUTPUT, INPUT, EXECUTION, JOBLOG, JOBMSG, and
+// JOBSTATUS.
 func (s *StatusSetter) JesStatus(expression string) error {
 	switch expression {
 	case "ALL", "ACTIVE", "OUTPUT", "INPUT", "EXECUTION", "JOBLOG", "JOBMSG", "JOBSTATUS":
@@ -110,16 +121,22 @@ func (s *StatusSetter) JesStatus(expression string) error {
 	return err
 }
 
+// ListLevel sets the LISTLEVEL that controls the column layout of dataset
+// listings (SITE LISTLEVEL).
 func (s *StatusSetter) ListLevel(level int) error {
 	_, err := s.site(fmt.Sprintf("LISTLEVEL=%d", level))
 	return err
 }
 
+// SBSendEol sets the end-of-line sequence appended to outbound single-byte data
+// (SITE SBSENDEOL).
 func (s *StatusSetter) SBSendEol(eol eol.LineBreaker) error {
 	_, err := s.site(fmt.Sprintf("SBSENDEOL=%s", eol.String()))
 	return err
 }
 
+// MBSendEol sets the end-of-line sequence appended to outbound multibyte data
+// (SITE MBSENDEOL).
 func (s *StatusSetter) MBSendEol(eol eol.LineBreaker) error {
 	_, err := s.site(fmt.Sprintf("MBSENDEOL=%s", eol.String()))
 	return err
