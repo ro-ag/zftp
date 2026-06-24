@@ -24,7 +24,7 @@ type InfoPdsMember struct {
 }
 
 // String returns a row of text representing the Partitioned Dataset member
-func (m *InfoPdsMember) String() string {
+func (m InfoPdsMember) String() string {
 	str := strings.Builder{}
 	str.WriteString(fmt.Sprintf("Name: %s, ", m.Name.String()))
 	str.WriteString(fmt.Sprintf("VV.MM: %s, ", m.VvMm.String()))
@@ -37,6 +37,8 @@ func (m *InfoPdsMember) String() string {
 	return str.String()
 }
 
+// ToStringSlice returns the member's columns as a slice of strings, in the same
+// order as Headers (Name, VV.MM, Created, Changed, Size, Init, Mod, Id).
 func (m *InfoPdsMember) ToStringSlice() []string {
 	return []string{
 		m.Name.String(),

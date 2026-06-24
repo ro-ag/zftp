@@ -42,16 +42,25 @@ var (
 // records Class is empty and SpoolFiles is N; for JesInterfaceLevel=2 records,
 // which carry a real class, SpoolFiles is 0.
 type InfoJob struct {
-	Name       FieldString `json:"Name"`
-	JobId      FieldString `json:"JobId"`
-	Owner      FieldString `json:"Owner"`
-	Status     FieldString `json:"Status"`
-	Class      FieldString `json:"Class"`
-	SpoolFiles int         `json:"SpoolFiles,omitempty"`
+	// Name is the job name (the JOBNAME column).
+	Name FieldString `json:"Name"`
+	// JobId is the JES job identifier (e.g. "JOB12345").
+	JobId FieldString `json:"JobId"`
+	// Owner is the user ID that owns the job. It is empty for
+	// JesInterfaceLevel=1 listings, which omit the owner column.
+	Owner FieldString `json:"Owner"`
+	// Status is the job status (e.g. "ACTIVE", "OUTPUT").
+	Status FieldString `json:"Status"`
+	// Class is the job class for JesInterfaceLevel=2 listings; it is empty for
+	// JesInterfaceLevel=1 listings, which report a spool-file count instead.
+	Class FieldString `json:"Class"`
+	// SpoolFiles is the spool-file count from a JesInterfaceLevel=1 listing; it
+	// is 0 for JesInterfaceLevel=2 listings.
+	SpoolFiles int `json:"SpoolFiles,omitempty"`
 }
 
 // String returns a row of text representing the job.
-func (j *InfoJob) String() string {
+func (j InfoJob) String() string {
 	str := strings.Builder{}
 	str.WriteString(fmt.Sprintf("Name: %s, ", j.Name.String()))
 	str.WriteString(fmt.Sprintf("JobId: %s, ", j.JobId.String()))
@@ -159,7 +168,7 @@ func parseLineJob(line string, level int) (j InfoJob, err error) {
 // InfoJobDetail contains the job record and the job details.
 type InfoJobDetail struct {
 	job    InfoJob
-	detail []jobDetail
+	detail []JobDetail
 }
 
 // Job returns the job record.
@@ -168,7 +177,7 @@ func (j InfoJobDetail) Job() InfoJob {
 }
 
 // Detail returns the job details.
-func (j InfoJobDetail) Detail() []jobDetail {
+func (j InfoJobDetail) Detail() []JobDetail {
 	return j.detail
 }
 
@@ -210,18 +219,27 @@ func (j InfoJobDetail) ReturnCode() (rc int, err error) {
 	return rc, err
 }
 
-// InfoJobDetail returns the job details, contains the STEPS
-type jobDetail struct {
-	Id        FieldInt    `json:"Id"`
-	StepName  FieldString `json:"StepName"`
-	ProcSpec  FieldString `json:"ProcSpec"`
-	C         FieldString `json:"C"`
-	DDName    FieldString `json:"DDName"`
-	ByteCount FieldInt    `json:"ByteCount"`
+// JobDetail represents one step's spool detail within a job (the columns of a
+// JesInterfaceLevel=2 job listing): step id, step name, procedure step, class,
+// DD name, and byte count.
+type JobDetail struct {
+	// Id is the spool dataset's sequence number within the job (the ID column).
+	Id FieldInt `json:"Id"`
+	// StepName is the job step name (the STEPNAME column).
+	StepName FieldString `json:"StepName"`
+	// ProcSpec is the procedure step name (the PROCSTEP column).
+	ProcSpec FieldString `json:"ProcSpec"`
+	// C is the SYSOUT class of the spool dataset (the single-character C column).
+	C FieldString `json:"C"`
+	// DDName is the DD name of the spool dataset (the DDNAME column).
+	DDName FieldString `json:"DDName"`
+	// ByteCount is the size of the spool dataset, in bytes (the BYTE-COUNT
+	// column).
+	ByteCount FieldInt `json:"ByteCount"`
 }
 
 // String returns a row of text representing the job detail.
-func (j jobDetail) String() string {
+func (j JobDetail) String() string {
 	str := strings.Builder{}
 	str.WriteString(fmt.Sprintf("Id: %d, ", j.Id.Value()))
 	str.WriteString(fmt.Sprintf("StepName: %s, ", j.StepName.String()))
@@ -294,7 +312,7 @@ func ParseInfoJobDetail(records []string) (*InfoJobDetail, error) {
 	}
 	i++
 
-	dt := make([]jobDetail, 0)
+	dt := make([]JobDetail, 0)
 	for ; i < len(records); i++ {
 		if strings.TrimSpace(records[i]) == "" {
 			continue
@@ -320,8 +338,8 @@ func ParseInfoJobDetail(records []string) (*InfoJobDetail, error) {
 	return jd, nil
 }
 
-func parseJobDetailLine(line string) (jobDetail, error) {
-	s := jobDetail{}
+func parseJobDetailLine(line string) (JobDetail, error) {
+	s := JobDetail{}
 	fields := whitespaceRegex.Split(strings.TrimSpace(line), 6)
 	if len(fields) != 6 {
 		return s, fmt.Errorf("invalid record: '%s'", line)
