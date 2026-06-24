@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"gopkg.in/ro-ag/zftp.v2/internal/log"
 	"gopkg.in/ro-ag/zftp.v2/internal/utils"
+	"net"
 	"strings"
 	"time"
 )
@@ -98,14 +99,27 @@ func parseCommand(lg *log.Logger, cmd string, a ...string) []byte {
 		lg.Commandf("%s", command)
 	}
 
-	fullCommand := fmt.Appendf(nil, "%s %s\r\n", command, args)
+	var fullCommand []byte
+	if args == "" {
+		// No arguments: emit "verb\r\n" with no trailing space (e.g. "NOOP\r\n").
+		fullCommand = fmt.Appendf(nil, "%s\r\n", command)
+	} else {
+		fullCommand = fmt.Appendf(nil, "%s %s\r\n", command, args)
+	}
 
 	return fullCommand
 }
 
-// SendCommand sends a command to the FTP server and expects a specific return code. It uses a default context.
+// SendCommand sends a command to the FTP server and expects a specific return
+// code. The whole round-trip is bounded by the session's reply timeout (see
+// WithReplyTimeout, default 120s) so a server that accepts a command but never
+// replies cannot hang the caller forever; on expiry the control stream is
+// considered unrecoverable and the session is closed. Use SendCommandWithContext
+// to supply a different deadline or cancellation.
 func (s *FTPSession) SendCommand(expect ReturnCode, command string, a ...string) (string, error) {
-	return s.SendCommandWithContext(context.Background(), expect, command, a...)
+	ctx, cancel := context.WithTimeout(context.Background(), s.dialCfg.replyTimeout())
+	defer cancel()
+	return s.SendCommandWithContext(ctx, expect, command, a...)
 }
 
 // CheckLast reads the server message buffer and validate the return code.
@@ -127,7 +141,9 @@ func (s *FTPSession) checkLast(expect ReturnCode, alsoAccept ...ReturnCode) (str
 
 	if s.isClosed.Load() {
 		s.log.Warningf("<%s> session %s is closed", utils.Caller(), s.conn.RemoteAddr().String())
-		return "", nil
+		// Never report a completion on a closed session: confirmData would otherwise
+		// treat a transfer whose terminal reply was never read as successful.
+		return "", net.ErrClosed
 	}
 
 	// Bound the reply read: z/OS sends the terminal 226/250 asynchronously to the
@@ -158,6 +174,13 @@ func (s *FTPSession) checkLast(expect ReturnCode, alsoAccept ...ReturnCode) (str
 				}
 			}
 			s.log.Serverf("[res|error] %s", err)
+			// A post-transfer reply whose code is not a completion code (e.g. 426
+			// "transfer aborted", which z/OS may follow with a second reply such as
+			// 226 acknowledging an ABOR) means the transfer did not end cleanly. Such
+			// replies can be multi-part, and FTP has no in-band way to resynchronize a
+			// partially-drained control stream, so close the session rather than leave
+			// a trailing reply buffered to desync ("shift") the next command.
+			s.closeLocked()
 			return "", err
 		}
 		s.log.Serverf("[res|error] %s", err)

@@ -62,8 +62,10 @@ func newJobsCmd(d deps, g *globalFlags) *cobra.Command {
 // newJobCmd returns the job subcommand that shows a job's status/detail and
 // hosts the job purge subcommand.
 //
-// Fix 1: InfoJob has no .String() on the struct value — call fields explicitly.
-// Fix 2: emit jd.Job() (InfoJob, exported fields) not jd (*InfoJobDetail, unexported).
+// It emits jd.Job() (InfoJob, exported json-tagged fields) rather than jd
+// (*InfoJobDetail, unexported fields) so --json yields a real object. InfoJob and
+// its FieldString fields marshal/stringify by value, so the value passed to emit
+// renders correctly without taking its address.
 func newJobCmd(d deps, g *globalFlags) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "job <id>",
@@ -77,9 +79,8 @@ func newJobCmd(d deps, g *globalFlags) *cobra.Command {
 				}
 				job := jd.Job()
 				// Emit job (InfoJob, exported json-tagged fields) for JSON so the
-				// output is a real object rather than {}. For the human render,
-				// print the fields explicitly — InfoJob.String() exists only as a
-				// pointer receiver (*InfoJob) and is not called on the value here.
+				// output is a real object. The human render prints the fields
+				// explicitly for column control.
 				return emit(d, g.jsonOut, job, func(w io.Writer) {
 					fmt.Fprintf(w, "%s\t%s\t%s\t%s\t%s\n",
 						job.Name.String(), job.JobId.String(),

@@ -11,10 +11,17 @@ var (
 	// ErrIEF indicates the job output contained one or more IEFxxx allocation or
 	// JCL messages (see iefMessages).
 	ErrIEF = errors.New("IEF error")
-	// ErrAba indicates the job output contained one or more ABAxxx abend messages
-	// (see abaMessages).
+	// ErrAba indicates the job output contained one or more ABAxxx messages.
+	// Despite the historical "ABA error" text, ABAxxx identifiers are DFSMShsm
+	// Aggregate Backup And Recovery Support (ABARS) messages (see abaMessages,
+	// e.g. ABA001I "AGGREGATE BACKUP ASSIST ... STARTING") — NOT task abends. The
+	// name reflects the ABAxxx message prefix it matches, not an abend condition.
+	// (Job abends surface either as IEFxxx messages — e.g. IEF450I "ABEND Scde",
+	// IEF402I "SYSTEM ABEND Scde" — which are reported via ErrIEF, or in the
+	// $HASP395 completion line handled by the GetJobStatus return-code path.)
 	ErrAba = errors.New("ABA error")
-	// ErrIEFAndABA indicates the job output contained both IEF and ABA messages.
+	// ErrIEFAndABA indicates the job output contained both IEFxxx and ABAxxx
+	// messages.
 	ErrIEFAndABA = errors.New("IEF/ABA error")
 )
 

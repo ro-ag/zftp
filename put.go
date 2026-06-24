@@ -56,7 +56,7 @@ func (s *FTPSession) Put(srcLocal string, destRemote string, mode TransferType, 
 
 	s.log.Debugf("starting transfer to: %s", destRemote)
 
-	bytesTransferred, _, err := s.StoreIO(destRemote, file, mode)
+	bytesTransferred, err := s.StoreIO(destRemote, file, mode)
 	if err != nil {
 		return fmt.Errorf("failed to store file: %w", err)
 	}
@@ -116,7 +116,7 @@ func (s *FTPSession) PutAt(srcLocal string, destRemote string, mode TransferType
 
 	s.log.Debugf("starting transfer to: %s at offset %d", destRemote, offset)
 
-	bytesTransferred, _, err := s.StoreIOAt(destRemote, file, mode, offset)
+	bytesTransferred, err := s.StoreIOAt(destRemote, file, mode, offset)
 	if err != nil {
 		return fmt.Errorf("failed to store file: %w", err)
 	}
@@ -131,47 +131,47 @@ type DataSpec interface {
 	Apply() (string, error)
 }
 
-// Recfm is a z/OS record format (RECFM) usable as a DataSpec via the WithRecfm…
-// constants; its Apply renders the SITE RECFM= subcommand.
+// Recfm is a z/OS record format (RECFM) usable as a DataSpec via the Recfm…
+// constants (e.g. RecfmFB); its Apply renders the SITE RECFM= subcommand.
 type Recfm string
 
 const (
-	WithRecfmF   Recfm = "F"   // Fixed record length
-	WithRecfmFB  Recfm = "FB"  // Fixed length records, Blocked
-	WithRecfmFBA Recfm = "FBA" // Fixed length records, Blocked, ASA control characters
-	WithRecfmFBM Recfm = "FBM" // Fixed length records, Blocked, Machine control characters
-	WithRecfmV   Recfm = "V"   // Variable record length
-	WithRecfmVB  Recfm = "VB"  // Variable length records, Blocked
-	WithRecfmVBA Recfm = "VBA" // Variable length records, Blocked, ASA control characters
-	WithRecfmVBM Recfm = "VBM" // Variable length records, Blocked, Machine control characters
-	WithRecfmU   Recfm = "U"   // Undefined record format
-	WithRecfmVS  Recfm = "VS"  // Variable record length, Spanned
-	WithRecfmVBS Recfm = "VBS" // Variable length records, Blocked, Spanned
+	RecfmF   Recfm = "F"   // Fixed record length
+	RecfmFB  Recfm = "FB"  // Fixed length records, Blocked
+	RecfmFBA Recfm = "FBA" // Fixed length records, Blocked, ASA control characters
+	RecfmFBM Recfm = "FBM" // Fixed length records, Blocked, Machine control characters
+	RecfmV   Recfm = "V"   // Variable record length
+	RecfmVB  Recfm = "VB"  // Variable length records, Blocked
+	RecfmVBA Recfm = "VBA" // Variable length records, Blocked, ASA control characters
+	RecfmVBM Recfm = "VBM" // Variable length records, Blocked, Machine control characters
+	RecfmU   Recfm = "U"   // Undefined record format
+	RecfmVS  Recfm = "VS"  // Variable record length, Spanned
+	RecfmVBS Recfm = "VBS" // Variable length records, Blocked, Spanned
 )
 
 func isValidRECFM(recfm Recfm) (string, bool) {
 	switch recfm {
-	case WithRecfmF:
+	case RecfmF:
 		return "Fixed record length", true
-	case WithRecfmFB:
+	case RecfmFB:
 		return "Fixed length records, Blocked", true
-	case WithRecfmFBA:
+	case RecfmFBA:
 		return "Fixed length records, Blocked, ASA control characters", true
-	case WithRecfmFBM:
+	case RecfmFBM:
 		return "Fixed length records, Blocked, Machine control characters", true
-	case WithRecfmV:
+	case RecfmV:
 		return "Variable record length", true
-	case WithRecfmVB:
+	case RecfmVB:
 		return "Variable length records, Blocked", true
-	case WithRecfmVBA:
+	case RecfmVBA:
 		return "Variable length records, Blocked, ASA control characters", true
-	case WithRecfmVBM:
+	case RecfmVBM:
 		return "Variable length records, Blocked, Machine control characters", true
-	case WithRecfmU:
+	case RecfmU:
 		return "Undefined record format", true
-	case WithRecfmVS:
+	case RecfmVS:
 		return "Variable record length, Spanned", true
-	case WithRecfmVBS:
+	case RecfmVBS:
 		return "Variable length records, Blocked, Spanned", true
 	default:
 		return "", false
@@ -221,7 +221,7 @@ func WithBlkSize(size uint16) DataSpec {
 // Valid attributes are:
 //   - WithLrecl(length uint16) - record length
 //   - WithBlkSize(size uint16) - block size
-//   - Recfm(recfm Recfm)   - record format
+//   - a Recfm constant (e.g. RecfmFB) - record format
 //
 // this function sends a SITE command to the server to set the attributes.
 func (s *FTPSession) SetDataSpecs(attributes ...DataSpec) error {

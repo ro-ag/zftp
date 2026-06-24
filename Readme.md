@@ -132,9 +132,9 @@ A compile-checked version of this snippet lives in
 - `(*FTPSession) Login(user, pass string) error`
 - `(*FTPSession) Get(remote, local string, mode TransferType) error` /
   `Put(local, remote string, mode TransferType, a ...DataSpec) error`
-- `(*FTPSession) RetrieveIO(remote string, w io.Writer, mode TransferType)` /
-  `StoreIO(remote string, r io.Reader, mode TransferType)` — stream without
-  touching the local filesystem.
+- `(*FTPSession) RetrieveIO(remote string, w io.Writer, mode TransferType) (int64, error)` /
+  `StoreIO(remote string, r io.Reader, mode TransferType) (int64, error)` — stream
+  without touching the local filesystem.
 - `(*FTPSession) ListDatasets(pattern string) ([]hfs.InfoDataset, error)`
 - `(*FTPSession) ListPds(pattern string) ([]hfs.InfoPdsMember, error)`
 - `(*FTPSession) ListSpool(pattern string) ([]hfs.InfoJob, error)`

@@ -96,7 +96,7 @@ func dialControl(server string, cfg dialOptions) (net.Conn, error) {
 // newSession wraps an established control connection in an FTPSession. It is the
 // unexported construction seam shared by Open and by in-process tests.
 func newSession(conn net.Conn, cfg dialOptions) *FTPSession {
-	return &FTPSession{
+	s := &FTPSession{
 		conn:      conn,
 		rawConn:   conn,
 		reader:    bufio.NewReader(conn),
@@ -104,10 +104,19 @@ func newSession(conn net.Conn, cfg dialOptions) *FTPSession {
 		jobPrefix: regexp.MustCompile(`(JOB\d{5})`),
 		log:       log.New(cfg.logger, log.None),
 	}
+	// The server's representation type at connect is ASCII (RFC 959 §3.1.1.3).
+	// Seed currType so a transfer that restores the prior type before any explicit
+	// SetType (e.g. on a session used before Login) never emits "TYPE \x00".
+	s.currType.Store(uint32(TypeAscii))
+	return s
 }
 
-// installSignalHandler tears the session down on SIGINT/SIGTERM and exits.
-// Only installed when WithSignalHandler is set.
+// installSignalHandler tears the session down on SIGINT/SIGTERM and exits the
+// process. It is installed only when WithSignalHandler is set (opt-in, intended
+// for the CLI). The signal registration and its goroutine live for the process
+// lifetime — there is no signal.Stop — so it is meant for a single, long-lived
+// session: opening many sessions with WithSignalHandler leaks one goroutine each,
+// and because the first signal calls os.Exit, only one handler ever runs.
 func (s *FTPSession) installSignalHandler() {
 	c := make(chan os.Signal, 1)
 	signal.Notify(c, os.Interrupt, syscall.SIGTERM)
@@ -262,8 +271,6 @@ func (s *FTPSession) Login(user, pass string) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
-	s.user = strings.ToUpper(user)
-
 	// The whole login handshake runs under s.mu, so every step uses the locked
 	// helpers (sendLocked / setTypeLocked / setStatusOfLocked) to avoid the
 	// re-entrant deadlock a sync.Mutex would otherwise cause.
@@ -276,6 +283,9 @@ func (s *FTPSession) Login(user, pass string) error {
 	if err != nil {
 		return err
 	}
+	// Record the user only after PASS succeeds, so a failed login leaves no stale
+	// username readable via User.
+	s.user = strings.ToUpper(user)
 	// set passive mode
 	_, err = s.sendLocked(context.Background(), CodeEnteringPassiveMode, "PASV")
 	if err != nil {
@@ -315,8 +325,8 @@ func (s *FTPSession) Login(user, pass string) error {
 	return nil
 }
 
-// GetUser returns the current username
-func (s *FTPSession) GetUser() string {
+// User returns the current username
+func (s *FTPSession) User() string {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	return s.user

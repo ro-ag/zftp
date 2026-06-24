@@ -71,12 +71,13 @@ func WithKeepAlive(d time.Duration) Option {
 	return func(o *dialOptions) { o.KeepAlivePeriod = d }
 }
 
-// WithReplyTimeout bounds how long the client waits for the terminal reply (the
-// 226/250 that follows a data transfer). z/OS sends that reply asynchronously to
-// the data-connection close, and it can be lost — for example a NAT dropping an
-// idle control link during a long transfer — so bounding the read keeps a lost
-// reply from hanging the caller. Defaults to 120s; a non-positive duration
-// restores the default.
+// WithReplyTimeout bounds how long the client waits for a control-connection
+// reply. It applies both to the terminal reply that follows a data transfer (the
+// 226/250, which z/OS sends asynchronously to the data-connection close and which
+// can be lost — e.g. a NAT dropping an idle control link during a long transfer)
+// and to every command issued through SendCommand, so a server that accepts a
+// command but never replies cannot hang the caller. Defaults to 120s; a
+// non-positive duration restores the default.
 func WithReplyTimeout(d time.Duration) Option {
 	return func(o *dialOptions) { o.ReplyTimeout = d }
 }
