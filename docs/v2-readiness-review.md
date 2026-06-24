@@ -25,10 +25,10 @@ All work TDD (RED→GREEN), full gate green under `-race` (gofmt/build/vet/stati
 | M3 TLS data handshake | **Fixed** — `tlsHandshakeBounded` with deadline. |
 | M4 EOF-as-success | **Fixed** — `check` returns `io.ErrUnexpectedEOF` on EOF-before-terminator. |
 | M5 `checkLast` nil-on-closed | **Fixed** — returns `net.ErrClosed`. |
-| M6 JES abend | **Partial** — wrong docs corrected (verified ABAxxx=ABARS, not abend); spool-scan abend **matcher PARKED** pending a real-LPAR `$HASP395 ABEND=` capture (no-fabricate rule). |
+| M6 JES abend | **Done** — built from real captures: real data showed abends land on `IEF450I … ABEND=Scde` (not `$HASP395`). `abendCodeRegex` matches real `Scde`/`Ucde`; `InfoJobDetail.AbendCode()` exposes the code; `ReturnCode()`→`(-1,ErrAbendedJob)`; `ErrAbend` sentinel + `classifyJesOutput` precedence; fixture corrected `ABEND=806`→`ABEND=S806`. |
 | M7 passive-abort desync | **Fixed** — `checkLast` closes the session on a non-completion (426) post-transfer reply. |
 | Minors | **Fixed**: doc-coverage gate extended to hfs/eol + ~48 idents documented; dead `utils` code + `StandardizeQuote` deleted; `parseCommand` trailing space; Login user hygiene; `TransferType(0).Name`→"UNKNOWN"; `eol.Cr` `// Deprecated:`; signal-handler + SITE-clobber documented. |
-| API-shape (deferred to user) | `(sz,msg,err)` triple on `*IO`; `ServerStatus` `Snapshot()`; `WithRecfmFB` naming; `GetUser`→`User`; `StatusOf`/`SetStatusOf` naming. Permanent at v2 — awaiting decision. |
+| API-shape | **Done**: `(sz,msg,err)` triple dropped from `*IO`→`(int64,error)`; `WithRecfm*`→`Recfm*`; `GetUser`→`User`; `ServerStatus.Snapshot()` added (one STAT round-trip; best-effort `Lines()`/`Values()` since the STAT block is prose, not key=value). **Kept**: `StatusOf`/`SetStatusOf` (38+ sites, churn > value). |
 | cli `go install` | Unchanged — documented "dev builds only"; binary-first distribution. |
 
 ---

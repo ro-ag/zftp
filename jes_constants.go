@@ -16,13 +16,17 @@ var (
 	// Aggregate Backup And Recovery Support (ABARS) messages (see abaMessages,
 	// e.g. ABA001I "AGGREGATE BACKUP ASSIST ... STARTING") — NOT task abends. The
 	// name reflects the ABAxxx message prefix it matches, not an abend condition.
-	// (Job abends surface either as IEFxxx messages — e.g. IEF450I "ABEND Scde",
-	// IEF402I "SYSTEM ABEND Scde" — which are reported via ErrIEF, or in the
-	// $HASP395 completion line handled by the GetJobStatus return-code path.)
+	// (Job abends are classified as ErrAbend — the abend completion code is matched
+	// on the IEF450I/IEF472I line — and also surface via the GetJobStatus
+	// return-code path.)
 	ErrAba = errors.New("ABA error")
 	// ErrIEFAndABA indicates the job output contained both IEFxxx and ABAxxx
 	// messages.
 	ErrIEFAndABA = errors.New("IEF/ABA error")
+	// ErrAbend indicates the job output reported a task abend — a system or user
+	// completion code (e.g. S0C4, S806, U0778), typically on an IEF450I/IEF472I
+	// message. It takes precedence over ErrIEF/ErrAba when present.
+	ErrAbend = errors.New("job abend")
 )
 
 var iefMessages = map[string]string{

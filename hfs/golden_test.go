@@ -289,8 +289,11 @@ func TestParseInfoJobDetail_Abend(t *testing.T) {
 	if !errors.Is(err, hfs.ErrAbendedJob) {
 		t.Fatalf("ReturnCode() err = %v, want ErrAbendedJob", err)
 	}
-	if rc != 806 {
-		t.Errorf("abend code = %d, want 806", rc)
+	if rc != -1 {
+		t.Errorf("abend ReturnCode rc = %d, want -1", rc)
+	}
+	if code, ok := jd.AbendCode(); !ok || code != "S806" {
+		t.Errorf("AbendCode() = %q,%v, want S806,true", code, ok)
 	}
 }
 

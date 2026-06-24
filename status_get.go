@@ -7,17 +7,95 @@ import (
 	"gopkg.in/ro-ag/zftp.v2/internal/utils"
 	"regexp"
 	"strconv"
+	"strings"
 )
 
 var (
 	recFmt = regexp.MustCompile(`^Record\s+format\s+(\w+)\s*,\s*Lrecl:\s*(\d+)\s*,\s*Blocksize:\s*(\d+)`)
 )
 
-// ServerStatus queries individual z/OS server status values via the XSTA
-// command. It is returned by FTPSession.StatusOf; each method issues one query
-// and parses the reply. Obtain it from the session rather than constructing it.
+// ServerStatus queries z/OS server status. It is returned by FTPSession.StatusOf;
+// each XSTA getter issues one query and parses the reply, while Snapshot reads the
+// whole STAT block in a single round-trip. Obtain it from the session rather than
+// constructing it.
 type ServerStatus struct {
 	xstat func(string) (string, error)
+	stat  func(...string) (string, error)
+}
+
+// StatusSnapshot is the parsed result of a single STAT command — the whole server
+// status block read in one round-trip instead of one XSTA query per attribute. It
+// is a best-effort convenience: the STAT block is largely human-readable prose, so
+// Lines holds every status line verbatim (reply code stripped, wrapped
+// continuations rejoined) while Values holds only the subset expressed as
+// "KEY is VALUE" / "Server site variable KEY is set to VALUE".
+type StatusSnapshot struct {
+	lines  []string
+	values map[string]string
+}
+
+// Lines returns every status line from the STAT reply, in order.
+func (s StatusSnapshot) Lines() []string { return s.lines }
+
+// Values returns the parsed "KEY is VALUE" subset of the status block (best effort).
+func (s StatusSnapshot) Values() map[string]string { return s.values }
+
+// Get returns the value parsed for key (see Values), or "", false.
+func (s StatusSnapshot) Get(key string) (string, bool) {
+	v, ok := s.values[key]
+	return v, ok
+}
+
+// Snapshot reads the entire server status block with a single STAT command and
+// parses it. Unlike the per-attribute getters (each an XSTA round-trip), this costs
+// one round-trip; the result is a best-effort parse (see StatusSnapshot).
+func (s *ServerStatus) Snapshot() (StatusSnapshot, error) {
+	raw, err := s.stat()
+	if err != nil {
+		return StatusSnapshot{}, err
+	}
+	return parseStatusSnapshot(raw), nil
+}
+
+var statReplyCodeRe = regexp.MustCompile(`^211[- ]`)
+
+// parseStatusSnapshot parses the STAT reply text: it strips any leading 211 reply
+// code, drops the "*** end of status ***" terminator and blank lines, rejoins
+// wrapped continuation lines (which begin with whitespace), and extracts the
+// "KEY is VALUE" / "... is set to VALUE" pairs into the values map.
+func parseStatusSnapshot(raw string) StatusSnapshot {
+	var lines []string
+	for _, ln := range strings.Split(raw, "\n") {
+		ln = strings.TrimRight(statReplyCodeRe.ReplaceAllString(ln, ""), " \r")
+		if strings.TrimSpace(ln) == "" || strings.Contains(ln, "*** end of status ***") {
+			continue
+		}
+		if (ln[0] == ' ' || ln[0] == '\t') && len(lines) > 0 {
+			lines[len(lines)-1] += " " + strings.TrimSpace(ln)
+			continue
+		}
+		lines = append(lines, ln)
+	}
+	values := make(map[string]string, len(lines))
+	for _, ln := range lines {
+		if k, v, ok := splitStatusKV(ln); ok {
+			values[k] = v
+		}
+	}
+	return StatusSnapshot{lines: lines, values: values}
+}
+
+// splitStatusKV extracts a "KEY is VALUE" pair from a status line, stripping the
+// optional "Server site variable " prefix, or reports ok=false for a prose line.
+func splitStatusKV(line string) (key, value string, ok bool) {
+	line = strings.TrimPrefix(line, "Server site variable ")
+	if i := strings.Index(line, " is set to "); i >= 0 {
+		return line[:i], strings.TrimSpace(line[i+len(" is set to "):]), true
+	}
+	if i := strings.Index(line, " is "); i >= 0 {
+		return line[:i], strings.TrimSpace(line[i+len(" is "):]), true
+	}
+	return "", "", false
 }
 
 // ASATrans reports whether ASA carriage-control handling is enabled (XSTA ASATRANS).
