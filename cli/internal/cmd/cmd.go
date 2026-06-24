@@ -167,7 +167,10 @@ func newRootCmd(d deps, bi BuildInfo) *cobra.Command {
 	pf.CountVarP(&g.verbose, "verbose", "v", "increase protocol logging (-v, -vv)")
 	pf.DurationVar(&g.timeout, "timeout", 0, "control connection timeout (e.g. 30s)")
 
-	root.AddCommand(newVersionCmd(d, bi))
+	root.AddCommand(
+		newVersionCmd(d, bi),
+		newLsCmd(d, g),
+	)
 	root.SetOut(d.out)
 	root.SetErr(d.errOut)
 	return root
