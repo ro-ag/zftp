@@ -31,11 +31,11 @@ sboms:
 
 signs:
   - cmd: cosign
-    certificate: "${artifact}.pem"
+    signature: "${artifact}.bundle"
     args:
       - sign-blob
-      - "--output-certificate=${certificate}"
-      - "--output-signature=${signature}"
+      - "--new-bundle-format"
+      - "--bundle=${signature}"
       - "${artifact}"
       - "--yes"
     artifacts: checksum
@@ -55,7 +55,10 @@ dockers_v2:
       org.opencontainers.image.version: "{{ .Version }}"
 
 homebrew_casks:
+  # Disabled until the HOMEBREW_TAP_GITHUB_TOKEN secret is configured.
+  # skip_upload still builds the cask locally but does not push to the tap.
   - name: zftp
+    skip_upload: "true"
     binaries:
       - zftp
     repository:
