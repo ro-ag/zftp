@@ -86,10 +86,10 @@ func TestParseInfoJobDetail_StrayBlankLine(t *testing.T) {
 // filtered out.
 func TestParseInfoJob_ErrorReportsOriginalLine(t *testing.T) {
 	records := []string{
-		"",                                        // line 1
-		"",                                        // line 2
+		"", // line 1
+		"", // line 2
 		"GOODJOB  JOB00001 OUTPUT  3 spool files", // line 3
-		"BADRECORD",                               // line 4 (malformed)
+		"BADRECORD", // line 4 (malformed)
 	}
 	_, err := hfs.ParseInfoJob(records)
 	if err == nil {
