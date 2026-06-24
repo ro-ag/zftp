@@ -176,6 +176,7 @@ func newRootCmd(d deps, bi BuildInfo) *cobra.Command {
 		newMkdirCmd(d, g),
 		newMvCmd(d, g),
 		newChmodCmd(d, g),
+		newStatCmd(d, g),
 	)
 	root.SetOut(d.out)
 	root.SetErr(d.errOut)
