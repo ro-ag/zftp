@@ -327,3 +327,16 @@ type jesOptionFunc func(*FTPSession) error
 func (f jesOptionFunc) Apply(s *FTPSession) error {
 	return f(s)
 }
+
+// PurgeJob deletes a job from the JES spool by job id (DELE under FILETYPE=JES).
+// The session's file type is set to JES for the call and restored afterward. A
+// 550 (unknown job / not owner) is returned as a *ReturnError.
+func (s *FTPSession) PurgeJob(jobID string) error {
+	ft, err := utils.SetValueAndGetCurrent(s.log, "JES", s.SetStatusOf().FileType, s.StatusOf().FileType)
+	if err != nil {
+		return err
+	}
+	defer ft.Restore()
+	_, err = s.SendCommand(CodeFileActionOK, "DELE", jobID)
+	return err
+}

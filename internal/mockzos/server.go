@@ -188,6 +188,14 @@ func (s *Server) dispatch(sess *session, line, verb, arg string) bool {
 		writeLines(sess.conn, []string{"350 restarting at the requested offset, send transfer command"})
 	case "CWD":
 		writeLines(sess.conn, []string{"250 directory changed"})
+	case "DELE":
+		writeLines(sess.conn, []string{"250 file deleted"})
+	case "MKD", "XMKD":
+		writeLines(sess.conn, []string{fmt.Sprintf("257 %q directory created", arg)})
+	case "RNFR":
+		writeLines(sess.conn, []string{"350 file exists, ready for destination name"})
+	case "RNTO":
+		writeLines(sess.conn, []string{"250 rename successful"})
 	case "NOOP":
 		writeLines(sess.conn, []string{"200 command okay"})
 	case "PASV":
