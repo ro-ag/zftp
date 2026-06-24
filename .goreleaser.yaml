@@ -46,7 +46,8 @@ dockers_v2:
       - "ghcr.io/ro-ag/zftp"
     tags:
       - "{{ .Version }}"
-      - "latest"
+      # Only the stable release should claim :latest; prereleases (rc/beta) skip it.
+      - "{{ if not .Prerelease }}latest{{ end }}"
     platforms:
       - linux/amd64
       - linux/arm64
@@ -79,3 +80,6 @@ changelog:
 
 release:
   github: { owner: ro-ag, name: zftp }
+  # auto = flag as a GitHub pre-release when the tag carries a semver
+  # prerelease suffix (e.g. v2.0.0-rc.1); stable tags publish as full releases.
+  prerelease: auto
