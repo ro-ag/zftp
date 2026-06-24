@@ -15,6 +15,13 @@ type DataTransfer interface {
 	Command() string
 }
 
+// Compile-time checks that each transfer implementation satisfies DataTransfer.
+var (
+	_ DataTransfer = (*Store)(nil)
+	_ DataTransfer = (*Retrieve)(nil)
+	_ DataTransfer = (*StoreAscii)(nil)
+)
+
 type Store struct {
 	src io.Reader
 }

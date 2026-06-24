@@ -49,7 +49,7 @@ func TestRetrieve_SinkError_ClosesSession(t *testing.T) {
 	s, srv := dialMock(t)
 	srv.DataFor("RETR", "BIG.BIN", strings.Repeat("z", 64*1024))
 
-	if _, _, err := s.RetrieveIO("BIG.BIN", errWriter{}, zftp.TypeBinary); err == nil {
+	if _, err := s.RetrieveIO("BIG.BIN", errWriter{}, zftp.TypeBinary); err == nil {
 		t.Fatal("RetrieveIO with a failing sink must error, got nil")
 	}
 	if !s.IsClosed() {
@@ -130,7 +130,7 @@ func TestSession_ConcurrentRetrieveAndClose_NoPanic(t *testing.T) {
 		var wg sync.WaitGroup
 		wg.Go(func() {
 			var buf bytes.Buffer
-			_, _, _ = s.RetrieveIO("BIG.BIN", &buf, zftp.TypeBinary)
+			_, _ = s.RetrieveIO("BIG.BIN", &buf, zftp.TypeBinary)
 		})
 		wg.Go(func() {
 			_ = s.Close()

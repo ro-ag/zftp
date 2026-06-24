@@ -99,6 +99,14 @@ func (e *ReturnError) Unwrap() error {
 	return e.cause
 }
 
+// Compile-time checks that *ReturnError implements error and the optional Is /
+// Unwrap interfaces the errors package looks for during errors.Is/errors.As.
+var (
+	_ error                       = (*ReturnError)(nil)
+	_ interface{ Is(error) bool } = (*ReturnError)(nil)
+	_ interface{ Unwrap() error } = (*ReturnError)(nil)
+)
+
 // CodeError returns an error usable only as an errors.Is target: it matches any
 // *ReturnError carrying the given FTP return code. External callers cannot build
 // a *ReturnError directly (its fields are unexported), so this is the supported
@@ -134,16 +142,15 @@ func (code ReturnCode) check(reader *bufio.Reader, lg *log.Logger) (msg string, 
 		line, isPrefix, err := reader.ReadLine()
 		if err != nil {
 			if err == io.EOF {
-				// EOF before any complete reply line means the peer closed the
-				// control stream mid-reply: an unrecoverable I/O failure, not a
-				// valid (if unexpected) FTP reply. Surface it as a plain error so
-				// callers close the desynchronized session instead of mistaking it
-				// for a ReturnError. If a complete reply was already read, fall
-				// through and let the code-mismatch logic below report it.
-				if !haveOpening {
-					return response.String(), io.ErrUnexpectedEOF
-				}
-				break
+				// Reaching EOF here means the stream ended before a terminator line
+				// (a real terminator breaks out of the loop below, so it never
+				// reaches this read). Whether or not an opening line was seen, the
+				// reply is truncated and the control stream is dead: surface it as a
+				// plain io.ErrUnexpectedEOF so callers close the desynchronized
+				// session instead of acting on a partial reply or mistaking it for a
+				// ReturnError. This holds even when the opening code equals the
+				// expected code, where the post-loop check would otherwise pass.
+				return response.String(), io.ErrUnexpectedEOF
 			}
 			return "", err
 		}

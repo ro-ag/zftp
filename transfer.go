@@ -50,12 +50,17 @@ func (t TransferType) strCommand() string {
 	return fmt.Sprintf("TYPE %c", t)
 }
 
-// Name returns the human-readable name of the transfer type.
+// Name returns the human-readable name of the transfer type, or "UNKNOWN" for a
+// value that is neither ASCII nor image/binary (e.g. the zero value).
 func (t TransferType) Name() string {
-	if t.IsAscii() {
+	switch t {
+	case TypeAscii:
 		return "ASCII"
+	case TypeImage:
+		return "BINARY"
+	default:
+		return "UNKNOWN"
 	}
-	return "BINARY"
 }
 
 // IsAscii reports whether the transfer type is ASCII.
@@ -178,7 +183,15 @@ func (s *FTPSession) restoreType(prev TransferType, errp *error) {
 // The original transfer type is restored to the previous value after the transfer
 // (including when the transfer fails at the control level and the session stays
 // open); supports ASCII and binary/Image transfers.
-func (s *FTPSession) StoreIO(remote string, src io.Reader, t TransferType) (sz int64, msg string, err error) {
+func (s *FTPSession) StoreIO(remote string, src io.Reader, t TransferType) (int64, error) {
+	sz, _, err := s.storeIO(remote, src, t)
+	return sz, err
+}
+
+// storeIO is the implementation behind StoreIO that also returns the concatenated
+// server reply text. The public StoreIO drops that text; internal callers (e.g.
+// SubmitIO in jes.go) keep it to parse the JES job id from the submit reply.
+func (s *FTPSession) storeIO(remote string, src io.Reader, t TransferType) (sz int64, msg string, err error) {
 
 	current := s.currentType()
 	if err = s.SetType(t); err != nil {
@@ -202,7 +215,16 @@ func (s *FTPSession) StoreIO(remote string, src io.Reader, t TransferType) (sz i
 // The transfer type is restored to the previous value after the transfer (including
 // when the transfer fails at the control level and the session stays open);
 // supports ASCII and binary/Image transfers.
-func (s *FTPSession) RetrieveIO(remote string, dest io.Writer, t TransferType) (sz int64, msg string, err error) {
+func (s *FTPSession) RetrieveIO(remote string, dest io.Writer, t TransferType) (int64, error) {
+	sz, _, err := s.retrieveIO(remote, dest, t)
+	return sz, err
+}
+
+// retrieveIO is the implementation behind RetrieveIO that also returns the
+// concatenated server reply text. The public RetrieveIO drops that text; internal
+// callers (e.g. SubmitJesGetByDSN in jes.go) keep it to parse the JES job id from
+// the retrieve reply.
+func (s *FTPSession) retrieveIO(remote string, dest io.Writer, t TransferType) (sz int64, msg string, err error) {
 	current := s.currentType()
 	if t.IsAscii() {
 		if err = s.SetStatusOf().SBSendEol(eol.System); err != nil {
@@ -225,15 +247,15 @@ func (s *FTPSession) RetrieveIO(remote string, dest io.Writer, t TransferType) (
 // Resume requires image/binary mode: a positive offset combined with TypeAscii
 // returns ErrAsciiResumeUnsupported before any I/O, because in ASCII mode the
 // server's EOL/codepage translation makes a byte offset corrupt the data.
-func (s *FTPSession) StoreIOAt(remote string, src io.Reader, t TransferType, offset int64) (sz int64, msg string, err error) {
+func (s *FTPSession) StoreIOAt(remote string, src io.Reader, t TransferType, offset int64) (sz int64, err error) {
 
 	if err = guardResume(t, offset); err != nil {
-		return 0, "", err
+		return 0, err
 	}
 
 	current := s.currentType()
 	if err = s.SetType(t); err != nil {
-		return 0, "", err
+		return 0, err
 	}
 	defer s.restoreType(current, &err)
 
@@ -245,8 +267,8 @@ func (s *FTPSession) StoreIOAt(remote string, src io.Reader, t TransferType, off
 		format = transfer.NewStore(src)
 	}
 
-	sz, msg, err = s.transfer(format, remote, offset)
-	return sz, msg, err
+	sz, _, err = s.transfer(format, remote, offset)
+	return sz, err
 }
 
 // RetrieveIOAt performs a retrieve operation starting from the given offset of the remote file.
@@ -256,21 +278,21 @@ func (s *FTPSession) StoreIOAt(remote string, src io.Reader, t TransferType, off
 // Resume requires image/binary mode: a positive offset combined with TypeAscii
 // returns ErrAsciiResumeUnsupported before any I/O, because in ASCII mode the
 // server's EOL/codepage translation makes a byte offset corrupt the data.
-func (s *FTPSession) RetrieveIOAt(remote string, dest io.Writer, t TransferType, offset int64) (sz int64, msg string, err error) {
+func (s *FTPSession) RetrieveIOAt(remote string, dest io.Writer, t TransferType, offset int64) (sz int64, err error) {
 	if err = guardResume(t, offset); err != nil {
-		return 0, "", err
+		return 0, err
 	}
 	current := s.currentType()
 	if t.IsAscii() {
 		if err = s.SetStatusOf().SBSendEol(eol.System); err != nil {
-			return 0, "", err
+			return 0, err
 		}
 	}
 	if err = s.SetType(t); err != nil {
-		return 0, "", err
+		return 0, err
 	}
 	defer s.restoreType(current, &err)
 
-	sz, msg, err = s.transfer(transfer.NewRetrieve(dest), remote, offset)
-	return sz, msg, err
+	sz, _, err = s.transfer(transfer.NewRetrieve(dest), remote, offset)
+	return sz, err
 }

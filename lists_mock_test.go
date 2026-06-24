@@ -73,7 +73,7 @@ func TestListSpool(t *testing.T) {
 
 func TestSetDataSpecs_SiteCommand(t *testing.T) {
 	s, srv := dialMock(t)
-	if err := s.SetDataSpecs(zftp.WithRecfmFB, zftp.WithLrecl(80), zftp.WithBlkSize(27920)); err != nil {
+	if err := s.SetDataSpecs(zftp.RecfmFB, zftp.WithLrecl(80), zftp.WithBlkSize(27920)); err != nil {
 		t.Fatalf("SetDataSpecs: %v", err)
 	}
 	if !hasCmd(srv.Commands(), "SITE RECFM=FB LRECL=80 BLKSIZE=27920") {

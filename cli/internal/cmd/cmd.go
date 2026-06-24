@@ -45,6 +45,10 @@ type client interface {
 	Close() error
 }
 
+// *zftp.FTPSession satisfies client; enforce it at compile time so library API
+// drift surfaces here rather than only at the realConnect call site.
+var _ client = (*zftp.FTPSession)(nil)
+
 // connOpts carries the resolved connection parameters for the connect factory.
 type connOpts struct {
 	host, port       string

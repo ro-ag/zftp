@@ -87,13 +87,12 @@ HELLO, WORLD!
 		s.SetStatusOf().FileType("JES")
 		s.SetStatusOf().JesJobName("*")
 		jobOutput := &strings.Builder{}
-		n, str, err := s.RetrieveIO(job.ID, jobOutput, zftp.TypeAscii)
+		n, err := s.RetrieveIO(job.ID, jobOutput, zftp.TypeAscii)
 
 		if err != nil {
 			t.Fatal(err)
 		}
 		t.Logf("Retrieved %d bytes", n)
-		t.Logf("Output: %s", str)
 
 		t.Logf("Job output: %s", jobOutput.String())
 	})

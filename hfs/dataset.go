@@ -10,16 +10,28 @@ import (
 
 // InfoDataset is a struct that represents a z/OS dataset
 type InfoDataset struct {
-	Dsname   FieldString `json:"Dsname"`
-	Volume   FieldString `json:"Volume"`
-	Unit     FieldString `json:"Unit"`
-	Referred FieldDate   `json:"Referred"`
-	Ext      FieldInt    `json:"Ext"`
-	Used     FieldInt    `json:"Used"`
-	Recfm    FieldString `json:"Recfm"`
-	Lrecl    FieldInt    `json:"Lrecl"`
-	BlkSz    FieldInt    `json:"BlkSz"`
-	Dsorg    FieldString `json:"Dsorg"`
+	// Dsname is the fully qualified dataset name, including the surrounding
+	// single quotes as reported by z/OS.
+	Dsname FieldString `json:"Dsname"`
+	// Volume is the volume serial (VOLSER) on which the dataset resides.
+	Volume FieldString `json:"Volume"`
+	// Unit is the device unit/type the dataset is allocated on (e.g. "3390").
+	Unit FieldString `json:"Unit"`
+	// Referred is the date the dataset was last referenced.
+	Referred FieldDate `json:"Referred"`
+	// Ext is the number of extents the dataset currently occupies.
+	Ext FieldInt `json:"Ext"`
+	// Used is the amount of space used, in the units reported by the listing
+	// (typically tracks).
+	Used FieldInt `json:"Used"`
+	// Recfm is the record format (e.g. "FB", "VB", "U").
+	Recfm FieldString `json:"Recfm"`
+	// Lrecl is the logical record length, in bytes.
+	Lrecl FieldInt `json:"Lrecl"`
+	// BlkSz is the block size, in bytes.
+	BlkSz FieldInt `json:"BlkSz"`
+	// Dsorg is the dataset organization (e.g. "PO", "PS", "VSAM").
+	Dsorg FieldString `json:"Dsorg"`
 	// Tracks is the allocated-track count reported only by the Co:Z SFTP listing
 	// format (which has a distinct Tracks column); it is zero for the IBM z/OS FTP
 	// formats, which do not carry it.
@@ -29,6 +41,9 @@ type InfoDataset struct {
 	// "Pseudo Directory"); it is empty for a normal, fully-attributed dataset.
 	state string
 }
+
+// InfoDataset satisfies fmt.Stringer by value (ListDatasets returns []InfoDataset).
+var _ fmt.Stringer = InfoDataset{}
 
 // Name returns DName but without the quotes
 func (d *InfoDataset) Name() string {
@@ -110,7 +125,7 @@ func (d *InfoDataset) ToStringSlice() []string {
 }
 
 // String return a row of text representing the dataset
-func (d *InfoDataset) String() string {
+func (d InfoDataset) String() string {
 	str := strings.Builder{}
 	str.WriteString(fmt.Sprintf("Name: %s, ", d.Dsname.String()))
 	str.WriteString(fmt.Sprintf("Volume: %s, ", d.Volume.String()))

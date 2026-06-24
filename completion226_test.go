@@ -20,7 +20,7 @@ func TestRetrieveIO_Accepts226Completion(t *testing.T) {
 	srv.CompletionReply("RETR", "226 closing data connection; transfer complete")
 
 	var buf bytes.Buffer
-	if _, _, err := s.RetrieveIO("MY.BIN", &buf, zftp.TypeBinary); err != nil {
+	if _, err := s.RetrieveIO("MY.BIN", &buf, zftp.TypeBinary); err != nil {
 		t.Fatalf("RetrieveIO with a 226 completion: %v", err)
 	}
 	if buf.String() != "payload-bytes" {
@@ -34,7 +34,7 @@ func TestStoreIO_Accepts226Completion(t *testing.T) {
 	s, srv := dialMock(t)
 	srv.CompletionReply("STOR", "226 closing data connection; transfer complete")
 
-	if _, _, err := s.StoreIO("OUT.BIN", strings.NewReader("data"), zftp.TypeBinary); err != nil {
+	if _, err := s.StoreIO("OUT.BIN", strings.NewReader("data"), zftp.TypeBinary); err != nil {
 		t.Fatalf("StoreIO with a 226 completion: %v", err)
 	}
 	if stored, ok := srv.Stored("OUT.BIN"); !ok || string(stored) != "data" {

@@ -43,7 +43,7 @@ func (s *FTPSession) SubmitIO(jr io.Reader, options ...JesSpec) (*JesJob, error)
 	}
 	defer curr.Restore()
 
-	_, msg, err := s.StoreIO(job.DSN, jr, TypeAscii)
+	_, msg, err := s.storeIO(job.DSN, jr, TypeAscii)
 	if err != nil {
 		return nil, fmt.Errorf("failed to write JCL to FTP server: %w", err)
 	}
@@ -96,6 +96,11 @@ var (
 // it generates a unique job name and sets the site parameters to RECFM=FB LRECL=80 BLKSIZE=27920
 // it returns the whole Spool output as a string
 // this function waits for the job to complete
+//
+// NOTE: the RECFM/LRECL/BLKSIZE SITE attributes set here for the JCL upload are
+// NOT restored afterwards (only FILETYPE and the JES job-name filter are), so they
+// persist on the session for subsequent commands. Re-set them, or use a separate
+// session, if a later transfer needs different allocation attributes.
 func (s *FTPSession) SubmitJesGetByDSN(jcl string) (*JobResult, error) {
 	currSeq, err := utils.SetValueAndGetCurrent(s.log, "SEQ", s.SetStatusOf().FileType, s.StatusOf().FileType)
 	if err != nil {
@@ -112,7 +117,7 @@ func (s *FTPSession) SubmitJesGetByDSN(jcl string) (*JobResult, error) {
 
 	job.DSN = generateJobFileName()
 
-	_, _, err = s.StoreIO(job.DSN, strings.NewReader(jcl), TypeAscii)
+	_, err = s.StoreIO(job.DSN, strings.NewReader(jcl), TypeAscii)
 	if err != nil {
 		return nil, fmt.Errorf("failed to write JCL to FTP server: %w", err)
 	}
@@ -131,7 +136,7 @@ func (s *FTPSession) SubmitJesGetByDSN(jcl string) (*JobResult, error) {
 
 	jobOutput := &strings.Builder{}
 
-	_, msg, err := s.RetrieveIO(job.DSN, jobOutput, TypeAscii)
+	_, msg, err := s.retrieveIO(job.DSN, jobOutput, TypeAscii)
 	if err != nil {
 		return nil, fmt.Errorf("failed to retrieve job output: %w", err)
 	}
@@ -180,12 +185,18 @@ func (s *FTPSession) SubmitJesGetByDSN(jcl string) (*JobResult, error) {
 	return job, nil
 }
 
-// classifyJesOutput scans JES job output for ABEND (ABAxxx) and allocation/JCL
-// (IEFxxx) message identifiers, returning the matched, trimmed lines together with
-// the matching sentinel — ErrAba, ErrIEF, or ErrIEFAndABA when both kinds are
-// present. It returns (nil, nil) when no such message is found. The sentinel is
-// returned (not wrapped) so callers can match it with errors.Is once it is
-// wrapped with %w at the call site.
+// classifyJesOutput scans JES job output for DFSMShsm Aggregate Backup (ABAxxx)
+// and allocation/JCL (IEFxxx) message identifiers, returning the matched, trimmed
+// lines together with the matching sentinel — ErrAba, ErrIEF, or ErrIEFAndABA when
+// both kinds are present. It returns (nil, nil) when no such message is found. The
+// sentinel is returned (not wrapped) so callers can match it with errors.Is once
+// it is wrapped with %w at the call site.
+//
+// NOTE: ABAxxx are ABARS messages, not task abends (see ErrAba). A dedicated
+// matcher for a bare "$HASP395 jobname ENDED - ABEND=Scde" spool line is not yet
+// implemented here, pending a verified real-LPAR capture; today such abends are
+// detected only when they also emit an IEFxxx message or via the GetJobStatus
+// return-code path.
 func classifyJesOutput(output string) (details []string, errType error) {
 	lines := strings.Split(output, "\n")
 	/* analyze if job has abend errors */

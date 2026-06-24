@@ -40,11 +40,10 @@ func TestFieldInt_OverflowDistinctFromRealMax(t *testing.T) {
 	if overflow.String() == real.String() {
 		t.Errorf("overflow String()=%q indistinguishable from real %q", overflow.String(), real.String())
 	}
-	if overflow.Value() == real.Value() && !real.IsOverflow() && overflow.IsOverflow() {
-		// Value() may legitimately be 0 for overflow; that is fine *because*
-		// IsOverflow() disambiguates. This guard only fails if NOTHING
-		// distinguishes them, which is the bug.
-	}
+	// Value() may legitimately be 0 for an overflow; that is fine *because*
+	// IsOverflow() (asserted above) disambiguates it from a real 0. The String()
+	// and JSON guards here and below prove they are distinguishable on every
+	// observable surface.
 	realJSON := mustMarshal(t, &real)
 	overflowJSON := mustMarshal(t, &overflow)
 	if realJSON == overflowJSON {

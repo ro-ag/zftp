@@ -16,6 +16,32 @@ import (
 	"time"
 )
 
+// Compile-time checks: the value types satisfy fmt.Stringer and json.Marshaler BY
+// VALUE (the hfs listing APIs return value slices, e.g. []InfoDataset), and the
+// pointer types satisfy json.Unmarshaler. A receiver change that broke these — so
+// that fmt printed the raw struct or json.Marshal emitted {} — would fail the build.
+var (
+	_ fmt.Stringer = FieldString{}
+	_ fmt.Stringer = FieldInt{}
+	_ fmt.Stringer = FieldFloat{}
+	_ fmt.Stringer = FieldDate{}
+	_ fmt.Stringer = FieldTime{}
+
+	_ json.Marshaler = FieldString{}
+	_ json.Marshaler = FieldInt{}
+	_ json.Marshaler = FieldFloat{}
+	_ json.Marshaler = FieldDate{}
+	_ json.Marshaler = FieldTime{}
+
+	_ json.Unmarshaler = (*FieldString)(nil)
+	_ json.Unmarshaler = (*FieldInt)(nil)
+	_ json.Unmarshaler = (*FieldFloat)(nil)
+	_ json.Unmarshaler = (*FieldDate)(nil)
+	_ json.Unmarshaler = (*FieldTime)(nil)
+)
+
+// FieldString holds a single whitespace-trimmed string column from a z/OS
+// listing.
 type FieldString struct {
 	data string
 }
@@ -25,18 +51,23 @@ func (f *FieldString) parse(data string) error {
 	return nil
 }
 
-func (f *FieldString) String() string {
+// String returns the trimmed column text.
+func (f FieldString) String() string {
 	return f.data
 }
 
-func (f *FieldString) Value() string {
+// Value returns the trimmed column text.
+func (f FieldString) Value() string {
 	return f.data
 }
 
-func (f *FieldString) MarshalJSON() ([]byte, error) {
+// MarshalJSON encodes the field as a JSON string.
+func (f FieldString) MarshalJSON() ([]byte, error) {
 	return json.Marshal(f.String())
 }
 
+// UnmarshalJSON decodes a JSON string into the field, trimming surrounding
+// whitespace.
 func (f *FieldString) UnmarshalJSON(b []byte) error {
 	var s string
 	if err := json.Unmarshal(b, &s); err != nil {
@@ -94,7 +125,10 @@ func (f *FieldInt) parse(data string) error {
 	return nil
 }
 
-func (f *FieldInt) String() string {
+// String returns the base-10 representation of the value, the overflow marker
+// ("+++++") when the source column overflowed, or "" when the value is zero or
+// absent.
+func (f FieldInt) String() string {
 	if f.overflow {
 		return overflowMarker
 	}
@@ -107,17 +141,20 @@ func (f *FieldInt) String() string {
 // IsOverflow reports whether the source column held a z/OS display-overflow
 // indicator ("+++++") rather than a representable number. When true, Value() is
 // 0 and carries no meaning.
-func (f *FieldInt) IsOverflow() bool {
+func (f FieldInt) IsOverflow() bool {
 	return f.overflow
 }
 
 // Value returns the parsed integer. It is 0 for both an absent column and a
 // display overflow; use IsOverflow to tell the two apart.
-func (f *FieldInt) Value() uint32 {
+func (f FieldInt) Value() uint32 {
 	return f.data
 }
 
-func (f *FieldInt) MarshalJSON() ([]byte, error) {
+// MarshalJSON encodes the value as a JSON number, as the overflow marker string
+// ("+++++") when the column overflowed, or as null when the value is zero or
+// absent.
+func (f FieldInt) MarshalJSON() ([]byte, error) {
 	if f.overflow {
 		return json.Marshal(overflowMarker)
 	}
@@ -127,6 +164,9 @@ func (f *FieldInt) MarshalJSON() ([]byte, error) {
 	return json.Marshal(f.data)
 }
 
+// UnmarshalJSON decodes a JSON number into the value, accepts the overflow marker
+// string ("+++++") as a display overflow, and treats null as zero. Any other
+// string is rejected.
 func (f *FieldInt) UnmarshalJSON(b []byte) error {
 	f.data = 0
 	f.overflow = false
@@ -155,6 +195,7 @@ func (f *FieldInt) UnmarshalJSON(b []byte) error {
 
 /* ------------------------------------------------------------------------------------------------------------------ */
 
+// FieldFloat holds a single 32-bit floating-point column from a z/OS listing.
 type FieldFloat struct {
 	data float32
 }
@@ -173,24 +214,30 @@ func (f *FieldFloat) parse(data string) error {
 	return nil
 }
 
-func (f *FieldFloat) String() string {
+// String returns the value formatted as "%05.02f", or "" when it is zero or
+// absent.
+func (f FieldFloat) String() string {
 	if f.data == 0 {
 		return ""
 	}
 	return fmt.Sprintf("%05.02f", f.data)
 }
 
-func (f *FieldFloat) Value() float32 {
+// Value returns the parsed floating-point value.
+func (f FieldFloat) Value() float32 {
 	return f.data
 }
 
-func (f *FieldFloat) MarshalJSON() ([]byte, error) {
+// MarshalJSON encodes the value as a JSON number, or as null when it is zero or
+// absent.
+func (f FieldFloat) MarshalJSON() ([]byte, error) {
 	if f.data == 0 {
 		return []byte("null"), nil
 	}
 	return json.Marshal(f.Value())
 }
 
+// UnmarshalJSON decodes a JSON number into the value, treating null as zero.
 func (f *FieldFloat) UnmarshalJSON(b []byte) error {
 	var n float32
 	if string(b) == "null" {
@@ -206,6 +253,7 @@ func (f *FieldFloat) UnmarshalJSON(b []byte) error {
 
 /* ------------------------------------------------------------------------------------------------------------------ */
 
+// FieldDate holds a single date column (no time component) from a z/OS listing.
 type FieldDate struct {
 	data time.Time
 }
@@ -229,21 +277,27 @@ func (f *FieldDate) parse(data string) error {
 	return fmt.Errorf("failed to parse date field: %q", data)
 }
 
-func (f *FieldDate) String() string {
+// String returns the date formatted as "yyyy/mm/dd", or "" when it is unset.
+func (f FieldDate) String() string {
 	if f.data.IsZero() {
 		return ""
 	}
 	return f.data.Format("2006/01/02")
 }
 
-func (f *FieldDate) Value() time.Time {
+// Value returns the parsed date as a time.Time, which is the zero time when
+// unset.
+func (f FieldDate) Value() time.Time {
 	return f.data
 }
 
-func (f *FieldDate) MarshalJSON() ([]byte, error) {
+// MarshalJSON encodes the date as a JSON "yyyy/mm/dd" string (empty when unset).
+func (f FieldDate) MarshalJSON() ([]byte, error) {
 	return json.Marshal(f.String())
 }
 
+// UnmarshalJSON decodes a JSON date string into the field, accepting the
+// "yyyy/mm/dd" and "mm/dd/yy" layouts and the "**NONE**" sentinel.
 func (f *FieldDate) UnmarshalJSON(b []byte) error {
 	var s string
 	if err := json.Unmarshal(b, &s); err != nil {
@@ -254,6 +308,7 @@ func (f *FieldDate) UnmarshalJSON(b []byte) error {
 
 /* ------------------------------------------------------------------------------------------------------------------ */
 
+// FieldTime holds a single date-and-time column from a z/OS listing.
 type FieldTime struct {
 	data time.Time
 }
@@ -273,21 +328,29 @@ func (f *FieldTime) parse(data string) error {
 	return nil
 }
 
-func (f *FieldTime) String() string {
+// String returns the timestamp formatted as "yyyy/mm/dd HH:MM", or "" when it is
+// unset.
+func (f FieldTime) String() string {
 	if f.data.IsZero() {
 		return ""
 	}
 	return f.data.Format("2006/01/02 15:04")
 }
 
-func (f *FieldTime) Value() time.Time {
+// Value returns the parsed timestamp as a time.Time, which is the zero time when
+// unset.
+func (f FieldTime) Value() time.Time {
 	return f.data
 }
 
-func (f *FieldTime) MarshalJSON() ([]byte, error) {
+// MarshalJSON encodes the timestamp as a JSON "yyyy/mm/dd HH:MM" string (empty
+// when unset).
+func (f FieldTime) MarshalJSON() ([]byte, error) {
 	return json.Marshal(f.String())
 }
 
+// UnmarshalJSON decodes a JSON "yyyy/mm/dd HH:MM" timestamp string into the
+// field.
 func (f *FieldTime) UnmarshalJSON(b []byte) error {
 	var s string
 	if err := json.Unmarshal(b, &s); err != nil {

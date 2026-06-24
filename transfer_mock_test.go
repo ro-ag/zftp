@@ -19,7 +19,7 @@ func TestRetrieveIO_Binary(t *testing.T) {
 	srv.DataFor("RETR", "MY.BIN", string(want))
 
 	var buf bytes.Buffer
-	n, _, err := s.RetrieveIO("MY.BIN", &buf, zftp.TypeBinary)
+	n, err := s.RetrieveIO("MY.BIN", &buf, zftp.TypeBinary)
 	if err != nil {
 		t.Fatalf("RetrieveIO: %v", err)
 	}
@@ -37,7 +37,7 @@ func TestStoreIO_ASCII_CRLF(t *testing.T) {
 	s, srv := dialMock(t)
 	src := strings.NewReader("alpha\nbeta\ngamma") // LF input, no trailing newline
 
-	n, _, err := s.StoreIO("OUT.TXT", src, zftp.TypeAscii)
+	n, err := s.StoreIO("OUT.TXT", src, zftp.TypeAscii)
 	if err != nil {
 		t.Fatalf("StoreIO: %v", err)
 	}
@@ -60,7 +60,7 @@ func TestStoreIO_ASCII_CRLF(t *testing.T) {
 // store's TYPE A.
 func TestStoreIO_RestoresType(t *testing.T) {
 	s, srv := dialMock(t)
-	if _, _, err := s.StoreIO("F", strings.NewReader("x"), zftp.TypeAscii); err != nil {
+	if _, err := s.StoreIO("F", strings.NewReader("x"), zftp.TypeAscii); err != nil {
 		t.Fatalf("StoreIO: %v", err)
 	}
 
@@ -88,7 +88,7 @@ func TestRetrieveIOAt_Offset(t *testing.T) {
 	srv.DataFor("RETR", "BIG.SEQ", "tail-bytes")
 
 	var buf bytes.Buffer
-	if _, _, err := s.RetrieveIOAt("BIG.SEQ", &buf, zftp.TypeBinary, 4096); err != nil {
+	if _, err := s.RetrieveIOAt("BIG.SEQ", &buf, zftp.TypeBinary, 4096); err != nil {
 		t.Fatalf("RetrieveIOAt: %v", err)
 	}
 	if !hasCmd(srv.Commands(), "REST 4096") {
@@ -110,7 +110,7 @@ func TestRetrieveIOAt_AsciiOffsetRejected(t *testing.T) {
 
 	before := len(srv.Commands())
 	var buf bytes.Buffer
-	_, _, err := s.RetrieveIOAt("BIG.SEQ", &buf, zftp.TypeAscii, 100)
+	_, err := s.RetrieveIOAt("BIG.SEQ", &buf, zftp.TypeAscii, 100)
 	if !errors.Is(err, zftp.ErrAsciiResumeUnsupported) {
 		t.Fatalf("err = %v, want ErrAsciiResumeUnsupported", err)
 	}
@@ -129,7 +129,7 @@ func TestStoreIOAt_AsciiOffsetRejected(t *testing.T) {
 	s, srv := dialMock(t)
 
 	before := len(srv.Commands())
-	_, _, err := s.StoreIOAt("OUT.TXT", strings.NewReader("alpha\nbeta\n"), zftp.TypeAscii, 100)
+	_, err := s.StoreIOAt("OUT.TXT", strings.NewReader("alpha\nbeta\n"), zftp.TypeAscii, 100)
 	if !errors.Is(err, zftp.ErrAsciiResumeUnsupported) {
 		t.Fatalf("err = %v, want ErrAsciiResumeUnsupported", err)
 	}
@@ -152,7 +152,7 @@ func TestRetrieveIO_RestoresTypeOnControlFailure(t *testing.T) {
 	srv.Script("RETR", "550 not found")
 
 	var buf bytes.Buffer
-	_, _, err := s.RetrieveIO("NO.SUCH.FILE", &buf, zftp.TypeAscii)
+	_, err := s.RetrieveIO("NO.SUCH.FILE", &buf, zftp.TypeAscii)
 	if err == nil {
 		t.Fatal("expected an error from the rejected RETR")
 	}
@@ -174,7 +174,7 @@ func TestStoreIO_RestoresTypeOnControlFailure(t *testing.T) {
 	s, srv := dialMock(t)
 	srv.Script("STOR", "550 access denied")
 
-	_, _, err := s.StoreIO("NO.SUCH.FILE", strings.NewReader("data"), zftp.TypeAscii)
+	_, err := s.StoreIO("NO.SUCH.FILE", strings.NewReader("data"), zftp.TypeAscii)
 	if err == nil {
 		t.Fatal("expected an error from the rejected STOR")
 	}
@@ -197,7 +197,7 @@ func TestRetrieveIO_RestoresTypeOnSuccess(t *testing.T) {
 	srv.DataFor("RETR", "MY.TXT", "hello\r\n")
 
 	var buf bytes.Buffer
-	if _, _, err := s.RetrieveIO("MY.TXT", &buf, zftp.TypeAscii); err != nil {
+	if _, err := s.RetrieveIO("MY.TXT", &buf, zftp.TypeAscii); err != nil {
 		t.Fatalf("RetrieveIO: %v", err)
 	}
 
@@ -217,7 +217,7 @@ func TestStoreIOAt_BinaryOffset(t *testing.T) {
 	s, srv := dialMock(t)
 	payload := []byte{0xDE, 0xAD, 0xBE, 0xEF, 0x00, 0x10}
 
-	n, _, err := s.StoreIOAt("BIG.BIN", bytes.NewReader(payload), zftp.TypeBinary, 2048)
+	n, err := s.StoreIOAt("BIG.BIN", bytes.NewReader(payload), zftp.TypeBinary, 2048)
 	if err != nil {
 		t.Fatalf("StoreIOAt: %v", err)
 	}

@@ -87,6 +87,10 @@ type childConnection struct {
 	lg       *log.Logger
 }
 
+// childConnection embeds net.Conn (overriding Close), so it satisfies net.Conn —
+// the type the transfer helpers expect for a data connection.
+var _ net.Conn = (*childConnection)(nil)
+
 // Close tears down the data connection. It is idempotent and safe to call
 // concurrently with an in-flight Read/Write/scan, which it interrupts so the
 // reader observes the closure promptly.
@@ -167,7 +171,19 @@ func (s *FTPSession) newChildConnection(port int) (*childConnection, error) {
 	}
 
 	if s.tlsConfig != nil {
-		conn = tls.Client(conn, s.tlsConfig)
+		// Bound the handshake: net.Dialer.Timeout covered only the TCP dial, so a
+		// peer that connects but stalls the TLS negotiation would otherwise hang the
+		// transfer on the first Read/Write. Fall back to the reply timeout when no
+		// dial timeout is configured so the bound is always finite.
+		hsTimeout := s.dialCfg.DialTimeout
+		if hsTimeout <= 0 {
+			hsTimeout = s.dialCfg.replyTimeout()
+		}
+		tconn, herr := tlsHandshakeBounded(conn, s.tlsConfig, hsTimeout)
+		if herr != nil {
+			return nil, fmt.Errorf("data-connection TLS handshake: %w", herr)
+		}
+		conn = tconn
 		s.log.Debugf("upgraded connection to TLS")
 	}
 
@@ -177,6 +193,28 @@ func (s *FTPSession) newChildConnection(port int) (*childConnection, error) {
 
 	s.log.Debugf("created child connection: %s", child.RemoteAddr().String())
 	return child, nil
+}
+
+// tlsHandshakeBounded wraps conn in a TLS client and drives the handshake under a
+// deadline, so a peer that completes the TCP dial but stalls the TLS negotiation
+// cannot hang the caller. The deadline is cleared on success; the data transfer
+// manages its own deadlines afterwards. On any failure the TLS connection (and the
+// underlying conn it owns) is closed before returning.
+func tlsHandshakeBounded(conn net.Conn, cfg *tls.Config, timeout time.Duration) (*tls.Conn, error) {
+	tconn := tls.Client(conn, cfg)
+	if err := tconn.SetDeadline(time.Now().Add(timeout)); err != nil {
+		_ = tconn.Close()
+		return nil, err
+	}
+	if err := tconn.Handshake(); err != nil {
+		_ = tconn.Close()
+		return nil, err
+	}
+	if err := tconn.SetDeadline(time.Time{}); err != nil {
+		_ = tconn.Close()
+		return nil, err
+	}
+	return tconn, nil
 }
 
 // newScanner returns a new scanner for the connection

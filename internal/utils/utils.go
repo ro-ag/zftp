@@ -3,7 +3,6 @@
 package utils
 
 import (
-	"bytes"
 	"encoding/binary"
 	"fmt"
 	"gopkg.in/ro-ag/zftp.v2/internal/log"
@@ -16,34 +15,6 @@ import (
 )
 
 var RegexSearchPattern = regexp.MustCompile(`[*?]|^\s*$`)
-
-func IsMigrated(line []byte) bool {
-	p := Prefix(line)
-	return bytes.HasPrefix(bytes.ToLower(p), []byte("migrated"))
-}
-
-func IsNotMounted(line []byte) bool {
-	p := Prefix(line)
-	return bytes.HasPrefix(bytes.ToLower(p), []byte("not mounted"))
-}
-
-func Prefix(line []byte) []byte {
-	f := bytes.Fields(line)
-	return f[0]
-}
-
-func PrefixString(line []byte) string {
-	return string(Prefix(line))
-}
-
-func Suffix(line []byte) []byte {
-	f := bytes.Fields(line)
-	return f[len(f)-1]
-}
-
-func SuffixString(line []byte) string {
-	return string(Suffix(line))
-}
 
 func Caller() string {
 	pc, _, _, _ := runtime.Caller(2)
@@ -113,11 +84,6 @@ func VerifyGzSize(lg *log.Logger, file *os.File, size int64) error {
 }
 
 var trims = regexp.MustCompile(`(^\s+|\s+$|^'|'$)|[\n\r]+`)
-
-func StandardizeQuote(name string) string {
-	trims.ReplaceAllString(name, "")
-	return fmt.Sprintf("'%s'", name)
-}
 
 func RemoveNewLine(name string) string {
 	return trims.ReplaceAllString(name, "")

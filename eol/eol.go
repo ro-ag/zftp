@@ -36,7 +36,9 @@ func (l lf) NewLine() string {
 
 type cr string
 
-// Cr is the legacy Mac/OS end-of-line sequence. (deprecated)
+// Cr is the legacy (pre-OSX) Mac end-of-line sequence, a lone carriage return.
+//
+// Deprecated: classic Mac line endings are obsolete; use [Lf] or [Crlf] instead.
 const Cr = cr("CR")
 
 func (c cr) String() string {
