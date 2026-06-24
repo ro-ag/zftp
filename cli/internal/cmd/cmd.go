@@ -167,11 +167,9 @@ func newRootCmd(d deps, bi BuildInfo) *cobra.Command {
 	pf.CountVarP(&g.verbose, "verbose", "v", "increase protocol logging (-v, -vv)")
 	pf.DurationVar(&g.timeout, "timeout", 0, "control connection timeout (e.g. 30s)")
 
-	// Subcommands are wired in by later tasks (version, ls, get, put, rm/mkdir/mv/chmod, stat, submit/jobs/job).
-	// root.AddCommand(...) populated incrementally.
+	root.AddCommand(newVersionCmd(d, bi))
 	root.SetOut(d.out)
 	root.SetErr(d.errOut)
-	_ = bi // used by newVersionCmd in a later task
 	return root
 }
 
