@@ -11,6 +11,7 @@ dummy/
 /cli/cli
 /cli/zftp
 /zftp
+/dist/
 *.exe
 
 # Test and coverage artifacts

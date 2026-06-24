@@ -2,6 +2,7 @@
 
 [![Go Reference](https://pkg.go.dev/badge/gopkg.in/ro-ag/zftp.v2.svg)](https://pkg.go.dev/gopkg.in/ro-ag/zftp.v2)
 [![CI](https://github.com/ro-ag/zftp/actions/workflows/ci.yml/badge.svg)](https://github.com/ro-ag/zftp/actions/workflows/ci.yml)
+[![Release](https://img.shields.io/github/v/release/ro-ag/zftp)](https://github.com/ro-ag/zftp/releases/latest)
 [![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](./LICENSE)
 
 A **pure-Go FTP client specialized for IBM z/OS mainframes** — datasets, JES
@@ -15,6 +16,55 @@ go get gopkg.in/ro-ag/zftp.v2
 > v2 is the current line. It is a clean, SemVer-correct break from v1: the public
 > API returns concrete types instead of interfaces. Existing v1 tags are
 > unaffected.
+
+## Install (CLI binary)
+
+The `zftp` command-line client is distributed as a prebuilt binary via GitHub
+Releases, Homebrew, and Docker. A tag-triggered release workflow builds
+multi-platform archives, a multi-arch Docker image on GHCR, and a Homebrew cask.
+
+### GitHub Releases
+
+Download the archive for your OS/arch from the
+[Releases page](https://github.com/ro-ag/zftp/releases/latest) and extract
+the `zftp` binary:
+
+```bash
+# archives are named zftp_<version>_<os>_<arch>.tar.gz
+# os: linux|darwin|windows   arch: amd64|arm64   (.zip on windows)
+VERSION=2.0.0
+curl -L https://github.com/ro-ag/zftp/releases/download/v${VERSION}/zftp_${VERSION}_linux_amd64.tar.gz \
+  | tar -xz zftp
+sudo mv zftp /usr/local/bin/
+```
+
+### Homebrew
+
+```bash
+brew tap ro-ag/tap        # only needed the first time
+brew install --cask ro-ag/tap/zftp
+```
+
+The tap publishes a **cask** that installs the prebuilt binary — no build from
+source.
+
+### Docker
+
+```bash
+docker run --rm ghcr.io/ro-ag/zftp:latest version
+```
+
+The image is multi-arch (amd64/arm64) and hosted on GHCR.
+
+### go install (development builds only)
+
+```bash
+go install github.com/ro-ag/zftp/cli@latest
+```
+
+> **Note:** `cli/` uses a `replace` directive pointing to `../` for the
+> library, so `go install` from a clean module checkout is not wired yet.
+> For production use, prefer the release binaries, Homebrew, or Docker above.
 
 ## Features
 
@@ -152,8 +202,8 @@ Integration tests that require a live host are skipped unless `ZFTP_HOSTNAME`,
 ## Command-line client
 
 A CLI built on this library lives in [`cli/`](./cli) as a separate module, which
-keeps the library itself dependency-free. It is currently a skeleton; the full
-client and downloadable binaries are planned.
+keeps the library itself dependency-free. See the [Install](#install-cli-binary)
+section above for prebuilt binaries, Homebrew, and Docker.
 
 ## Contributing
 
