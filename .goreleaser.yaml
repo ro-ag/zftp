@@ -1,0 +1,78 @@
+version: 2
+project_name: zftp
+
+builds:
+  - id: zftp
+    dir: cli
+    main: .
+    binary: zftp
+    env: [CGO_ENABLED=0]
+    flags: [-trimpath]
+    ldflags:
+      - -s -w
+      - -X main.version={{.Version}}
+      - -X main.commit={{.Commit}}
+      - -X main.date={{.Date}}
+    goos: [linux, darwin, windows]
+    goarch: [amd64, arm64]
+
+archives:
+  - formats: [tar.gz]
+    name_template: "{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
+    format_overrides:
+      - goos: windows
+        formats: [zip]
+
+checksum:
+  name_template: "checksums.txt"
+
+sboms:
+  - artifacts: archive
+
+signs:
+  - cmd: cosign
+    certificate: "${artifact}.pem"
+    args:
+      - sign-blob
+      - "--output-certificate=${certificate}"
+      - "--output-signature=${signature}"
+      - "${artifact}"
+      - "--yes"
+    artifacts: checksum
+    output: true
+
+dockers_v2:
+  - images:
+      - "ghcr.io/ro-ag/zftp"
+    tags:
+      - "{{ .Version }}"
+      - "latest"
+    platforms:
+      - linux/amd64
+      - linux/arm64
+    dockerfile: "Dockerfile"
+    labels:
+      org.opencontainers.image.version: "{{ .Version }}"
+
+homebrew_casks:
+  - name: zftp
+    binaries:
+      - zftp
+    repository:
+      owner: ro-ag
+      name: homebrew-tap
+      token: "{{ .Env.HOMEBREW_TAP_GITHUB_TOKEN }}"
+    homepage: "https://github.com/ro-ag/zftp"
+    description: "Pure-Go z/OS FTP client"
+
+changelog:
+  sort: asc
+  groups:
+    - { title: Features, regexp: '^feat', order: 0 }
+    - { title: Fixes, regexp: '^fix', order: 1 }
+    - { title: Others, order: 999 }
+  filters:
+    exclude: ['^docs', '^test', '^chore', '^ci', 'Merge pull request']
+
+release:
+  github: { owner: ro-ag, name: zftp }
