@@ -206,3 +206,38 @@ $$DITTO TLB INPUT=TAPEIN
 	t.Logf("Expected Error: %s", err)
 	t.Logf("Spool:\n%s", strings.Join(job.Spool, "\n")) // Print the spool
 }
+
+func TestPurgeJob_OK(t *testing.T) {
+	s, srv := dialMock(t)
+	srv.Script("DELE", "250 job JOB12345 purged")
+	if err := s.PurgeJob("JOB12345"); err != nil {
+		t.Fatalf("PurgeJob: %v", err)
+	}
+	cmds := srv.Commands()
+	var idxSite, idxDele int = -1, -1
+	for i, c := range cmds {
+		if c == "SITE FILETYPE=JES" {
+			idxSite = i
+		}
+		if c == "DELE JOB12345" {
+			idxDele = i
+		}
+	}
+	if idxSite < 0 {
+		t.Fatalf("missing SITE FILETYPE=JES in %v", cmds)
+	}
+	if idxDele < 0 {
+		t.Fatalf("missing DELE JOB12345 in %v", cmds)
+	}
+	if idxSite >= idxDele {
+		t.Fatalf("SITE FILETYPE=JES must appear before DELE JOB12345; got %v", cmds)
+	}
+}
+
+func TestPurgeJob_Error(t *testing.T) {
+	s, srv := dialMock(t)
+	srv.Script("DELE", "550 job not found")
+	if err := s.PurgeJob("JOB12345"); !errors.Is(err, zftp.CodeError(550)) {
+		t.Fatalf("PurgeJob err = %v, want CodeError(550)", err)
+	}
+}
