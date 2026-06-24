@@ -20,6 +20,13 @@ func (s *FTPSession) Mkdir(path string) error {
 	return err
 }
 
+// Chmod changes HFS file permissions via SITE CHMOD <mode> <path>. mode is an
+// octal string ("750"). It is meaningful only for z/OS UNIX (HFS) files.
+func (s *FTPSession) Chmod(mode, path string) error {
+	_, err := s.Site("CHMOD", mode, path)
+	return err
+}
+
 // Rename renames a file or dataset from -> to using the RNFR/RNTO sequence. The
 // two round-trips are issued under a single hold of the session mutex so no other
 // goroutine's command can interleave between them, keeping *FTPSession safe to

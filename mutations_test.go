@@ -92,3 +92,26 @@ func TestRename_NoInterleave(t *testing.T) {
 		}
 	}
 }
+
+func TestChmod_OK(t *testing.T) {
+	s, srv := dialMock(t)
+	if err := s.Chmod("750", "/u/user/file"); err != nil {
+		t.Fatalf("Chmod: %v", err)
+	}
+	cmds := srv.Commands()
+	want := "SITE CHMOD 750 /u/user/file"
+	for _, c := range cmds {
+		if c == want {
+			return
+		}
+	}
+	t.Fatalf("missing %q in %v", want, cmds)
+}
+
+func TestChmod_ServerError(t *testing.T) {
+	s, srv := dialMock(t)
+	srv.Script("SITE", "550 not permitted")
+	if err := s.Chmod("750", "/u/user/file"); !errors.Is(err, zftp.CodeError(550)) {
+		t.Fatalf("Chmod err = %v, want CodeError(550)", err)
+	}
+}
