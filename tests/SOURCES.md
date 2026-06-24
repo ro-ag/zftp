@@ -104,3 +104,26 @@ Co:Z docs, OpenSalamander digest.
   harden the offsets.
 - Multivolume datasets render only their primary volser on the row (per IBM), so
   there is no multi-volser row form to parse.
+
+## JES job-abend and STAT status formats (verification)
+
+The JES abend classification (`classifyJesOutput` → `ErrAbend`,
+`InfoJobDetail.AbendCode`) and `ServerStatus.Snapshot` parse two further server
+outputs, modeled (neutral job names / placeholder values) from these public
+sources (harvested 2026-06-24):
+
+- **Abend completion codes** are alphanumeric — system `Scde` (e.g. S0C4, S806,
+  SB37) or user `Ucde` (e.g. U0778) — written on `IEF450I … - ABEND=Scde Ucde
+  REASON=…` / `IEF472I … SYSTEM=Scde USER=Ucde` lines, **not** inside `$HASP395`
+  (which shows `… ENDED`, `ENDED nnn LINES …`, or `ENDED - RC=nnnn`). Per IBM z/OS
+  MVS System Messages (IEF450I/IEF472I/IEF142I) and JES2 Messages ($HASP395). The
+  `job_spool_abend.txt` fixture class was corrected from the unreal `ABEND=806` to
+  `ABEND=S806`. An abended / JCL-error job's `JESINTERFACELEVEL=2` directory status
+  shows `ABEND` / `(JCL Error)` (IBM z/OS Communications Server).
+- **STAT status block** — the `quote stat` `211-…` multiline server-status reply
+  ending `211 *** end of status ***`. A real full dump (mixing `KEY is VALUE`,
+  `Server site variable KEY is set to VALUE`, free-form prose, and wrapped
+  continuation lines — which is why `Snapshot` is a best-effort `Lines()` +
+  `Values()` convenience, not a typed struct) is at
+  https://www.mslinn.com/mainframe/3000-run_jcl.html. The `fakeStatBlock` test
+  fixture models this format with a neutral host/user.

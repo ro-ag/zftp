@@ -30,5 +30,5 @@ func (s *FTPSession) XStat(feature string) (string, error) {
 //
 // Reference: https://www.ibm.com/docs/en/zos/2.2.0?topic=fs-status-subcommand-retrieve-status-information-from-remote-host
 func (s *FTPSession) StatusOf() *ServerStatus {
-	return &ServerStatus{xstat: s.XStat}
+	return &ServerStatus{xstat: s.XStat, stat: s.Stat}
 }

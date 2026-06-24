@@ -13,7 +13,7 @@ import (
 var (
 	whitespaceRegex   = regexp.MustCompile(`\s+`)
 	returnCodeRegex   = regexp.MustCompile(`RC=(\d+)`)
-	abendCodeRegex    = regexp.MustCompile(`ABEND=(\d+)`)
+	abendCodeRegex    = regexp.MustCompile(`ABEND[=\s]+([SU]?[0-9A-Fa-f]{3,4})`)
 	numberPrefixRegex = regexp.MustCompile(`^(\d+)\s+spool\s+files`)
 )
 
@@ -188,42 +188,45 @@ func (j InfoJobDetail) Detail() []JobDetail {
 	return j.detail
 }
 
-// ReturnCode returns the job return code.
-// returns ErrActiveJob if the job is still active.
-// returns ErrAbendedJob if the job abended.
+// ReturnCode returns the job's numeric return code (the RC=nnnn reported in the
+// JES listing). It returns ErrActiveJob if the job is still running, ErrJCLError on
+// a JCL error, and (-1, ErrAbendedJob) if the job abended: an abend's completion
+// code is alphanumeric (e.g. S0C4, S806, U0778), not a decimal return code, so it
+// is reported via the sentinel and surfaced separately by AbendCode.
 func (j InfoJobDetail) ReturnCode() (rc int, err error) {
+	class := j.job.Class.String()
 
 	if j.job.Status.String() == "ACTIVE" {
 		return 0, ErrActiveJob
 	}
-
-	regex := returnCodeRegex
-
-	if strings.Contains(j.job.Class.String(), "ABEND") {
-		err = ErrAbendedJob
-		regex = abendCodeRegex
-	}
-
-	if strings.Contains(j.job.Class.String(), "JCL error") {
+	if strings.Contains(class, "JCL error") {
 		return -1, ErrJCLError
 	}
+	if strings.Contains(class, "ABEND") {
+		return -1, ErrAbendedJob
+	}
 
-	result := regex.FindStringSubmatch(j.job.Class.String())
+	result := returnCodeRegex.FindStringSubmatch(class)
 	if len(result) != 2 {
-		// An ABEND with no parseable numeric code (e.g. "ABEND S0C4") must still
-		// report ErrAbendedJob rather than a generic "no return code found".
-		if err != nil {
-			return -1, err
-		}
 		return 0, fmt.Errorf("no return code found")
 	}
-
-	rc, errInt := strconv.Atoi(result[1])
-	if errInt != nil {
-		return 0, fmt.Errorf("failed to parse return code: %w", errInt)
+	rc, err = strconv.Atoi(result[1])
+	if err != nil {
+		return 0, fmt.Errorf("failed to parse return code: %w", err)
 	}
+	return rc, nil
+}
 
-	return rc, err
+// AbendCode returns the system or user abend completion code (e.g. "S0C4", "S806",
+// "U0778") when the job abended, or "", false otherwise. z/OS reports an abend in
+// the job's class/status text as "ABEND=Scde" or "ABEND Scde"; the code is
+// alphanumeric, which is why it is exposed here rather than through ReturnCode.
+func (j InfoJobDetail) AbendCode() (string, bool) {
+	m := abendCodeRegex.FindStringSubmatch(j.job.Class.String())
+	if len(m) != 2 {
+		return "", false
+	}
+	return m[1], true
 }
 
 // JobDetail represents one step's spool detail within a job (the columns of a

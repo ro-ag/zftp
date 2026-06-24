@@ -3,7 +3,6 @@
 package zftp
 
 import (
-	"errors"
 	"fmt"
 	"gopkg.in/ro-ag/zftp.v2/hfs"
 	"gopkg.in/ro-ag/zftp.v2/internal/utils"
@@ -90,6 +89,10 @@ var (
 	jesJobDoneRegexp          = regexp.MustCompile(`When\s+(J\w+\d+)\s+is\s+done`)
 	jesJobDoneRcRegexp        = regexp.MustCompile(`\$HASP395\s+(\w+)\s+ENDED\s+-\s+RC=(\d+)`)
 	jesJobDoneEndedNoRcRegexp = regexp.MustCompile(`\$HASP395\s+(\w+)\s+ENDED`)
+	// abendLineRegex matches a task-abend completion code (system Scde / user Ucde,
+	// e.g. S0C4, S806, U0778) as written on IEF450I/IEF472I (and listing) lines:
+	// "ABEND=Scde", "ABEND Scde", or "ABENDED Scde".
+	abendLineRegex = regexp.MustCompile(`ABEND(?:ED)?[=\s]+[SU]?[0-9A-Fa-f]{3,4}`)
 )
 
 // SubmitJesGetByDSN puts JCL to the FTP server and returns the DSN, this uses StringToJCL internally
@@ -185,41 +188,55 @@ func (s *FTPSession) SubmitJesGetByDSN(jcl string) (*JobResult, error) {
 	return job, nil
 }
 
-// classifyJesOutput scans JES job output for DFSMShsm Aggregate Backup (ABAxxx)
-// and allocation/JCL (IEFxxx) message identifiers, returning the matched, trimmed
-// lines together with the matching sentinel — ErrAba, ErrIEF, or ErrIEFAndABA when
-// both kinds are present. It returns (nil, nil) when no such message is found. The
-// sentinel is returned (not wrapped) so callers can match it with errors.Is once
-// it is wrapped with %w at the call site.
+// classifyJesOutput scans JES job output for a task abend (an alphanumeric Scde/
+// Ucde completion code, usually on an IEF450I/IEF472I line), DFSMShsm Aggregate
+// Backup (ABAxxx) messages, and allocation/JCL (IEFxxx) message identifiers. It
+// returns the matched, trimmed lines together with the matching sentinel: ErrAbend
+// takes precedence (an abend is the salient failure), otherwise ErrIEFAndABA when
+// both IEF and ABA are present, else ErrIEF or ErrAba. It returns (nil, nil) when
+// no such message is found. The sentinel is returned (not wrapped) so callers
+// match it with errors.Is once it is wrapped with %w at the call site.
 //
-// NOTE: ABAxxx are ABARS messages, not task abends (see ErrAba). A dedicated
-// matcher for a bare "$HASP395 jobname ENDED - ABEND=Scde" spool line is not yet
-// implemented here, pending a verified real-LPAR capture; today such abends are
-// detected only when they also emit an IEFxxx message or via the GetJobStatus
-// return-code path.
+// Each line is attributed to a single category (abend first, then ABA, then IEF),
+// so an IEF450I abend line is counted once and classified as an abend rather than
+// as a generic IEF allocation message.
 func classifyJesOutput(output string) (details []string, errType error) {
 	lines := strings.Split(output, "\n")
-	/* analyze if job has abend errors */
+	var sawAbend, sawIef, sawAba bool
 	for _, line := range lines {
-		for key := range abaMessages {
-			if strings.Contains(line, key) {
-				details = append(details, strings.TrimSpace(line))
-				errType = ErrAba
-			}
+		matched := false
+		if abendLineRegex.MatchString(line) {
+			sawAbend, matched = true, true
 		}
-	}
-	/* analyze if job has IEF (allocation/JCL) errors */
-	for _, line := range lines {
-		for key := range iefMessages {
-			if strings.Contains(line, key) {
-				details = append(details, strings.TrimSpace(line))
-				if errors.Is(errType, ErrAba) || errors.Is(errType, ErrIEFAndABA) {
-					errType = ErrIEFAndABA
-				} else {
-					errType = ErrIEF
+		if !matched {
+			for key := range abaMessages {
+				if strings.Contains(line, key) {
+					sawAba, matched = true, true
+					break
 				}
 			}
 		}
+		if !matched {
+			for key := range iefMessages {
+				if strings.Contains(line, key) {
+					sawIef, matched = true, true
+					break
+				}
+			}
+		}
+		if matched {
+			details = append(details, strings.TrimSpace(line))
+		}
+	}
+	switch {
+	case sawAbend:
+		errType = ErrAbend
+	case sawIef && sawAba:
+		errType = ErrIEFAndABA
+	case sawIef:
+		errType = ErrIEF
+	case sawAba:
+		errType = ErrAba
 	}
 	return details, errType
 }

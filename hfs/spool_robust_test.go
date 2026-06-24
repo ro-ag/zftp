@@ -57,6 +57,42 @@ func TestReturnCode_AbendWithoutNumericCode(t *testing.T) {
 	}
 }
 
+// TestAbendCode_RealCodes verifies the real z/OS abend completion codes are
+// captured and exposed. Real abend codes are alphanumeric (system Scde, user
+// Ucde), not decimal — e.g. S0C4, S806, U0778 — so they are surfaced as a string
+// via AbendCode while ReturnCode reports (-1, ErrAbendedJob). Formats per IBM
+// message IEF450I "... - ABEND=Scde Ucde ..." and the JES listing status "ABEND
+// Scde" (modeled here with neutral job names).
+func TestAbendCode_RealCodes(t *testing.T) {
+	cases := []struct{ record, code string }{
+		{"MYJOB    JOB00001 Z00000   OUTPUT A        ABEND=S806", "S806"},
+		{"MYJOB    JOB00002 Z00000   OUTPUT A        ABEND S0C4", "S0C4"},
+		{"MYJOB    JOB00003 Z00000   OUTPUT A        ABEND=U0778", "U0778"},
+	}
+	for _, c := range cases {
+		jd, err := level2Detail(t, c.record)
+		if err != nil {
+			t.Fatalf("ParseInfoJobDetail(%q): %v", c.record, err)
+		}
+		if code, ok := jd.AbendCode(); !ok || code != c.code {
+			t.Errorf("AbendCode(%q) = %q,%v; want %q,true", c.record, code, ok, c.code)
+		}
+		if rc, err := jd.ReturnCode(); !errors.Is(err, hfs.ErrAbendedJob) || rc != -1 {
+			t.Errorf("ReturnCode(%q) = %d,%v; want -1,ErrAbendedJob", c.record, rc, err)
+		}
+	}
+	jd, err := level2Detail(t, "MYJOB    JOB00004 Z00000   OUTPUT A        RC=0004")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if code, ok := jd.AbendCode(); ok {
+		t.Errorf("non-abend AbendCode = %q,true; want empty,false", code)
+	}
+	if rc, err := jd.ReturnCode(); err != nil || rc != 4 {
+		t.Errorf("RC job ReturnCode = %d,%v; want 4,nil", rc, err)
+	}
+}
+
 // TestParseInfoJobDetail_StrayBlankLine verifies a stray blank line in the detail
 // block (here between the job record and the "--------" separator) does not abort
 // parsing: the separator and column header are located by content, not fixed

@@ -25,3 +25,25 @@ func TestClassifyJesOutput(t *testing.T) {
 		t.Errorf("clean: errType=%v details=%v, want nil/empty", errType, details)
 	}
 }
+
+// TestClassifyJesOutput_Abend verifies a real abend completion line is classified
+// as ErrAbend (distinct from a generic IEF allocation message). Real abend codes
+// are alphanumeric (system S0C4/S806, user U0778); the abend usually arrives as an
+// IEF450I/IEF472I line, so ErrAbend takes precedence over ErrIEF. Format per IBM
+// message IEF450I "... - ABEND=Scde Ucde ...".
+func TestClassifyJesOutput_Abend(t *testing.T) {
+	details, errType := classifyJesOutput("preamble\nIEF450I MVS001 STEP1 - ABEND=S0C4 REASON=00000004\ntail")
+	if !errors.Is(errType, ErrAbend) {
+		t.Errorf("system abend: errType = %v, want ErrAbend", errType)
+	}
+	if len(details) == 0 {
+		t.Error("want the abend line captured in details")
+	}
+	if _, e := classifyJesOutput("$HASP395 MVS001 ENDED ABEND U0778"); !errors.Is(e, ErrAbend) {
+		t.Errorf("user abend: errType = %v, want ErrAbend", e)
+	}
+	// A plain "ABEND" word with no completion code is not an abend classification.
+	if _, e := classifyJesOutput("the ABEND handling routine ran"); errors.Is(e, ErrAbend) {
+		t.Error("a bare ABEND word (no code) must not classify as ErrAbend")
+	}
+}
