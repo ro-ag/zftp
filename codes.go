@@ -99,6 +99,14 @@ func (e *ReturnError) Unwrap() error {
 	return e.cause
 }
 
+// Compile-time checks that *ReturnError implements error and the optional Is /
+// Unwrap interfaces the errors package looks for during errors.Is/errors.As.
+var (
+	_ error                       = (*ReturnError)(nil)
+	_ interface{ Is(error) bool } = (*ReturnError)(nil)
+	_ interface{ Unwrap() error } = (*ReturnError)(nil)
+)
+
 // CodeError returns an error usable only as an errors.Is target: it matches any
 // *ReturnError carrying the given FTP return code. External callers cannot build
 // a *ReturnError directly (its fields are unexported), so this is the supported

@@ -87,6 +87,10 @@ type childConnection struct {
 	lg       *log.Logger
 }
 
+// childConnection embeds net.Conn (overriding Close), so it satisfies net.Conn —
+// the type the transfer helpers expect for a data connection.
+var _ net.Conn = (*childConnection)(nil)
+
 // Close tears down the data connection. It is idempotent and safe to call
 // concurrently with an in-flight Read/Write/scan, which it interrupts so the
 // reader observes the closure promptly.

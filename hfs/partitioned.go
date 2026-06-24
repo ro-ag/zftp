@@ -23,6 +23,9 @@ type InfoPdsMember struct {
 	Id      FieldString `json:"Id"`      // Id The user ID of the person who created or last updated this version
 }
 
+// InfoPdsMember satisfies fmt.Stringer by value (ListPds returns []InfoPdsMember).
+var _ fmt.Stringer = InfoPdsMember{}
+
 // String returns a row of text representing the Partitioned Dataset member
 func (m InfoPdsMember) String() string {
 	str := strings.Builder{}

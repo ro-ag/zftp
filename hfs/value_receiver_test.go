@@ -10,26 +10,11 @@ import (
 )
 
 // The public listing APIs (ListDatasets/ListPds/ListSpool, GetJobStatus) hand
-// back value types ([]InfoDataset, []InfoJob, ...). For fmt and encoding/json to
-// work on those values, the value types — and the Field* types they embed — must
-// satisfy fmt.Stringer and json.Marshaler BY VALUE. A pointer-only receiver makes
-// fmt print the raw struct and, for json on a non-addressable value, emit {}.
-var (
-	_ fmt.Stringer = FieldString{}
-	_ fmt.Stringer = FieldInt{}
-	_ fmt.Stringer = FieldFloat{}
-	_ fmt.Stringer = FieldDate{}
-	_ fmt.Stringer = FieldTime{}
-	_ fmt.Stringer = InfoDataset{}
-	_ fmt.Stringer = InfoPdsMember{}
-	_ fmt.Stringer = InfoJob{}
-
-	_ json.Marshaler = FieldString{}
-	_ json.Marshaler = FieldInt{}
-	_ json.Marshaler = FieldFloat{}
-	_ json.Marshaler = FieldDate{}
-	_ json.Marshaler = FieldTime{}
-)
+// back value types ([]InfoDataset, []InfoJob, ...), so the value types must
+// satisfy fmt.Stringer and json.Marshaler BY VALUE. The compile-time guarantees
+// live in the source files (attributes.go/dataset.go/partitioned.go/spool.go);
+// these tests exercise the runtime behavior — that a value actually marshals its
+// fields rather than emitting {}, and prints via String().
 
 func TestInfoJobValueMarshalsFields(t *testing.T) {
 	j := InfoJob{

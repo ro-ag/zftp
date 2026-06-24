@@ -206,6 +206,13 @@ func (r lrecl) Apply() (string, error) {
 	return fmt.Sprintf("LRECL=%d", r), nil
 }
 
+// Compile-time checks that the DataSpec implementations satisfy the interface.
+var (
+	_ DataSpec = Recfm("")
+	_ DataSpec = blksz(0)
+	_ DataSpec = lrecl(0)
+)
+
 // WithLrecl specs for dataset logical record length.
 func WithLrecl(length uint16) DataSpec {
 	return lrecl(length)

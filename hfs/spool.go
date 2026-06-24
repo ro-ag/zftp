@@ -59,6 +59,13 @@ type InfoJob struct {
 	SpoolFiles int `json:"SpoolFiles,omitempty"`
 }
 
+// InfoJob and JobDetail satisfy fmt.Stringer by value (ListSpool returns
+// []InfoJob; InfoJobDetail.Detail returns []JobDetail).
+var (
+	_ fmt.Stringer = InfoJob{}
+	_ fmt.Stringer = JobDetail{}
+)
+
 // String returns a row of text representing the job.
 func (j InfoJob) String() string {
 	str := strings.Builder{}

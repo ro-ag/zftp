@@ -16,6 +16,30 @@ import (
 	"time"
 )
 
+// Compile-time checks: the value types satisfy fmt.Stringer and json.Marshaler BY
+// VALUE (the hfs listing APIs return value slices, e.g. []InfoDataset), and the
+// pointer types satisfy json.Unmarshaler. A receiver change that broke these — so
+// that fmt printed the raw struct or json.Marshal emitted {} — would fail the build.
+var (
+	_ fmt.Stringer = FieldString{}
+	_ fmt.Stringer = FieldInt{}
+	_ fmt.Stringer = FieldFloat{}
+	_ fmt.Stringer = FieldDate{}
+	_ fmt.Stringer = FieldTime{}
+
+	_ json.Marshaler = FieldString{}
+	_ json.Marshaler = FieldInt{}
+	_ json.Marshaler = FieldFloat{}
+	_ json.Marshaler = FieldDate{}
+	_ json.Marshaler = FieldTime{}
+
+	_ json.Unmarshaler = (*FieldString)(nil)
+	_ json.Unmarshaler = (*FieldInt)(nil)
+	_ json.Unmarshaler = (*FieldFloat)(nil)
+	_ json.Unmarshaler = (*FieldDate)(nil)
+	_ json.Unmarshaler = (*FieldTime)(nil)
+)
+
 // FieldString holds a single whitespace-trimmed string column from a z/OS
 // listing.
 type FieldString struct {

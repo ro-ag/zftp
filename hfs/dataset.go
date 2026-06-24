@@ -42,6 +42,9 @@ type InfoDataset struct {
 	state string
 }
 
+// InfoDataset satisfies fmt.Stringer by value (ListDatasets returns []InfoDataset).
+var _ fmt.Stringer = InfoDataset{}
+
 // Name returns DName but without the quotes
 func (d *InfoDataset) Name() string {
 	return strings.Trim(d.Dsname.String(), "'")
