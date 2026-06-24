@@ -170,6 +170,8 @@ func newRootCmd(d deps, bi BuildInfo) *cobra.Command {
 	root.AddCommand(
 		newVersionCmd(d, bi),
 		newLsCmd(d, g),
+		newGetCmd(d, g),
+		newPutCmd(d, g),
 	)
 	root.SetOut(d.out)
 	root.SetErr(d.errOut)
