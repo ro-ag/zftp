@@ -23,3 +23,19 @@ func TestDelete_ServerError(t *testing.T) {
 		t.Fatalf("Delete err = %v, want CodeError(550)", err)
 	}
 }
+
+func TestMkdir_OK(t *testing.T) {
+	s, _ := dialMock(t)
+	if err := s.Mkdir("/u/user/newdir"); err != nil {
+		t.Fatalf("Mkdir: %v", err)
+	}
+}
+
+func TestMkdir_ServerError(t *testing.T) {
+	s, srv := dialMock(t)
+	srv.Script("MKD", "550 permission denied")
+	err := s.Mkdir("/u/user/newdir")
+	if !errors.Is(err, zftp.CodeError(550)) {
+		t.Fatalf("Mkdir err = %v, want CodeError(550)", err)
+	}
+}
