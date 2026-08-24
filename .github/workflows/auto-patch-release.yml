@@ -1,0 +1,44 @@
+name: auto-patch-release
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "cli/go.mod"
+      - "cli/go.sum"
+
+permissions:
+  contents: write  # create and push tags
+
+jobs:
+  tag:
+    name: Bump patch version
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+
+      - name: Compute and push next patch tag
+        run: |
+          # Find the latest vX.Y.Z tag; default to v2.0.0 if none exists.
+          latest=$(git tag --sort=-v:refname | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+$' | head -1)
+          if [ -z "$latest" ]; then
+            latest="v2.0.0"
+          fi
+
+          # Split into components.
+          major=$(echo "$latest" | cut -d. -f1 | tr -d 'v')
+          minor=$(echo "$latest" | cut -d. -f2)
+          patch=$(echo "$latest" | cut -d. -f3)
+
+          next_patch=$((patch + 1))
+          new_tag="v${major}.${minor}.${next_patch}"
+
+          echo "Latest tag : $latest"
+          echo "New tag    : $new_tag"
+
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git tag "$new_tag"
+          git push origin "$new_tag"
